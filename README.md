@@ -18,6 +18,8 @@ async def program(api):
     await api.print('Hello world!')
 ```
 
+There must be a separate file for each program with `program` coroutine defined.
+
 In minecraft, open up any computer and type:
 
 ```bash
@@ -45,6 +47,3 @@ async def program(api):
     # and this snippet takes approximately 2 seconds to complete.
     await asyncio.gather(api.os.sleep(2), api.os.sleep(2))
 ```
-
-TODO:
-- use current dir for programs

@@ -4,7 +4,7 @@ import string
 from aiohttp import web
 from traceback import print_exc
 from os.path import getmtime, join, dirname, abspath
-from os import listdir
+from os import listdir, getcwd
 import importlib
 import argparse
 
@@ -33,6 +33,7 @@ from .subapis.window import WindowAPI
 
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
+CURRENT_DIR = getcwd()
 
 
 exchange = {}
@@ -57,11 +58,11 @@ async def lua_json(request):
 
 
 def program_filenames():
-    return [f[:-3] for f in listdir(join(THIS_DIR, 'programs')) if f.endswith('.py') and f != '__init__.py']
+    return [f[:-3] for f in listdir(CURRENT_DIR) if f.endswith('.py') and f != '__init__.py']
 
 
 def m_filename(m):
-    return join(THIS_DIR, 'programs', '{}.py'.format(m))
+    return join(CURRENT_DIR, '{}.py'.format(m))
 
 
 async def reload_all_modules(module_map):
@@ -74,7 +75,7 @@ async def reload_all_modules(module_map):
 
     # loading new modules
     for m in nxt - prev:
-        module_map[m] = importlib.import_module('programs.{}'.format(m))
+        module_map[m] = importlib.import_module(m)
         module_map[m]._mtime_mark = getmtime(m_filename(m))
         print('Loaded {}'.format(m))
 
