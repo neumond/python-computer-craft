@@ -1,4 +1,4 @@
-class TurtleException(Exception):
+class CommandException(Exception):
     pass
 
 

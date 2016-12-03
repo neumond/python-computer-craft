@@ -6,27 +6,29 @@ from traceback import print_exc
 from os.path import getmtime, join, dirname, abspath
 from os import listdir
 import importlib
-from subapis.root import RootAPIMixin
-from common import LuaException
+import argparse
 
-from subapis.colors import ColorsAPI
-from subapis.commands import CommandsAPI
-from subapis.disk import DiskAPI
-from subapis.fs import FSAPI
-from subapis.gps import GpsAPI
-from subapis.help import HelpAPI
-from subapis.keys import KeysAPI
-from subapis.multishell import MultishellAPI
-from subapis.os import OSAPI
-from subapis.peripheral import PeripheralAPI
-from subapis.rednet import RednetAPI
-from subapis.redstone import RedstoneAPI
-from subapis.settings import SettingsAPI
-from subapis.shell import ShellAPI
-from subapis.term import TermAPI
-from subapis.textutils import TextutilsAPI
-from subapis.turtle import TurtleAPI
-from subapis.window import WindowAPI
+from .subapis.root import RootAPIMixin
+from .errors import LuaException
+
+from .subapis.colors import ColorsAPI
+from .subapis.commands import CommandsAPI
+from .subapis.disk import DiskAPI
+from .subapis.fs import FSAPI
+from .subapis.gps import GpsAPI
+from .subapis.help import HelpAPI
+from .subapis.keys import KeysAPI
+from .subapis.multishell import MultishellAPI
+from .subapis.os import OSAPI
+from .subapis.peripheral import PeripheralAPI
+from .subapis.rednet import RednetAPI
+from .subapis.redstone import RedstoneAPI
+from .subapis.settings import SettingsAPI
+from .subapis.shell import ShellAPI
+from .subapis.term import TermAPI
+from .subapis.textutils import TextutilsAPI
+from .subapis.turtle import TurtleAPI
+from .subapis.window import WindowAPI
 
 
 THIS_DIR = dirname(abspath(__file__))
@@ -202,6 +204,10 @@ async def taskresult(request):
 def backdoor(request):
     with open(LUA_FILE, 'r') as f:
         fcont = f.read()
+    fcont = fcont.replace(
+        "local url = 'http://127.0.0.1:4343/'",
+        "local url = '{}://{}/'".format(request.scheme, request.host)
+    )
     return web.Response(text=fcont)
 
 
@@ -236,13 +242,25 @@ def enable_request_logging():
 
 def main():
     # enable_request_logging()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host')
+    parser.add_argument('--port', type=int)
+    args = parser.parse_args()
+
+    app_kw = {}
+    if args.host is not None:
+        app_kw['host'] = args.host
+    if args.port is not None:
+        app_kw['port'] = args.port
+
     asyncio.ensure_future(module_reloader())
     app = web.Application()
     app.router.add_get('/', backdoor)
     app.router.add_post('/start/{turtle}/{program}/', start)
     app.router.add_post('/gettask/{turtle}/', gettask)
     app.router.add_post('/taskresult/{turtle}/{task_id}/', taskresult)
-    web.run_app(app, port=4343)
+    web.run_app(app, **app_kw)
 
 
 if __name__ == '__main__':

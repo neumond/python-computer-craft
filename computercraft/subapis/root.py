@@ -1,4 +1,4 @@
-from subapis.base import nil_return, bool_return, lua_args, str_return
+from .base import nil_return, bool_return, lua_args, str_return
 
 
 class RootAPIMixin:

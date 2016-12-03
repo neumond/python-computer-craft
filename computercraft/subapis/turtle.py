@@ -1,6 +1,6 @@
 from typing import Optional
 from .base import BaseSubAPI, bool_success, number_return, LuaNum, int_return, bool_return, opt_dict_return
-from common import TurtleException
+from ..errors import CommandException
 
 
 class TurtleAPI(BaseSubAPI):
@@ -89,7 +89,7 @@ class TurtleAPI(BaseSubAPI):
         if not r and data == 'No block to inspect':
             return None
         if not r:
-            raise TurtleException(data)
+            raise CommandException(data)
         return data
 
     async def inspect(self) -> Optional[dict]:

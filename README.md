@@ -1,5 +1,8 @@
 # Pythonized ComputerCraft API
 
+```
+python -m computercraft.server
+```
+
 TODO:
-- add host and port cmdline parameters for server
 - use current dir for programs

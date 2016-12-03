@@ -1,4 +1,4 @@
-from common import TurtleException, ApiException
+from ..errors import CommandException, ApiException
 from typing import Union
 
 
@@ -68,7 +68,7 @@ def bool_success(v):
         return
     if len(v) == 2 and v[0] is False:
         assert isinstance(v[1], str)
-        raise TurtleException(v[1])
+        raise CommandException(v[1])
     raise ApiException('Bad return value: {}'.format(v))
 
 
