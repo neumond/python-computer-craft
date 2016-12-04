@@ -108,7 +108,7 @@ class CCAPI(RootAPIMixin):
         self.commands = CommandsAPI(self)
         self.disk = DiskAPI(self)
         self.fs = FSAPI(self)
-        self.gps = GpsAPI(self)  # TODO: test
+        self.gps = GpsAPI(self)
         self.help = HelpAPI(self)
         self.keys = KeysAPI(self)
         self.multishell = MultishellAPI(self)

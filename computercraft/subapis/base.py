@@ -85,25 +85,20 @@ def make_optional(fn):
     return op_fn
 
 
-def make_single_value_return(*types):
-    if len(types) > 1:
-        types = tuple(types)
-    else:
-        types = types[0]
-
+def make_single_value_return(cond):
     def fn(v):
         assert len(v) == 1
-        assert isinstance(v[0], types)
+        assert cond(v[0])
         return v[0]
     return fn
 
 
-bool_return = make_single_value_return(bool)
-int_return = make_single_value_return(int)
-number_return = make_single_value_return(int, float)
-str_return = make_single_value_return(str)
-list_return = make_single_value_return(list)
-dict_return = make_single_value_return(dict)
+bool_return = make_single_value_return(lambda v: isinstance(v, bool))
+int_return = make_single_value_return(lambda v: isinstance(v, int) and not isinstance(v, bool))
+number_return = make_single_value_return(lambda v: isinstance(v, (int, float)) and not isinstance(v, bool))
+str_return = make_single_value_return(lambda v: isinstance(v, str))
+list_return = make_single_value_return(lambda v: isinstance(v, list))
+dict_return = make_single_value_return(lambda v: isinstance(v, dict))
 
 
 @make_optional
