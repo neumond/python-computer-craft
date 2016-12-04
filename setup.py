@@ -38,8 +38,6 @@ setup(
     package_data={'computercraft': ['back.lua']},
     install_requires=['aiohttp'],
     entry_points={
-        'console_scripts': [
-            'computercraft=computercraft.server:main',
-        ],
+        'console_scripts': ['computercraft = computercraft.server:main'],
     },
 )

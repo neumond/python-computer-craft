@@ -6,6 +6,7 @@ from traceback import print_exc
 from os.path import getmtime, join, dirname, abspath
 from os import listdir, getcwd
 import importlib
+import importlib.util
 import argparse
 
 from .subapis.root import RootAPIMixin
@@ -75,7 +76,9 @@ async def reload_all_modules(module_map):
 
     # loading new modules
     for m in nxt - prev:
-        module_map[m] = importlib.import_module(m)
+        spec = importlib.util.spec_from_file_location('ccprograms.{}'.format(m), m_filename(m))
+        module_map[m] = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module_map[m])
         module_map[m]._mtime_mark = getmtime(m_filename(m))
         print('Loaded {}'.format(m))
 
