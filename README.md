@@ -1,35 +1,27 @@
 # Pythonized ComputerCraft API
 
-First, you need to start a server:
+1. Create module named `examplemod.py`:
 
-```bash
-cd your_folder_with_programs
-python -m computercraft.server
-```
+    ```python
+    async def hello(api):
+        await api.print('Hello world!')
+    ```
 
-Current directory is the place for your amazing programs.
-Server tracks files inside this directory and reloads if necessary.
-You don't (always) have to restart server if you change your programs.
+2. Start a server:
 
-Create simple program named `hello.py`:
+    ```bash
+    python -m computercraft.server examplemod
+    ```
 
-```python
-async def program(api):
-    await api.print('Hello world!')
-```
+3. In minecraft, open up any computer and type:
 
-There must be a separate file for each program with `program` coroutine defined.
-
-In minecraft, open up any computer and type:
-
-```bash
-wget http://127.0.0.1:8080/ py
-py hello
-```
+    ```bash
+    wget http://127.0.0.1:8080/ py
+    py hello
+    ```
 
 `py` is short Lua program that interacts with the server.
-Argument is the name of program without `.py`.
-In everything else it works exactly like native program on Lua.
+Argument is the name of coroutine inside the module.
 `api` object contains almost everything *as is* in ComputerCraft documentation:
 
 ```python
