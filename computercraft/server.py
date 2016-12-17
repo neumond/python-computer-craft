@@ -3,10 +3,8 @@ import json
 import string
 from aiohttp import web
 from traceback import print_exc
-from os.path import getmtime, join, dirname, abspath
-from os import listdir, getcwd
-import importlib
-import importlib.util
+from os.path import join, dirname, abspath
+from importlib import import_module
 import argparse
 
 from .subapis.root import RootAPIMixin
@@ -34,13 +32,6 @@ from .subapis.window import WindowAPI
 
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
-CURRENT_DIR = getcwd()
-
-
-exchange = {}
-module_map = {}
-
-
 DIGITS = string.digits + string.ascii_lowercase
 
 
@@ -58,48 +49,8 @@ async def lua_json(request):
     return json.loads(body)
 
 
-def program_filenames():
-    return [f[:-3] for f in listdir(CURRENT_DIR) if f.endswith('.py') and f != '__init__.py']
-
-
-def m_filename(m):
-    return join(CURRENT_DIR, '{}.py'.format(m))
-
-
-async def reload_all_modules(module_map):
-    prev = set(module_map.keys())
-    nxt = set(program_filenames())
-
-    # unloading old modules
-    for m in prev - nxt:
-        del module_map[m]
-
-    # loading new modules
-    for m in nxt - prev:
-        spec = importlib.util.spec_from_file_location('ccprograms.{}'.format(m), m_filename(m))
-        module_map[m] = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module_map[m])
-        module_map[m]._mtime_mark = getmtime(m_filename(m))
-        print('Loaded {}'.format(m))
-
-    # reloading modified modules
-    for m in nxt & prev:
-        mtime = getmtime(m_filename(m))
-        if module_map[m]._mtime_mark < mtime:
-            importlib.reload(module_map[m])
-            module_map[m]._mtime_mark = mtime
-            print('Reloaded {}'.format(m))
-
-
-async def module_reloader():
-    while True:
-        fut = asyncio.ensure_future(reload_all_modules(module_map))
-        await asyncio.wait([fut])
-        await asyncio.sleep(5)
-
-
 class CCAPI(RootAPIMixin):
-    def __init__(self, nid, program):
+    def __init__(self, nid, program, cleanup_callback):
         self._id = nid
         self._task_autoid = 1
         self._cmd = asyncio.Queue(maxsize=1)
@@ -142,7 +93,7 @@ class CCAPI(RootAPIMixin):
             finally:
                 if not cancel:
                     await self._cmd.put('END')
-                del exchange[self._id]
+                cleanup_callback()
 
         self._task = asyncio.ensure_future(prog_wrap())
 
@@ -174,47 +125,6 @@ class CCAPI(RootAPIMixin):
         del self._result_queues[task_id]
 
 
-async def start(request):
-    tid = int(request.match_info['turtle'])
-    if tid in exchange:
-        # terminate old program
-        exchange[tid]._task.cancel()
-    exchange[tid] = CCAPI(tid, module_map[request.match_info['program']].program)
-    return web.Response(text='')
-
-
-async def gettask(request):
-    api = exchange.get(int(request.match_info['turtle']))
-    if api is None:
-        return web.Response(text='END')
-    return web.Response(text=await api._cmd.get())
-
-
-async def taskresult(request):
-    api = exchange.get(int(request.match_info['turtle']))
-    if api is not None:
-        tid = request.match_info['task_id']
-        if tid in api._result_locks:
-            # it's a TASK
-            api._result_values[tid] = await lua_json(request)
-            api._result_locks[tid].set()
-        elif tid in api._result_queues:
-            # it's a QUEUE
-            await api._result_queues[tid].put(await lua_json(request))
-        # otherwise just ignore
-    return web.Response(text='')
-
-
-def backdoor(request):
-    with open(LUA_FILE, 'r') as f:
-        fcont = f.read()
-    fcont = fcont.replace(
-        "local url = 'http://127.0.0.1:4343/'",
-        "local url = '{}://{}/'".format(request.scheme, request.host)
-    )
-    return web.Response(text=fcont)
-
-
 logging_config = '''
 version: 1
 disable_existing_loggers: false
@@ -244,10 +154,65 @@ def enable_request_logging():
     logging.config.dictConfig(yaml.load(logging_config))
 
 
+class CCApplication(web.Application):
+    async def start(self, request):
+        tid = int(request.match_info['turtle'])
+        if tid in self['exchange']:
+            # terminate old program
+            self['exchange'][tid]._task.cancel()
+        module = import_module(self['source_module'])
+        program = getattr(module, request.match_info['program'])
+
+        def cleanup_callback():
+            del self['exchange'][tid]
+
+        self['exchange'][tid] = CCAPI(tid, program, cleanup_callback)
+        return web.Response(text='')
+
+    async def gettask(self, request):
+        api = self['exchange'].get(int(request.match_info['turtle']))
+        if api is None:
+            return web.Response(text='END')
+        return web.Response(text=await api._cmd.get())
+
+    async def taskresult(self, request):
+        api = self['exchange'].get(int(request.match_info['turtle']))
+        if api is not None:
+            tid = request.match_info['task_id']
+            if tid in api._result_locks:
+                # it's a TASK
+                api._result_values[tid] = await lua_json(request)
+                api._result_locks[tid].set()
+            elif tid in api._result_queues:
+                # it's a QUEUE
+                await api._result_queues[tid].put(await lua_json(request))
+            # otherwise just ignore
+        return web.Response(text='')
+
+    @staticmethod
+    def backdoor(request):
+        with open(LUA_FILE, 'r') as f:
+            fcont = f.read()
+        fcont = fcont.replace(
+            "local url = 'http://127.0.0.1:4343/'",
+            "local url = '{}://{}/'".format(request.scheme, request.host)
+        )
+        return web.Response(text=fcont)
+
+    def initialize(self, source_module):
+        self['source_module'] = source_module
+        self['exchange'] = {}
+        self.router.add_get('/', self.backdoor)
+        self.router.add_post('/start/{turtle}/{program}/', self.start)
+        self.router.add_post('/gettask/{turtle}/', self.gettask)
+        self.router.add_post('/taskresult/{turtle}/{task_id}/', self.taskresult)
+
+
 def main():
     # enable_request_logging()
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('module', help='Module used as source for programs')
     parser.add_argument('--host')
     parser.add_argument('--port', type=int)
     args = parser.parse_args()
@@ -258,12 +223,8 @@ def main():
     if args.port is not None:
         app_kw['port'] = args.port
 
-    asyncio.ensure_future(module_reloader())
-    app = web.Application()
-    app.router.add_get('/', backdoor)
-    app.router.add_post('/start/{turtle}/{program}/', start)
-    app.router.add_post('/gettask/{turtle}/', gettask)
-    app.router.add_post('/taskresult/{turtle}/{task_id}/', taskresult)
+    app = CCApplication()
+    app.initialize(args.module)
     web.run_app(app, **app_kw)
 
 
