@@ -113,6 +113,6 @@ class FSAPI(BaseSubAPI):
         return str_return(await self._send('getDir', path))
 
     async def complete(
-        self, partialName: str, path: str, includeFiles: bool=None, includeSlashes: bool=None
+        self, partialName: str, path: str, includeFiles: bool = None, includeSlashes: bool = None,
     ) -> List[str]:
         return list_return(await self._send('complete', partialName, path, includeFiles, includeSlashes))

@@ -11,13 +11,13 @@ class RednetAPI(BaseSubAPI):
     async def close(self, side: str):
         return nil_return(await self._send('close', side))
 
-    async def send(self, receiverID: int, message: Any, protocol: str=None):
+    async def send(self, receiverID: int, message: Any, protocol: str = None):
         return nil_return(await self._send('send', receiverID, message, protocol))
 
-    async def broadcast(self, message: Any, protocol: str=None):
+    async def broadcast(self, message: Any, protocol: str = None):
         return nil_return(await self._send('broadcast', message, protocol))
 
-    async def receive(self, protocolFilter: str=None, timeout: LuaNum=None) -> int:
+    async def receive(self, protocolFilter: str = None, timeout: LuaNum = None) -> int:
         return int_return(await self._send('receive', protocolFilter, timeout))
 
     async def isOpen(self, side: str) -> bool:

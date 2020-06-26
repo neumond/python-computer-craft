@@ -35,7 +35,7 @@ class ShellAPI(BaseSubAPI):
     async def clearAlias(self, alias: str):
         return nil_return(await self._send('clearAlias', alias))
 
-    async def programs(self, showHidden: bool=None) -> List[str]:
+    async def programs(self, showHidden: bool = None) -> List[str]:
         return list_return(await self._send('programs', showHidden))
 
     async def getRunningProgram(self) -> str:

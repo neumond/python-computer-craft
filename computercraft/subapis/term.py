@@ -1,5 +1,5 @@
 from typing import Tuple
-from .base import BaseSubAPI, list_return, nil_return
+from .base import BaseSubAPI, nil_return
 from .mixins import TermMixin
 
 
@@ -20,7 +20,7 @@ class CCWindow(BaseSubAPI, TermMixin):
     async def getPosition(self) -> Tuple[int, int]:
         return tuple(await self._send('getPosition'))
 
-    async def reposition(self, x: int, y: int, width: int=None, height: int=None):
+    async def reposition(self, x: int, y: int, width: int = None, height: int = None):
         return nil_return(await self._send('reposition', x, y, width, height))
 
 

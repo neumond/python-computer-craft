@@ -20,10 +20,10 @@ class TextutilsAPI(BaseSubAPI):
     async def pagedTabulate(self, *rows_and_colors: Union[list, int]):
         return nil_return(await self._send('pagedTabulate', *rows_and_colors))
 
-    async def pagedPrint(self, text: str, freeLines: int=None) -> int:
+    async def pagedPrint(self, text: str, freeLines: int = None) -> int:
         return int_return(await self._send('pagedPrint', text, freeLines))
 
-    async def complete(self, partialName: str, environment: dict=None) -> List[str]:
+    async def complete(self, partialName: str, environment: dict = None) -> List[str]:
         return list_return(await self._send('complete', partialName, environment))
 
     # Questionable to implement

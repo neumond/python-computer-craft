@@ -33,13 +33,13 @@ class TurtleAPI(BaseSubAPI):
     async def getSelectedSlot(self) -> int:
         return int_return(await self._send('getSelectedSlot'))
 
-    async def getItemCount(self, slotNum: int=None) -> int:
+    async def getItemCount(self, slotNum: int = None) -> int:
         return int_return(await self._send('getItemCount', slotNum))
 
-    async def getItemSpace(self, slotNum: int=None) -> int:
+    async def getItemSpace(self, slotNum: int = None) -> int:
         return int_return(await self._send('getItemSpace', slotNum))
 
-    async def getItemDetail(self, slotNum: int=None) -> dict:
+    async def getItemDetail(self, slotNum: int = None) -> dict:
         return opt_dict_return(await self._send('getItemDetail', slotNum))
 
     async def equipLeft(self):
@@ -66,7 +66,7 @@ class TurtleAPI(BaseSubAPI):
     async def digDown(self):
         return bool_success(await self._send('digDown'))
 
-    async def place(self, signText: str=None):
+    async def place(self, signText: str = None):
         return bool_success(await self._send('place', signText))
 
     async def placeUp(self):
@@ -113,25 +113,25 @@ class TurtleAPI(BaseSubAPI):
     async def compareTo(self, slot: int) -> bool:
         return bool_return(await self._send('compareTo', slot))
 
-    async def drop(self, count: LuaNum=None):
+    async def drop(self, count: LuaNum = None):
         return bool_success(await self._send('drop', count))
 
-    async def dropUp(self, count: LuaNum=None):
+    async def dropUp(self, count: LuaNum = None):
         return bool_success(await self._send('dropUp', count))
 
-    async def dropDown(self, count: LuaNum=None):
+    async def dropDown(self, count: LuaNum = None):
         return bool_success(await self._send('dropDown', count))
 
-    async def suck(self, amount: LuaNum=None):
+    async def suck(self, amount: LuaNum = None):
         return bool_success(await self._send('suck', amount))
 
-    async def suckUp(self, amount: LuaNum=None):
+    async def suckUp(self, amount: LuaNum = None):
         return bool_success(await self._send('suckUp', amount))
 
-    async def suckDown(self, amount: LuaNum=None):
+    async def suckDown(self, amount: LuaNum = None):
         return bool_success(await self._send('suckDown', amount))
 
-    async def refuel(self, quantity: LuaNum=None):
+    async def refuel(self, quantity: LuaNum = None):
         return bool_success(await self._send('refuel', quantity))
 
     async def getFuelLevel(self) -> LuaNum:
@@ -140,5 +140,5 @@ class TurtleAPI(BaseSubAPI):
     async def getFuelLimit(self) -> LuaNum:
         return number_return(await self._send('getFuelLimit'))
 
-    async def transferTo(self, slot: int, quantity: int=None):
+    async def transferTo(self, slot: int, quantity: int = None):
         return bool_success(await self._send('transferTo', slot, quantity))
