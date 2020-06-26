@@ -1,4 +1,4 @@
-# Pythonized ComputerCraft API
+# Pythonized CC Tweaked (ComputerCraft) API
 
 1. Enable localhost in mod server config
 

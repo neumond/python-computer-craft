@@ -9,6 +9,7 @@ def is_register_command(a):
         return item in ('register', 'bdist_wheel')
     return False
 
+
 longdesc = None
 if is_register_command(argv[1:]):
     import os
@@ -18,7 +19,7 @@ if is_register_command(argv[1:]):
 
 setup(
     name='computercraft',
-    version='0.1.1',
+    version='0.2.0',
     description='Pythonization of ComputerCraft Minecraft mod. Write Python instead Lua!',
     long_description=longdesc,
     url='https://github.com/neumond/python-computer-craft',
@@ -29,8 +30,9 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Education',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Games/Entertainment',
     ],
     keywords='computercraft minecraft',
