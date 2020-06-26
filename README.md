@@ -1,19 +1,32 @@
 # Pythonized ComputerCraft API
 
-1. Create module named `examplemod.py`:
+1. Enable localhost in mod server config
+
+    In case of singleplayer it's located inside your saves folder.
+    In case of multiplayer check your server folder.
+
+    Edit `computercraft-server.toml`
+
+    ```toml
+    [[http.rules]]
+		host = "127.0.0.0/8"
+		action = "allow"  # change here deny to allow
+    ```
+
+2. Create module named `examplemod.py`:
 
     ```python
     async def hello(api):
         await api.print('Hello world!')
     ```
 
-2. Start a server:
+3. Start a server:
 
     ```bash
     python -m computercraft.server examplemod
     ```
 
-3. In minecraft, open up any computer and type:
+4. In minecraft, open up any computer and type:
 
     ```bash
     wget http://127.0.0.1:8080/ py

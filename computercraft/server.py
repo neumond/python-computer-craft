@@ -193,9 +193,13 @@ class CCApplication(web.Application):
     def backdoor(request):
         with open(LUA_FILE, 'r') as f:
             fcont = f.read()
+        h = request.host
+        if ':' not in h:
+            # fix for malformed Host header
+            h += ':{}'.format(request.app['port'])
         fcont = fcont.replace(
             "local url = 'http://127.0.0.1:4343/'",
-            "local url = '{}://{}/'".format(request.scheme, request.host)
+            "local url = '{}://{}/'".format(request.scheme, h)
         )
         return web.Response(text=fcont)
 
@@ -214,16 +218,16 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('module', help='Module used as source for programs')
     parser.add_argument('--host')
-    parser.add_argument('--port', type=int)
+    parser.add_argument('--port', type=int, default=8080)
     args = parser.parse_args()
 
     app_kw = {}
     if args.host is not None:
         app_kw['host'] = args.host
-    if args.port is not None:
-        app_kw['port'] = args.port
+    app_kw['port'] = args.port
 
     app = CCApplication()
+    app['port'] = args.port
     app.initialize(args.module)
     web.run_app(app, **app_kw)
 

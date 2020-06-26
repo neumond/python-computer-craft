@@ -67,13 +67,13 @@ local function event_queue(task_id, event)
 end
 
 local function fetch_fn()
-    local r = http.post(url..'start/'..os.getComputerID()..'/'..args[1]..'/')
+    local r = http.post(url..'start/'..os.getComputerID()..'/'..args[1]..'/', '')
     if (r == nil or r.getResponseCode() ~= 200) then
         print('Failed to start program '..args[1])
         return
     end
     while true do
-        r = http.post(url..'gettask/'..os.getComputerID()..'/', answer)
+        r = http.post(url..'gettask/'..os.getComputerID()..'/', '')
         if (r == nil or r.getResponseCode() ~= 200) then
             print('Connection broken')
             return
