@@ -74,18 +74,24 @@ class CCAPI(RootAPIMixin):
         self.window = WindowAPI(self)  # TODO: unimplemented
 
         async def prog_wrap():
+            err = None
             try:
                 await program(self)
             except asyncio.CancelledError:
                 print('program {} cancelled'.format(self._id))
                 print_exc()
+                err = 'program has been cancelled'
             except Exception as e:
                 print('program {} crashed: {} {}'.format(self._id, type(e), e))
                 print_exc()
+                err = type(e).__name__ + ': ' + str(e)
             else:
                 print('program {} finished'.format(self._id))
             finally:
-                await self._cmd.put({'action': 'close'})
+                c = {'action': 'close'}
+                if err is not None:
+                    c['error'] = err
+                await self._cmd.put(c)
                 cleanup_callback()
 
         self._task = asyncio.create_task(prog_wrap())
@@ -95,17 +101,20 @@ class CCAPI(RootAPIMixin):
         self._task_autoid += 1
         return task_id
 
-    async def _send_cmd(self, lua):
+    async def raw_eval(self, lua_code):
         task_id = self._new_task_id()
         self._result_locks[task_id] = asyncio.Event()
         await self._cmd.put({
             'action': 'task',
             'task_id': task_id,
-            'code': lua,
+            'code': lua_code,
         })
         await self._result_locks[task_id].wait()
         del self._result_locks[task_id]
-        result = self._result_values.pop(task_id)
+        return self._result_values.pop(task_id)
+
+    async def _send_cmd(self, lua):
+        result = await self.raw_eval(lua)
         print('{} → {}'.format(lua, result))
         if not result[0]:
             raise LuaException(*result[1:])

@@ -6,6 +6,9 @@ local url = 'http://127.0.0.1:4343/'
 local tasks = {}
 
 ws = http.websocket(url..'ws/')
+if ws == false then
+    error('unable to connect to server '..url..'ws/')
+end
 ws.send(textutils.serializeJSON{
     action='run',
     computer=os.getComputerID(),
