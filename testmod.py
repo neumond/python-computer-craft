@@ -752,3 +752,102 @@ async def test_term_api(api):
     await term_step(api, 'You must have seen different shades of red made using palettes')
 
     await api.print('Test finished successfully')
+
+
+async def test_settings_api(api):
+    tbl = await get_object_table(api, 'settings')
+    assert get_class_table(api.settings.__class__) == tbl
+
+    await step(api, 'Settings will be cleared')
+
+    assert await api.settings.clear() is None
+    # names are not empty, there are system settings
+    assert isinstance(await api.settings.getNames(), list)
+
+    assert await api.settings.define('test.a') is None
+    assert await api.settings.define('test.b', description='b') is None
+    assert await api.settings.define('test.c', type='string') is None
+    assert await api.settings.define('test.d', default=42) is None
+
+    assert await api.settings.getDetails('test.a') == {
+        'changed': False,
+    }
+    assert await api.settings.getDetails('test.b') == {
+        'changed': False,
+        'description': 'b',
+    }
+    assert await api.settings.getDetails('test.c') == {
+        'changed': False,
+        'type': 'string',
+    }
+    assert await api.settings.getDetails('test.d') == {
+        'changed': False,
+        'default': 42,
+        'value': 42,
+    }
+
+    # redefining
+    assert await api.settings.define('test.a', type='number', default=11) is None
+
+    assert await api.settings.getDetails('test.a') == {
+        'changed': False,
+        'type': 'number',
+        'default': 11,
+        'value': 11,
+    }
+
+    assert await api.settings.get('test.a') == 11
+    assert await api.settings.set('test.a', 12) is None
+    assert await api.settings.get('test.a') == 12
+    with assert_raises(LuaException):
+        await api.settings.set('test.a', 'text')
+    assert await api.settings.get('test.a') == 12
+    assert await api.settings.unset('test.a') is None
+    assert await api.settings.get('test.a') == 11
+
+    assert await api.settings.set('test.c', 'hello') is None
+
+    assert {'test.a', 'test.b', 'test.c', 'test.d'}.issubset(set(await api.settings.getNames()))
+
+    assert await api.settings.undefine('test.a') is None
+    assert await api.settings.undefine('test.b') is None
+    assert await api.settings.undefine('test.c') is None
+    assert await api.settings.undefine('test.d') is None
+
+    assert 'test.c' in await api.settings.getNames()
+    assert await api.settings.get('test.c') == 'hello'
+    assert await api.settings.getDetails('test.c') == {
+        'changed': True,
+        'value': 'hello',
+    }
+
+    assert await api.settings.unset('test.c') is None
+
+    assert await api.settings.get('test.c') is None
+    assert await api.settings.getDetails('test.c') == {
+        'changed': False,
+    }
+
+    assert {'test.a', 'test.b', 'test.c', 'test.d'} & set(await api.settings.getNames()) == set()
+
+    assert await api.settings.set('test.e', [9, 'text', False]) is None
+    assert await api.settings.get('test.e') == [9, 'text', False]
+    assert await api.settings.clear() is None
+    assert await api.settings.get('test.e') is None
+
+    await api.fs.delete('.settings')
+
+    assert await api.settings.load() is False
+    assert await api.settings.save() is True
+    assert await api.settings.load() is True
+
+    await api.fs.delete('.settings')
+
+    assert await api.settings.set('key', 84) is None
+
+    assert await api.settings.save('sfile') is True
+    assert await api.settings.load('sfile') is True
+
+    await api.fs.delete('sfile')
+
+    await api.print('Test finished successfully')

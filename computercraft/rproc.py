@@ -89,16 +89,21 @@ def fact_union(*case_pairs, pelse):
     return proc
 
 
-def fact_scheme_dict(components):
+def fact_scheme_dict(required, optional):
+    required_keys = set(required.keys())
+    optional_keys = set(optional.keys())
+    assert required_keys & optional_keys == set()
+    all_keys = required_keys | optional_keys
+    all_fns = required.copy()
+    all_fns.update(optional)
+
     def proc(result):
         result = any_dict(result)
-        assert set(result.keys()) == set(components.keys())
-        return {key: component(result[key]) for key, component in components.items()}
+        result_keys = set(result.keys())
+        assert result_keys.issubset(all_keys)
+        assert required_keys.issubset(result_keys)
+        return {key: all_fns[key](value) for key, value in result.items()}
     return proc
-
-
-def fact_scheme_dict_kw(**components):
-    return fact_scheme_dict(components)
 
 
 def fact_mono_dict(key, value):

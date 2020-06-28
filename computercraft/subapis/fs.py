@@ -2,15 +2,15 @@ from contextlib import asynccontextmanager
 from typing import Optional, List
 
 from .base import BaseSubAPI, lua_string
-from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict_kw
+from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict
 
 
-attribute = fact_scheme_dict_kw(
-    created=integer,
-    modification=integer,
-    isDir=boolean,
-    size=integer,
-)
+attribute = fact_scheme_dict({
+    'created': integer,
+    'modification': integer,
+    'isDir': boolean,
+    'size': integer,
+}, {})
 
 
 class BaseHandle(BaseSubAPI):
