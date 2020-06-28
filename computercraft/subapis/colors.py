@@ -48,6 +48,8 @@ class ColorsAPI(BaseSubAPI):
         for c in self.chars.values():
             yield c
 
+    # combine, subtract and test are mostly for redstone.setBundledOutput
+
     async def combine(self, *colors: int) -> int:
         return integer(await self._send('combine', *colors))
 

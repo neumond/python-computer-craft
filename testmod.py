@@ -851,3 +851,56 @@ async def test_settings_api(api):
     await api.fs.delete('sfile')
 
     await api.print('Test finished successfully')
+
+
+async def test_redstone_api(api):
+    tbl = await get_object_table(api, 'redstone')
+
+    # remove British method names to make API lighter
+    del tbl['function']['getAnalogueInput']
+    del tbl['function']['getAnalogueOutput']
+    del tbl['function']['setAnalogueOutput']
+
+    assert get_class_table(api.redstone.__class__) == tbl
+
+    assert set(await api.redstone.getSides()) == {'top', 'bottom', 'front', 'back', 'left', 'right'}
+
+    await step(api, 'Remove all the redstone from sides of computer')
+
+    side = 'top'
+
+    assert await api.redstone.setOutput(side, True) is None
+    assert await api.redstone.getOutput(side) is True
+    assert await api.redstone.getAnalogOutput(side) == 15
+    assert await api.redstone.setOutput(side, False) is None
+    assert await api.redstone.getOutput(side) is False
+    assert await api.redstone.getAnalogOutput(side) == 0
+
+    assert await api.redstone.setAnalogOutput(side, 7) is None
+    assert await api.redstone.getAnalogOutput(side) == 7
+    assert await api.redstone.getOutput(side) is True
+    assert await api.redstone.setAnalogOutput(side, 15) is None
+    assert await api.redstone.getAnalogOutput(side) == 15
+    assert await api.redstone.setAnalogOutput(side, 0) is None
+    assert await api.redstone.getAnalogOutput(side) == 0
+    assert await api.redstone.getOutput(side) is False
+
+    assert await api.redstone.getInput(side) is False
+    assert await api.redstone.getAnalogInput(side) == 0
+
+    await step(api, f'Put redstone block on {side} side of computer')
+
+    assert await api.redstone.getInput(side) is True
+    assert await api.redstone.getAnalogInput(side) > 0
+
+    await step(api, f'Remove redstone block\nPut piston on {side} side of computer')
+
+    assert await api.redstone.getInput(side) is False
+    assert await api.redstone.getAnalogInput(side) == 0
+    assert await api.redstone.setOutput(side, True) is None
+    await asyncio.sleep(2)
+    assert await api.redstone.setOutput(side, False) is None
+
+    await api.print('Piston must have been activated\nRemove piston')
+
+    await api.print('Test finished successfully')

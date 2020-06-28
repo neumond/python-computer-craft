@@ -28,6 +28,8 @@ class RedstoneAPI(BaseSubAPI):
     async def getAnalogOutput(self, side: str) -> int:
         return integer(await self._send('getAnalogOutput', side))
 
+    # bundled cables are not available in vanilla
+
     async def getBundledInput(self, side: str) -> int:
         return integer(await self._send('getBundledInput', side))
 
