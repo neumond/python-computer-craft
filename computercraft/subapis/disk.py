@@ -1,5 +1,5 @@
-from typing import Optional
-from .base import BaseSubAPI, nil_return, bool_return, opt_str_return, opt_int_return
+from typing import Optional, Union
+from .base import BaseSubAPI, nil_return, bool_return, opt_str_return, opt_int_return, opt_str_bool_return
 
 
 class DiskAPI(BaseSubAPI):
@@ -26,8 +26,8 @@ class DiskAPI(BaseSubAPI):
     async def hasAudio(self, side: str) -> bool:
         return bool_return(await self._send('hasAudio', side))
 
-    async def getAudioTitle(self, side: str) -> Optional[str]:
-        return opt_str_return(await self._send('getAudioTitle', side))
+    async def getAudioTitle(self, side: str) -> Optional[Union[bool, str]]:
+        return opt_str_bool_return(await self._send('getAudioTitle', side))
 
     async def playAudio(self, side: str):
         return nil_return(await self._send('playAudio', side))

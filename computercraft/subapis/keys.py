@@ -1,8 +1,10 @@
-from .base import BaseSubAPI, str_return
+from typing import Optional
+
+from .base import BaseSubAPI, opt_str_return
 
 
 class KeysAPI(BaseSubAPI):
     _API = 'keys'
 
-    async def getName(self, code: int) -> str:
-        return str_return(await self._send('getName', code))
+    async def getName(self, code: int) -> Optional[str]:
+        return opt_str_return(await self._send('getName', code))

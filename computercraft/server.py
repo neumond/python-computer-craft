@@ -54,7 +54,7 @@ class CCAPI(RootAPIMixin):
         self._event_to_tids = {}
         self._tid_to_event = {}
 
-        self.colors = ColorsAPI
+        self.colors = ColorsAPI(self)
         self.commands = CommandsAPI(self)
         self.disk = DiskAPI(self)
         self.fs = FSAPI(self)
@@ -96,7 +96,7 @@ class CCAPI(RootAPIMixin):
 
         self._task = asyncio.create_task(prog_wrap())
 
-    def _new_task_id(self):
+    def _new_task_id(self) -> str:
         task_id = base36(self._task_autoid)
         self._task_autoid += 1
         return task_id
@@ -150,7 +150,7 @@ class CCApplication(web.Application):
     async def _sender(ws, api):
         while not ws.closed:
             cmd = await api._cmd.get()
-            print(f'_sender: {cmd}')
+            # print(f'_sender: {cmd}')
             if not ws.closed:
                 await ws.send_json(cmd)
             if cmd['action'] == 'close':
@@ -159,7 +159,7 @@ class CCApplication(web.Application):
     @staticmethod
     async def _json_messages(ws):
         async for msg in ws:
-            print('ws received', msg)
+            # print('ws received', msg)
             if msg.type != WSMsgType.TEXT:
                 continue
             # print('ws received', msg.data)

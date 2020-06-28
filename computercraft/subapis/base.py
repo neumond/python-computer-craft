@@ -85,10 +85,12 @@ def make_optional(fn):
     return op_fn
 
 
-def make_single_value_return(cond):
+def make_single_value_return(validator, converter=None):
     def fn(v):
         assert len(v) == 1
-        assert cond(v[0])
+        if converter is not None:
+            v[0] = converter(v[0])
+        assert validator(v[0])
         return v[0]
     return fn
 
@@ -97,7 +99,11 @@ bool_return = make_single_value_return(lambda v: isinstance(v, bool))
 int_return = make_single_value_return(lambda v: isinstance(v, int) and not isinstance(v, bool))
 number_return = make_single_value_return(lambda v: isinstance(v, (int, float)) and not isinstance(v, bool))
 str_return = make_single_value_return(lambda v: isinstance(v, str))
-list_return = make_single_value_return(lambda v: isinstance(v, list))
+str_bool_return = make_single_value_return(lambda v: isinstance(v, (str, bool)))
+list_return = make_single_value_return(
+    lambda v: isinstance(v, list),
+    lambda v: [] if v == {} else v,
+)
 dict_return = make_single_value_return(lambda v: isinstance(v, dict))
 
 
@@ -110,6 +116,7 @@ opt_bool_return = make_optional(bool_return)
 opt_int_return = make_optional(int_return)
 opt_number_return = make_optional(number_return)
 opt_str_return = make_optional(str_return)
+opt_str_bool_return = make_optional(str_bool_return)
 opt_list_return = make_optional(list_return)
 opt_dict_return = make_optional(dict_return)
 

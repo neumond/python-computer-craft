@@ -1,45 +1,28 @@
-from typing import Optional, Union, List
+from contextlib import asynccontextmanager
+from typing import Optional, List
+
 from .base import (
     BaseSubAPI, lua_string,
-    nil_return, opt_str_return, str_return, bool_return, int_return, list_return, opt_int_return,
+    nil_return, opt_str_return, str_return, bool_return,
+    int_return, list_return, dict_return,
 )
-from uuid import uuid4
 
 
-class CCFile(BaseSubAPI):
-    def __init__(self, cc, path, mode):
+class BaseHandle(BaseSubAPI):
+    def __init__(self, cc, var):
         super().__init__(cc)
-        self._path = path
-        self._mode = mode
+        self._API = var
 
-    async def __aenter__(self):
-        self._id = str(uuid4())
-        self._API = 'temp[{}]'.format(lua_string(self._id))
-        await self._cc._send_cmd('{} = fs.open({}, {})'.format(self._API, *map(lua_string, [
-            self._path, self._mode
-        ])))
-        return self
 
-    async def __aexit__(self, exc_type, exc, tb):
-        await self._cc._send_cmd('{}.close(); {} = nil'.format(self._API, self._API))
-
-    async def read(self) -> Optional[int]:
-        return opt_int_return(await self._send('read'))
+class ReadHandle(BaseHandle):
+    async def read(self, count: int) -> Optional[str]:
+        return opt_str_return(await self._send('read', count))
 
     async def readLine(self) -> Optional[str]:
         return opt_str_return(await self._send('readLine'))
 
     async def readAll(self) -> str:
         return str_return(await self._send('readAll'))
-
-    async def write(self, data: Union[str, int]):
-        return nil_return(await self._send('write', data))
-
-    async def writeLine(self, data: str):
-        return nil_return(await self._send('writeLine', data))
-
-    async def flush(self):
-        return nil_return(await self._send('flush'))
 
     def __aiter__(self):
         return self
@@ -49,6 +32,17 @@ class CCFile(BaseSubAPI):
         if line is None:
             raise StopAsyncIteration
         return line
+
+
+class WriteHandle(BaseHandle):
+    async def write(self, text: str):
+        return nil_return(await self._send('write', text))
+
+    async def writeLine(self, text: str):
+        return nil_return(await self._send('writeLine', text))
+
+    async def flush(self):
+        return nil_return(await self._send('flush'))
 
 
 class FSAPI(BaseSubAPI):
@@ -66,9 +60,6 @@ class FSAPI(BaseSubAPI):
     async def isReadOnly(self, path: str) -> bool:
         return bool_return(await self._send('isReadOnly', path))
 
-    async def getName(self, path: str) -> str:
-        return str_return(await self._send('getName', path))
-
     async def getDrive(self, path: str) -> Optional[str]:
         return opt_str_return(await self._send('getDrive', path))
 
@@ -77,6 +68,9 @@ class FSAPI(BaseSubAPI):
 
     async def getFreeSpace(self, path: str) -> int:
         return int_return(await self._send('getFreeSpace', path))
+
+    async def getCapacity(self, path: str) -> int:
+        return int_return(await self._send('getCapacity', path))
 
     async def makeDir(self, path: str):
         return nil_return(await self._send('makeDir', path))
@@ -93,7 +87,8 @@ class FSAPI(BaseSubAPI):
     async def combine(self, basePath: str, localPath: str) -> str:
         return str_return(await self._send('combine', basePath, localPath))
 
-    def open(self, path: str, mode: str) -> CCFile:
+    @asynccontextmanager
+    async def open(self, path: str, mode: str):
         '''
         Usage:
 
@@ -104,7 +99,14 @@ class FSAPI(BaseSubAPI):
             async for line in f:
                 ...
         '''
-        return CCFile(self._cc, path, mode)
+        fid = self._cc._new_task_id()
+        var = 'temp[{}]'.format(lua_string(fid))
+        await self._cc._send_cmd('{} = fs.open({}, {})'.format(
+            var, *map(lua_string, [path, mode])))
+        try:
+            yield (ReadHandle if mode == 'r' else WriteHandle)(self._cc, var)
+        finally:
+            await self._cc._send_cmd('{}.close(); {} = nil'.format(var, var))
 
     async def find(self, wildcard: str) -> List[str]:
         return list_return(await self._send('find', wildcard))
@@ -112,7 +114,17 @@ class FSAPI(BaseSubAPI):
     async def getDir(self, path: str) -> str:
         return str_return(await self._send('getDir', path))
 
+    async def getName(self, path: str) -> str:
+        return str_return(await self._send('getName', path))
+
+    async def isDriveRoot(self, path: str) -> bool:
+        return bool_return(await self._send('isDriveRoot', path))
+
     async def complete(
-        self, partialName: str, path: str, includeFiles: bool = None, includeSlashes: bool = None,
+        self, partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
     ) -> List[str]:
-        return list_return(await self._send('complete', partialName, path, includeFiles, includeSlashes))
+        return list_return(await self._send(
+            'complete', partialName, path, includeFiles, includeDirs, omit_nulls=False))
+
+    async def attributes(self, path: str) -> dict:
+        return dict_return(await self._send('attributes', path))
