@@ -1,60 +1,65 @@
 from typing import List, Dict
-from .base import BaseSubAPI, nil_return, str_return, bool_return, int_return, dict_return, list_return
+
+from .base import BaseSubAPI
+from ..rproc import nil, string, boolean, integer, array_string, fact_mono_dict
+
+
+map_string_string = fact_mono_dict(string, string)
 
 
 class ShellAPI(BaseSubAPI):
     _API = 'shell'
 
     async def exit(self):
-        return nil_return(await self._send('exit'))
+        return nil(await self._send('exit'))
 
     async def dir(self) -> str:
-        return str_return(await self._send('dir'))
+        return string(await self._send('dir'))
 
     async def setDir(self, path: str):
-        return nil_return(await self._send('setDir', path))
+        return nil(await self._send('setDir', path))
 
     async def path(self) -> str:
-        return str_return(await self._send('path'))
+        return string(await self._send('path'))
 
     async def setPath(self, path: str):
-        return nil_return(await self._send('setPath', path))
+        return nil(await self._send('setPath', path))
 
     async def resolve(self, localPath: str) -> str:
-        return str_return(await self._send('resolve', localPath))
+        return string(await self._send('resolve', localPath))
 
     async def resolveProgram(self, name: str) -> str:
-        return str_return(await self._send('resolveProgram', name))
+        return string(await self._send('resolveProgram', name))
 
     async def aliases(self) -> Dict[str, str]:
-        return dict_return(await self._send('aliases'))
+        return map_string_string(await self._send('aliases'))
 
     async def setAlias(self, alias: str, program: str):
-        return nil_return(await self._send('setAlias', alias, program))
+        return nil(await self._send('setAlias', alias, program))
 
     async def clearAlias(self, alias: str):
-        return nil_return(await self._send('clearAlias', alias))
+        return nil(await self._send('clearAlias', alias))
 
     async def programs(self, showHidden: bool = None) -> List[str]:
-        return list_return(await self._send('programs', showHidden))
+        return array_string(await self._send('programs', showHidden))
 
     async def getRunningProgram(self) -> str:
-        return str_return(await self._send('getRunningProgram'))
+        return string(await self._send('getRunningProgram'))
 
     async def run(self, command: str, *args: List[str]):
-        return bool_return(await self._send('run', command, *args))
+        return boolean(await self._send('run', command, *args))
 
     async def openTab(self, command: str, *args: List[str]) -> int:
-        return int_return(await self._send('openTab', command, *args))
+        return integer(await self._send('openTab', command, *args))
 
     async def switchTab(self, tabID: int):
-        return nil_return(await self._send('switchTab', tabID))
+        return nil(await self._send('switchTab', tabID))
 
     async def complete(self, prefix: str) -> List[str]:
-        return list_return(await self._send('complete', prefix))
+        return array_string(await self._send('complete', prefix))
 
     async def completeProgram(self, prefix: str) -> List[str]:
-        return list_return(await self._send('completeProgram', prefix))
+        return array_string(await self._send('completeProgram', prefix))
 
     # TODO: autocomplete functions
     # async def setCompletionFunction(self, path: str)

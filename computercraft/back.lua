@@ -22,15 +22,23 @@ while true do
         msg = textutils.unserializeJSON(p2)
         if msg.action == 'task' then
             local fn, err = loadstring(msg.code)
-            if fn ~= nil then
-                setfenv(fn, genv)
-                tasks[msg.task_id] = coroutine.create(fn)
-            else
+            if fn == nil then
                 ws.send(textutils.serializeJSON{
                     action='task_result',
                     task_id=msg.task_id,
                     result={false, err},
                 })
+            else
+                setfenv(fn, genv)
+                if msg.immediate then
+                    ws.send(textutils.serializeJSON{
+                        action='task_result',
+                        task_id=msg.task_id,
+                        result={fn()},
+                    })
+                else
+                    tasks[msg.task_id] = coroutine.create(fn)
+                end
             end
         elseif msg.action == 'sub' then
             event_sub[msg.event] = true

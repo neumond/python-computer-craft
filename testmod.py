@@ -105,8 +105,12 @@ def get_class_table(cls):
 
 
 async def test_colors_api(api):
-    assert get_class_table(api.colors.__class__) \
-        == await get_object_table(api, 'colors')
+    tbl = await get_object_table(api, 'colors')
+
+    # use packRGB and unpackRGB
+    del tbl['function']['rgb8']
+
+    assert get_class_table(api.colors.__class__) == tbl
 
     cs = await api.colors.combine(
         api.colors.orange,
@@ -127,12 +131,6 @@ async def test_colors_api(api):
 
     assert await api.colors.packRGB(0.7, 0.2, 0.6) == 0xb23399
     r, g, b = await api.colors.unpackRGB(0xb23399)
-    assert 0.68 < r < 0.72
-    assert 0.18 < g < 0.22
-    assert 0.58 < b < 0.62
-
-    assert await api.colors.rgb8(0.7, 0.2, 0.6) == 0xb23399
-    r, g, b = await api.colors.rgb8(0xb23399)
     assert 0.68 < r < 0.72
     assert 0.18 < g < 0.22
     assert 0.58 < b < 0.62
@@ -635,5 +633,14 @@ async def test_parallel(api):
         # Since os.sleep is mostly waiting for events, it doesn't block execution of parallel threads
         # and this snippet takes approximately 2 seconds to complete.
         await asyncio.gather(api.os.sleep(2), api.os.sleep(2))
+
+    await api.print('Test finished successfully')
+
+
+async def test_term_api(api):
+    from pprint import pprint
+    tbl = await get_object_table(api, 'term')
+
+    pprint(tbl)
 
     await api.print('Test finished successfully')

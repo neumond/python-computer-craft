@@ -1,10 +1,15 @@
 from contextlib import asynccontextmanager
 from typing import Optional, List
 
-from .base import (
-    BaseSubAPI, lua_string,
-    nil_return, opt_str_return, str_return, bool_return,
-    int_return, list_return, dict_return,
+from .base import BaseSubAPI, lua_string
+from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict_kw
+
+
+attribute = fact_scheme_dict_kw(
+    created=integer,
+    modification=integer,
+    isDir=boolean,
+    size=integer,
 )
 
 
@@ -16,13 +21,13 @@ class BaseHandle(BaseSubAPI):
 
 class ReadHandle(BaseHandle):
     async def read(self, count: int) -> Optional[str]:
-        return opt_str_return(await self._send('read', count))
+        return option_string(await self._send('read', count))
 
     async def readLine(self) -> Optional[str]:
-        return opt_str_return(await self._send('readLine'))
+        return option_string(await self._send('readLine'))
 
     async def readAll(self) -> str:
-        return str_return(await self._send('readAll'))
+        return string(await self._send('readAll'))
 
     def __aiter__(self):
         return self
@@ -36,56 +41,56 @@ class ReadHandle(BaseHandle):
 
 class WriteHandle(BaseHandle):
     async def write(self, text: str):
-        return nil_return(await self._send('write', text))
+        return nil(await self._send('write', text))
 
     async def writeLine(self, text: str):
-        return nil_return(await self._send('writeLine', text))
+        return nil(await self._send('writeLine', text))
 
     async def flush(self):
-        return nil_return(await self._send('flush'))
+        return nil(await self._send('flush'))
 
 
 class FSAPI(BaseSubAPI):
     _API = 'fs'
 
     async def list(self, path: str) -> List[str]:
-        return list_return(await self._send('list', path))
+        return array_string(await self._send('list', path))
 
     async def exists(self, path: str) -> bool:
-        return bool_return(await self._send('exists', path))
+        return boolean(await self._send('exists', path))
 
     async def isDir(self, path: str) -> bool:
-        return bool_return(await self._send('isDir', path))
+        return boolean(await self._send('isDir', path))
 
     async def isReadOnly(self, path: str) -> bool:
-        return bool_return(await self._send('isReadOnly', path))
+        return boolean(await self._send('isReadOnly', path))
 
     async def getDrive(self, path: str) -> Optional[str]:
-        return opt_str_return(await self._send('getDrive', path))
+        return option_string(await self._send('getDrive', path))
 
     async def getSize(self, path: str) -> int:
-        return int_return(await self._send('getSize', path))
+        return integer(await self._send('getSize', path))
 
     async def getFreeSpace(self, path: str) -> int:
-        return int_return(await self._send('getFreeSpace', path))
+        return integer(await self._send('getFreeSpace', path))
 
     async def getCapacity(self, path: str) -> int:
-        return int_return(await self._send('getCapacity', path))
+        return integer(await self._send('getCapacity', path))
 
     async def makeDir(self, path: str):
-        return nil_return(await self._send('makeDir', path))
+        return nil(await self._send('makeDir', path))
 
     async def move(self, fromPath: str, toPath: str):
-        return nil_return(await self._send('move', fromPath, toPath))
+        return nil(await self._send('move', fromPath, toPath))
 
     async def copy(self, fromPath: str, toPath: str):
-        return nil_return(await self._send('copy', fromPath, toPath))
+        return nil(await self._send('copy', fromPath, toPath))
 
     async def delete(self, path: str):
-        return nil_return(await self._send('delete', path))
+        return nil(await self._send('delete', path))
 
     async def combine(self, basePath: str, localPath: str) -> str:
-        return str_return(await self._send('combine', basePath, localPath))
+        return string(await self._send('combine', basePath, localPath))
 
     @asynccontextmanager
     async def open(self, path: str, mode: str):
@@ -104,27 +109,27 @@ class FSAPI(BaseSubAPI):
         await self._cc._send_cmd('{} = fs.open({}, {})'.format(
             var, *map(lua_string, [path, mode])))
         try:
-            yield (ReadHandle if mode == 'r' else WriteHandle)(self._cc, var)
+            yield (ReadHandle if 'r' in mode else WriteHandle)(self._cc, var)
         finally:
             await self._cc._send_cmd('{}.close(); {} = nil'.format(var, var))
 
     async def find(self, wildcard: str) -> List[str]:
-        return list_return(await self._send('find', wildcard))
+        return array_string(await self._send('find', wildcard))
 
     async def getDir(self, path: str) -> str:
-        return str_return(await self._send('getDir', path))
+        return string(await self._send('getDir', path))
 
     async def getName(self, path: str) -> str:
-        return str_return(await self._send('getName', path))
+        return string(await self._send('getName', path))
 
     async def isDriveRoot(self, path: str) -> bool:
-        return bool_return(await self._send('isDriveRoot', path))
+        return boolean(await self._send('isDriveRoot', path))
 
     async def complete(
         self, partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
     ) -> List[str]:
-        return list_return(await self._send(
+        return array_string(await self._send(
             'complete', partialName, path, includeFiles, includeDirs, omit_nulls=False))
 
     async def attributes(self, path: str) -> dict:
-        return dict_return(await self._send('attributes', path))
+        return attribute(await self._send('attributes', path))

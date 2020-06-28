@@ -8,7 +8,7 @@ from importlib import import_module
 import argparse
 
 from .subapis.root import RootAPIMixin
-from .errors import LuaException
+from . import rproc
 
 from .subapis.colors import ColorsAPI
 from .subapis.commands import CommandsAPI
@@ -101,24 +101,26 @@ class CCAPI(RootAPIMixin):
         self._task_autoid += 1
         return task_id
 
-    async def raw_eval(self, lua_code):
+    async def raw_eval(self, lua_code, immediate=False):
         task_id = self._new_task_id()
         self._result_locks[task_id] = asyncio.Event()
         await self._cmd.put({
             'action': 'task',
             'task_id': task_id,
             'code': lua_code,
+            'immediate': immediate,
         })
         await self._result_locks[task_id].wait()
         del self._result_locks[task_id]
-        return self._result_values.pop(task_id)
+        result = self._result_values.pop(task_id)
+        print('{} → {}'.format(lua_code, repr(result)))
+        return result
+
+    async def raw_eval_coro(self, lua_code):
+        return rproc.coro(await self.raw_eval(lua_code))
 
     async def _send_cmd(self, lua):
-        result = await self.raw_eval(lua)
-        print('{} → {}'.format(lua, result))
-        if not result[0]:
-            raise LuaException(*result[1:])
-        return result[1:]
+        return await self.raw_eval_coro(lua)
 
     async def _start_queue(self, event):
         task_id = self._new_task_id()
@@ -171,6 +173,12 @@ class CCApplication(web.Application):
                 await ws.send_json({
                     'action': 'close',
                     'error': 'protocol error',
+                })
+                return None
+            if len(msg['args']) == 0:
+                await ws.send_json({
+                    'action': 'close',
+                    'error': 'arguments required',
                 })
                 return None
             module = import_module(self['source_module'])

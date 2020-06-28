@@ -1,6 +1,7 @@
 from typing import Tuple
 
-from .base import BaseSubAPI, bool_return, int_return
+from .base import BaseSubAPI
+from ..rproc import boolean, integer, tuple3_number
 
 
 class ColorsAPI(BaseSubAPI):
@@ -43,23 +44,16 @@ class ColorsAPI(BaseSubAPI):
     }
 
     async def combine(self, *colors: int) -> int:
-        return int_return(await self._send('combine', *colors))
+        return integer(await self._send('combine', *colors))
 
     async def subtract(self, color_set: int, *colors: int) -> int:
-        return int_return(await self._send('subtract', color_set, *colors))
+        return integer(await self._send('subtract', color_set, *colors))
 
     async def test(self, colors: int, color: int) -> bool:
-        return bool_return(await self._send('test', colors, color))
+        return boolean(await self._send('test', colors, color))
 
     async def packRGB(self, r: float, g: float, b: float) -> int:
-        return int_return(await self._send('packRGB', r, g, b))
+        return integer(await self._send('packRGB', r, g, b))
 
     async def unpackRGB(self, rgb: int) -> Tuple[float, float, float]:
-        ret = await self._send('unpackRGB', rgb)
-        assert isinstance(ret, list)
-        assert len(ret) == 3
-        return tuple(ret)
-
-    async def rgb8(self, *args):
-        r = await self._send('rgb8', *args)
-        return r[0] if len(r) == 1 else r
+        return tuple3_number(await self._send('unpackRGB', rgb))

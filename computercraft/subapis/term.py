@@ -1,6 +1,8 @@
 from typing import Tuple
-from .base import BaseSubAPI, nil_return
+
+from .base import BaseSubAPI
 from .mixins import TermMixin
+from ..rproc import nil, tuple2_integer
 
 
 class CCWindow(BaseSubAPI, TermMixin):
@@ -9,27 +11,25 @@ class CCWindow(BaseSubAPI, TermMixin):
         super().__init__(cc)
 
     async def setVisible(self, visibility: bool):
-        return nil_return(await self._send('setVisible', visibility))
+        return nil(await self._send('setVisible', visibility))
 
     async def redraw(self):
-        return nil_return(await self._send('redraw'))
+        return nil(await self._send('redraw'))
 
     async def restoreCursor(self):
-        return nil_return(await self._send('restoreCursor'))
+        return nil(await self._send('restoreCursor'))
 
     async def getPosition(self) -> Tuple[int, int]:
-        return tuple(await self._send('getPosition'))
+        return tuple2_integer(await self._send('getPosition'))
 
     async def reposition(self, x: int, y: int, width: int = None, height: int = None):
-        return nil_return(await self._send('reposition', x, y, width, height))
+        return nil(await self._send('reposition', x, y, width, height))
 
 
 class TermAPI(BaseSubAPI, TermMixin):
     _API = 'term'
 
     # TODO
-    # async def redirect
-
     # term.redirect(target) 	table previous terminal object
     # term.current() 	table terminal object
     # term.native() 	table terminal object
