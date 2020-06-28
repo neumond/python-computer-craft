@@ -37,23 +37,23 @@ class TermMixin:
     async def scroll(self, lines: int):
         return nil(await self._send('scroll', lines))
 
-    async def setTextColor(self, color: int):
-        return nil(await self._send('setTextColor', color))
+    async def setTextColor(self, colorID: int):
+        return nil(await self._send('setTextColor', colorID))
 
     async def getTextColor(self) -> int:
         return integer(await self._send('getTextColor'))
 
-    async def setBackgroundColor(self, color: int):
-        return nil(await self._send('setBackgroundColor', color))
+    async def setBackgroundColor(self, colorID: int):
+        return nil(await self._send('setBackgroundColor', colorID))
 
     async def getBackgroundColor(self) -> int:
         return integer(await self._send('getBackgroundColor'))
 
-    async def getPaletteColor(self, index: int) -> Tuple[float, float, float]:
-        return tuple3_number(await self._send('getPaletteColor', index))
+    async def getPaletteColor(self, colorID: int) -> Tuple[float, float, float]:
+        return tuple3_number(await self._send('getPaletteColor', colorID))
 
-    async def setPaletteColor(self, index: int, r: float, g: float, b: float):
-        return nil(await self._send('setPaletteColor', index, r, g, b))
+    async def setPaletteColor(self, colorID: int, r: float, g: float, b: float):
+        return nil(await self._send('setPaletteColor', colorID, r, g, b))
 
-    async def nativePaletteColor(self, index: int) -> Tuple[float, float, float]:
-        return tuple3_number(await self._send('nativePaletteColor', index))
+    async def nativePaletteColor(self, colorID: int) -> Tuple[float, float, float]:
+        return tuple3_number(await self._send('nativePaletteColor', colorID))

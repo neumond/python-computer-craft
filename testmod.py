@@ -639,10 +639,116 @@ async def test_parallel(api):
     await api.print('Test finished successfully')
 
 
+async def term_step(api, text):
+    for color in api.colors:
+        r, g, b = await api.term.nativePaletteColor(color)
+        await api.term.setPaletteColor(color, r, g, b)
+    await api.term.setBackgroundColor(api.colors.black)
+    await api.term.setTextColor(api.colors.white)
+    await api.term.clear()
+    await api.term.setCursorPos(1, 1)
+    await api.term.setCursorBlink(True)
+    await step(api, text)
+
+
 async def test_term_api(api):
-    from pprint import pprint
+    from computercraft.subapis.mixins import TermMixin
+
     tbl = await get_object_table(api, 'term')
 
-    pprint(tbl)
+    # not defined in TermMixin
+    del tbl['function']['redirect']
+    del tbl['function']['current']
+    del tbl['function']['native']
+
+    # remove British method names to make API lighter
+    del tbl['function']['getBackgroundColour']
+    del tbl['function']['getPaletteColour']
+    del tbl['function']['getTextColour']
+    del tbl['function']['isColour']
+    del tbl['function']['nativePaletteColour']
+    del tbl['function']['setBackgroundColour']
+    del tbl['function']['setPaletteColour']
+    del tbl['function']['setTextColour']
+
+    assert get_class_table(TermMixin) == tbl
+
+    await step(api, 'Detach all monitors\nUse advanced computer for colors\nScreen will be cleared')
+
+    assert await api.term.getSize() == (51, 19)
+    assert await api.term.isColor() is True
+    assert await api.term.clear() is None
+    assert await api.term.setCursorPos(1, 1) is None
+    assert await api.term.getCursorPos() == (1, 1)
+    assert await api.term.write('Alpha') is None
+    assert await api.term.getCursorPos() == (6, 1)
+    assert await api.term.setCursorBlink(False) is None
+    assert await api.term.getCursorBlink() is False
+    assert await api.term.setCursorBlink(True) is None
+    assert await api.term.getCursorBlink() is True
+    await asyncio.sleep(2)
+
+    await term_step(api, 'You must have seen word Alpha with blinking cursor')
+
+    assert await api.term.clear() is None
+    for offs, (tc, bc) in enumerate((
+        (api.colors.lime, api.colors.green),
+        (api.colors.yellow, api.colors.brown),
+        (api.colors.red, api.colors.orange),
+    ), start=1):
+        assert await api.term.setTextColor(tc) is None
+        assert await api.term.getTextColor() == tc
+        assert await api.term.setBackgroundColor(bc) is None
+        assert await api.term.getBackgroundColor() == bc
+        assert await api.term.setCursorPos(offs * 2, offs) is None
+        assert await api.term.getCursorPos() == (offs * 2, offs)
+        assert await api.term.write('text with colors') is None
+    assert await api.term.setBackgroundColor(api.colors.black) is None
+    await asyncio.sleep(1)
+    for i in range(3):
+        assert await api.term.scroll(-2) is None
+        await asyncio.sleep(0.5)
+    for i in range(6):
+        assert await api.term.scroll(1) is None
+        await asyncio.sleep(0.25)
+
+    await term_step(api, 'You must have seen three texts with different colors scrolling')
+
+    assert await api.term.clear() is None
+    for i in range(1, 10):
+        assert await api.term.setCursorPos(1, i) is None
+        assert await api.term.write((str(i) + '  ') * 10) is None
+    await asyncio.sleep(2)
+    for i in range(2, 10, 2):
+        assert await api.term.setCursorPos(1, i) is None
+        assert await api.term.clearLine() is None
+    await asyncio.sleep(2)
+
+    await term_step(api, 'You must have seen some lines disappearing')
+
+    assert await api.term.clear() is None
+    assert await api.term.setCursorPos(1, 1) is None
+    assert await api.term.blit(
+        'rainbowrainbow',
+        'e14d3ba0000000',
+        'fffffffe14d3ba',
+    ) is None
+    await asyncio.sleep(3)
+
+    await term_step(api, 'You must have seen per-letter colored text')
+
+    assert await api.term.setBackgroundColor(api.colors.white) is None
+    assert await api.term.clear() is None
+    assert await api.term.setCursorPos(1, 1) is None
+    for i, color in enumerate(api.colors):
+        await api.term.setPaletteColor(color, i / 15, 0, 0)
+    assert await api.term.blit(
+        ' redtextappears!',
+        '0123456789abcdef',
+        '0000000000000000',
+    ) is None
+    await asyncio.sleep(3)
+
+    await term_step(api, 'You must have seen different shades of red made using palettes')
 
     await api.print('Test finished successfully')

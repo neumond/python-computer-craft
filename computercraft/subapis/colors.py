@@ -24,6 +24,7 @@ class ColorsAPI(BaseSubAPI):
     red = 0x4000
     black = 0x8000
 
+    # use these chars for term.blit
     chars = {
         '0': white,
         '1': orange,
@@ -42,6 +43,10 @@ class ColorsAPI(BaseSubAPI):
         'e': red,
         'f': black,
     }
+
+    def __iter__(self):
+        for c in self.chars.values():
+            yield c
 
     async def combine(self, *colors: int) -> int:
         return integer(await self._send('combine', *colors))
