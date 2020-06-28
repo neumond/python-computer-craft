@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import contextmanager
+from time import monotonic
 from types import FunctionType
 
 from computercraft.errors import LuaException, CommandException
@@ -13,12 +14,6 @@ async def id(api):
     await api.print('ID', await api.os.getComputerID())
     await api.print('Label', await api.os.getComputerLabel())
     await api.print('Version', await api.os.version())
-
-
-async def parallel(api):
-    # Since os.sleep is mostly waiting for events, it doesn't block execution of parallel threads
-    # and this snippet takes approximately 2 seconds to complete.
-    await asyncio.gather(api.os.sleep(2), api.os.sleep(2))
 
 
 async def move(api):
@@ -47,6 +42,15 @@ def assert_raises(etype):
         assert isinstance(e, etype)
     else:
         raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = monotonic()
+    yield
+    dt = monotonic() - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
 
 
 class AnyInstanceOf:
@@ -506,8 +510,130 @@ async def test_gps_command_computer(api):
 
 
 async def test_keys_api(api):
-    assert await api.keys.getName(65) == 'a'
-    assert await api.keys.getName(32) == 'space'
-    assert await api.keys.getName(13) is None  # wtf?
+    a = await api.keys.getCode('a')
+    space = await api.keys.getCode('space')
+    enter = await api.keys.getCode('enter')
+    assert await api.keys.getCode('doesnotexist') is None
+    assert await api.keys.getCode('getName') is None
+    assert isinstance(a, int)
+    assert isinstance(space, int)
+    assert isinstance(enter, int)
+
+    assert await api.keys.getName(a) == 'a'
+    assert await api.keys.getName(space) == 'space'
+    assert await api.keys.getName(enter) == 'enter'
+
     # for i in range(255):
     #     print(i, await api.keys.getName(i))
+
+    await api.print('Test finished successfully')
+
+
+async def test_help_api(api):
+    assert get_class_table(api.help.__class__) \
+        == await get_object_table(api, 'help')
+
+    await api.help.setPath('/rom/help')
+
+    assert await api.help.path() == '/rom/help'
+
+    assert await api.help.lookup('disk') == 'rom/help/disk.txt'
+    assert await api.help.lookup('abracadabra') is None
+
+    ts = await api.help.topics()
+    assert isinstance(ts, list)
+    assert len(ts) > 2
+    # print(ts)
+    assert 'disk' in ts
+
+    assert await api.help.completeTopic('di') == ['sk']
+    assert await api.help.completeTopic('abracadabra') == []
+
+    assert await api.help.setPath('/kek') is None
+    assert await api.help.path() == '/kek'
+    assert await api.help.topics() == ['index']
+    assert await api.help.setPath('/rom/help') is None
+
+    await api.print('Test finished successfully')
+
+
+async def test_reboot(api):
+    assert await api.os.reboot() is None
+    await api.print('Test finished successfully')
+
+
+async def test_shutdown(api):
+    assert await api.os.shutdown() is None
+    await api.print('Test finished successfully')
+
+
+async def test_os_api(api):
+    tbl = await get_object_table(api, 'os')
+
+    # use methods with get*
+    del tbl['function']['computerID']
+    del tbl['function']['computerLabel']
+
+    # use captureEvent
+    del tbl['function']['pullEvent']
+    del tbl['function']['pullEventRaw']
+
+    # we are in python world, loading lua modules is useless
+    del tbl['function']['loadAPI']
+    del tbl['function']['unloadAPI']
+
+    # remove complex date formatting function in favor of python stdlib
+    del tbl['function']['date']
+
+    tbl['function']['captureEvent'] = True
+
+    assert get_class_table(api.os.__class__) == tbl
+
+    with assert_takes_time(1.5, 3):
+        async with api.os.captureEvent('timer') as timer_queue:
+            timer_id = await api.os.startTimer(2)
+            async for etid, in timer_queue:
+                if etid == timer_id:
+                    await api.print('Timer reached')
+                    break
+
+    timer_id = await api.os.startTimer(20)
+    assert isinstance(timer_id, int)
+    assert await api.os.cancelTimer(timer_id) is None
+    assert await api.os.cancelTimer(timer_id) is None
+
+    alarm_id = await api.os.setAlarm(0.0)
+    assert isinstance(alarm_id, int)
+    assert await api.os.cancelAlarm(alarm_id) is None
+    assert await api.os.cancelAlarm(alarm_id) is None
+
+    with assert_takes_time(1.5, 3):
+        assert await api.os.sleep(2) is None
+
+    assert (await api.os.version()).startswith('CraftOS ')
+    assert isinstance(await api.os.getComputerID(), int)
+
+    assert await api.os.setComputerLabel(None) is None
+    assert await api.os.getComputerLabel() is None
+    assert await api.os.setComputerLabel('altair') is None
+    assert await api.os.getComputerLabel() == 'altair'
+    assert await api.os.setComputerLabel(None) is None
+    assert await api.os.getComputerLabel() is None
+
+    assert isinstance(await api.os.epoch(), int)
+    assert isinstance(await api.os.day(), int)
+    assert isinstance(await api.os.time(), (int, float))
+    assert isinstance(await api.os.clock(), (int, float))
+
+    # TODO: run method
+
+    await api.print('Test finished successfully')
+
+
+async def test_parallel(api):
+    with assert_takes_time(1.5, 3):
+        # Since os.sleep is mostly waiting for events, it doesn't block execution of parallel threads
+        # and this snippet takes approximately 2 seconds to complete.
+        await asyncio.gather(api.os.sleep(2), api.os.sleep(2))
+
+    await api.print('Test finished successfully')

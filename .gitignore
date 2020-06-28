@@ -4,3 +4,4 @@ __pypackages__/
 /build/
 /*.egg-info/
 /dist/
+/todo.txt

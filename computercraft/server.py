@@ -192,7 +192,7 @@ class CCApplication(web.Application):
             asyncio.create_task(self._sender(ws, api))
             async for msg in self._json_messages(ws):
                 if msg['action'] == 'event':
-                    for task_id in self._event_to_tids.get(msg['event'], ()):
+                    for task_id in api._event_to_tids.get(msg['event'], ()):
                         await api._result_queues[task_id].put(msg['params'])
                 elif msg['action'] == 'task_result':
                     api._result_values[msg['task_id']] = msg['result']

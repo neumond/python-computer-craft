@@ -30,8 +30,8 @@ class TermMixin:
     async def getSize(self) -> Tuple[int, int]:
         return tuple(await self._send('getSize'))
 
-    async def scroll(self, n: int):
-        return nil_return(await self._send('scroll', n))
+    async def scroll(self, lines: int):
+        return nil_return(await self._send('scroll', lines))
 
     async def setTextColor(self, color: int):
         return nil_return(await self._send('setTextColor', color))
