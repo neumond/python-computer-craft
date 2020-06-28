@@ -1,6 +1,6 @@
 from typing import Optional, List, Tuple, Any
 
-from .base import BaseSubAPI, bool_success
+from .base import BaseSubAPI
 from .mixins import TermMixin
 from ..rproc import boolean, nil, integer, string, option_integer, option_string, tuple2_integer, array_string
 

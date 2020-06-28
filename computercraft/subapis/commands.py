@@ -1,32 +1,17 @@
 from typing import Tuple, List, Optional
 
 from .base import BaseSubAPI
-from ..errors import CommandException
-from ..rproc import tuple3_integer, any_dict, any_list, array_string, integer
+from ..rproc import tuple3_integer, any_dict, any_list, array_string, integer, fact_tuple, boolean, option_integer
+
+
+command_result = fact_tuple(boolean, array_string, option_integer, tail_nils=1)
 
 
 class CommandsAPI(BaseSubAPI):
     _API = 'commands'
 
-    async def exec(self, command: str) -> Tuple[str, Optional[int]]:
-        # TODO: use rproc
-        r = await self._send('exec', command)
-        assert len(r) == 3
-        assert isinstance(r[0], bool)
-
-        if r[1] == {}:
-            r[1] = []
-        assert isinstance(r[1], list)
-        r[1] = '\n'.join(r[1])
-
-        if r[2] is None:
-            r[2] = 0
-        assert isinstance(r[2], int)
-
-        if r[0] is False:
-            raise CommandException(r[1])
-
-        return r[1], r[2]
+    async def exec(self, command: str) -> Tuple[bool, List[str], Optional[int]]:
+        return command_result(await self._send('exec', command))
 
     async def execAsync(self, command: str) -> int:
         return integer(await self._send('execAsync', command))

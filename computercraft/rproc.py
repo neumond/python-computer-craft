@@ -3,13 +3,15 @@ from .errors import LuaException
 
 def coro(result):
     assert isinstance(result, list)
-    if len(result) < 2:
-        result.append(None)
-    assert len(result) == 2
-    success, result = result
+    assert len(result) >= 1
+    success, *result = result
     assert isinstance(success, bool)
     if not success:
         raise LuaException(result)
+    if result == []:
+        return None
+    if len(result) == 1:
+        return result[0]
     return result
 
 
@@ -52,10 +54,13 @@ def any_list(result):
     return result
 
 
-def fact_tuple(*components):
+def fact_tuple(*components, tail_nils=0):
     def proc(result):
         result = any_list(result)
-        assert len(components) == result
+        assert len(components) + tail_nils >= len(result) >= len(components)
+        while len(result) < len(components):
+            result.append(None)
+        assert len(components) == len(result)
         return tuple(comp(value) for comp, value in zip(components, result))
     return proc
 

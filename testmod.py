@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from time import monotonic
 from types import FunctionType
 
-from computercraft.errors import LuaException, CommandException
+from computercraft.errors import LuaException
 
 
 async def hello(api):
@@ -257,14 +257,16 @@ async def test_commands_api(api):
     for c in cmdlist:
         assert isinstance(c, str)
 
-    assert await api.commands.exec('say Hello!') == ('', AnyInstanceOf(int))
+    assert await api.commands.exec('say Hello!') == (True, [], AnyInstanceOf(int))
 
-    with assert_raises(CommandException):
-        await api.commands.exec('tp hajejndlasksdkelefsns fjeklaskslekffjslas')
+    d = await api.commands.exec('tp hajejndlasksdkelefsns fjeklaskslekffjslas')
+    assert d[0] is False
 
     d = await api.commands.exec('difficulty')
-    assert d[0].startswith('The difficulty is ')
-    assert isinstance(d[1], int)
+    assert d[0] is True
+    assert len(d[1]) == 1
+    assert d[1][0].startswith('The difficulty is ')
+    assert isinstance(d[2], int)
 
     await api.print('Test finished successfully')
 
