@@ -1,6 +1,7 @@
 from typing import Any, List
 
-from .base import BaseSubAPI, LuaNum
+from .base import BaseSubAPI
+from ..lua import LuaNum
 from ..rproc import nil, integer, boolean, array_integer
 
 

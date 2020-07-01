@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from typing import Optional, List
 
-from .base import BaseSubAPI, lua_string
+from .base import BaseSubAPI
+from ..lua import LuaExpr, lua_string
 from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict
 
 
@@ -13,10 +14,13 @@ attribute = fact_scheme_dict({
 }, {})
 
 
-class BaseHandle(BaseSubAPI):
+class BaseHandle(BaseSubAPI, LuaExpr):
     def __init__(self, cc, var):
         super().__init__(cc)
         self._API = var
+
+    def get_expr_code(self):
+        return self._API
 
 
 class ReadHandle(BaseHandle):
@@ -106,12 +110,12 @@ class FSAPI(BaseSubAPI):
         '''
         fid = self._cc._new_task_id()
         var = 'temp[{}]'.format(lua_string(fid))
-        await self._cc._send_cmd('{} = fs.open({}, {})'.format(
+        await self._cc.eval_coro('{} = fs.open({}, {})'.format(
             var, *map(lua_string, [path, mode])))
         try:
             yield (ReadHandle if 'r' in mode else WriteHandle)(self._cc, var)
         finally:
-            await self._cc._send_cmd('{}.close(); {} = nil'.format(var, var))
+            await self._cc.eval_coro('{}.close(); {} = nil'.format(var, var))
 
     async def find(self, wildcard: str) -> List[str]:
         return array_string(await self._send('find', wildcard))

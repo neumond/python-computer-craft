@@ -1,6 +1,7 @@
 from typing import Tuple, Optional
 
-from .base import BaseSubAPI, LuaNum
+from .base import BaseSubAPI
+from ..lua import LuaNum
 from ..rproc import tuple3_number, fact_option
 
 

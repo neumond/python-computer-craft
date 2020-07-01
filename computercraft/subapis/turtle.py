@@ -1,6 +1,7 @@
 from typing import Optional
 
-from .base import BaseSubAPI, LuaNum
+from .base import BaseSubAPI
+from ..lua import LuaNum
 from ..errors import LuaException
 from ..rproc import nil, integer, number, boolean, fact_option, any_dict
 

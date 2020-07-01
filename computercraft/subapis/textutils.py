@@ -1,6 +1,7 @@
 from typing import List, Union
 
-from .base import BaseSubAPI, LuaNum
+from .base import BaseSubAPI
+from ..lua import LuaNum
 from ..rproc import nil, string, integer
 
 

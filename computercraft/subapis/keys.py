@@ -1,6 +1,7 @@
 from typing import Optional
 
-from .base import BaseSubAPI, lua_string
+from .base import BaseSubAPI
+from ..lua import lua_string
 from ..rproc import option_integer, option_string
 
 
@@ -10,7 +11,7 @@ class KeysAPI(BaseSubAPI):
     async def getCode(self, name: str) -> Optional[int]:
         # replaces properties
         # keys.space → await api.keys.getCode('space')
-        return option_integer(await self._cc._send_cmd('''
+        return option_integer(await self._cc.eval_coro('''
 if type({api}[{key}]) == 'number' then
     return {api}[{key}]
 end

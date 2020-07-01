@@ -2,8 +2,9 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Any, Union
 
-from .base import BaseSubAPI, LuaNum
+from .base import BaseSubAPI
 from .mixins import TermMixin
+from ..lua import LuaNum
 from ..rproc import (
     boolean, nil, integer, string, option_integer, option_string,
     tuple2_integer, array_string, option_string_bool, try_result,

@@ -25,7 +25,7 @@ async def move(api):
 
 async def t1(api):
     await api.print('kek')
-    result = await api.raw_eval("return 'jopa\\njopa'")
+    result = await api.eval("return 'jopa\\njopa'")
     await api.print(f'{result}')
     raise IndexError
 
@@ -68,7 +68,7 @@ async def step(api, text):
 
 
 async def get_object_table(api, objname):
-    r = await api.raw_eval(f"""
+    r = await api.eval(f"""
 local r = {{}}
 for k in pairs({objname}) do
     local t = type({objname}[k])

@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from typing import Optional, List
 
-from .base import BaseSubAPI, LuaTable, LuaNum
+from .base import BaseSubAPI
+from ..lua import LuaTable, LuaNum
 from ..rproc import nil, string, option_string, number, integer, boolean
 
 

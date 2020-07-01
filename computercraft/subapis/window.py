@@ -1,4 +1,5 @@
-from .base import BaseSubAPI, LuaTable
+from .base import BaseSubAPI
+from ..lua import LuaTable
 
 
 class WindowAPI(BaseSubAPI):

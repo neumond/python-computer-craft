@@ -103,7 +103,7 @@ class CCAPI(RootAPIMixin):
         self._task_autoid += 1
         return task_id
 
-    async def raw_eval(self, lua_code, immediate=False):
+    async def _eval(self, lua_code, immediate=False):
         task_id = self._new_task_id()
         self._result_locks[task_id] = asyncio.Event()
         await self._cmd.put({
@@ -118,11 +118,11 @@ class CCAPI(RootAPIMixin):
         print('{} → {}'.format(lua_code, repr(result)))
         return result
 
-    async def raw_eval_coro(self, lua_code):
-        return rproc.coro(await self.raw_eval(lua_code))
+    async def eval(self, lua_code):
+        return await self._eval(lua_code, True)
 
-    async def _send_cmd(self, lua):
-        return await self.raw_eval_coro(lua)
+    async def eval_coro(self, lua_code):
+        return rproc.coro(await self._eval(lua_code, False))
 
     async def _start_queue(self, event):
         task_id = self._new_task_id()
