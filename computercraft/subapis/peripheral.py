@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, Any, Union
 
 from .base import BaseSubAPI
-from .mixins import TermMixin
+from .mixins import TermMixin, TermTarget
 from ..lua import LuaNum, lua_args
 from ..rproc import (
     boolean, nil, integer, string, option_integer, option_string,
@@ -118,6 +118,10 @@ class ModemMixin:
     async def isWireless(self) -> bool:
         return boolean(await self._send('isWireless'))
 
+    @property
+    def _side(self):
+        return self._prepend_params[0]
+
     def _mk_recv_filter(self, channel):
         def filter(msg):
             if msg[0] != self._side:
@@ -159,6 +163,7 @@ class CCWiredModem(BasePeripheral, ModemMixin):
 
     async def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
         # use instead getMethodsRemote and callRemote
+        # NOTE: you can also use peripheral.wrap(peripheralName)
 
         ptype = await self.getTypeRemote(peripheralName)
         if ptype is None:
@@ -169,6 +174,8 @@ class CCWiredModem(BasePeripheral, ModemMixin):
             self._lua_method_expr, *self._prepend_params,
             'callRemote', peripheralName,
         )
+
+    # NOTE: for TermTarget use peripheral.get_term_target(peripheralName)
 
 
 class CCPrinter(BasePeripheral):
@@ -276,3 +283,9 @@ class PeripheralAPI(BaseSubAPI):
                 return CCWiredModem(self._cc, m, side)
         else:
             return TYPE_MAP[ptype](self._cc, m, side)
+
+    def get_term_target(self, side: str) -> TermTarget:
+        return TermTarget('{}.wrap({})'.format(
+            self.get_expr_code(),
+            lua_args(side),
+        ))

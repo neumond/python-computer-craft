@@ -116,6 +116,7 @@ def fact_mono_dict(key, value):
 tuple3_number = fact_tuple(number, number, number)
 tuple2_integer = fact_tuple(integer, integer)
 tuple3_integer = fact_tuple(integer, integer, integer)
+tuple3_string = fact_tuple(string, string, string)
 array_integer = fact_array(integer)
 array_string = fact_array(string)
 option_integer = fact_option(integer)

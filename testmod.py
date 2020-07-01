@@ -1,6 +1,6 @@
 import asyncio
 import random
-from contextlib import contextmanager
+from contextlib import contextmanager, AsyncExitStack
 from time import monotonic
 from types import FunctionType
 
@@ -1628,6 +1628,108 @@ async def test_shell(api):
     await step(api, 'Computer will shutdown after test due to shell.exit')
 
     assert await api.shell.exit() is None
+
+    await api.print('Test finished successfully')
+
+
+async def test_window(api):
+    async with api.window.create(
+        api.term.get_current_target(),
+        15, 5, 5, 5, False,
+    ) as win:
+        assert await win.getPosition() == (15, 5)
+        assert await win.getSize() == (5, 5)
+
+        await win.setBackgroundColor(api.colors.red)
+        await win.clear()
+        await win.setVisible(True)
+
+        await asyncio.sleep(1)
+
+        await win.setVisible(False)
+        await win.setCursorPos(1, 1)
+        await win.setTextColor(api.colors.yellow)
+        await win.write('*********')
+        await win.setVisible(True)
+
+        await asyncio.sleep(1)
+
+        await api.term.clear()
+
+        await asyncio.sleep(1)
+
+        await win.redraw()
+        assert await win.getLine(1) == ('*****', '44444', 'eeeee')
+
+        # draws immediately
+        await win.reposition(21, 5)
+        await win.reposition(27, 5)
+
+    await api.print('Test finished successfully')
+
+
+async def test_redirect_to_window(api):
+    w, h = await api.term.getSize()
+    async with AsyncExitStack() as stack:
+        left = await stack.enter_async_context(api.window.create(
+            api.term.get_current_target(),
+            1, 1, w // 2, h, True,
+        ))
+        right = await stack.enter_async_context(api.window.create(
+            api.term.get_current_target(),
+            w // 2 + 1, 1, w // 2, h, True,
+        ))
+        async with api.term.redirect(left.get_term_target()):
+            await api.term.setBackgroundColor(api.colors.green)
+            await api.term.setTextColor(api.colors.white)
+            await api.term.clear()
+            await api.term.setCursorPos(1, h // 2)
+            await api.print('Left part')
+        async with api.term.redirect(right.get_term_target()):
+            await api.term.setBackgroundColor(api.colors.red)
+            await api.term.setTextColor(api.colors.yellow)
+            await api.term.clear()
+            await api.term.setCursorPos(1, h // 2)
+            await api.print('Right part')
+        await api.print('Default terminal restored')
+
+    await api.print('Test finished successfully')
+
+
+async def test_redirect_to_local_monitor(api):
+    side = 'left'
+    await step(api, f'Attach 3x3 color monitor to {side} side of computer')
+
+    async with api.term.redirect(api.peripheral.get_term_target(side)):
+        await api.term.setBackgroundColor(api.colors.green)
+        await api.term.setTextColor(api.colors.white)
+        await api.term.clear()
+        await api.term.setCursorPos(1, 1)
+        await api.print('Redirected to monitor')
+
+    await api.print('Test finished successfully')
+
+
+async def test_redirect_to_remote_monitor(api):
+    side = 'back'
+    await step(api, f'Attach wired modem to {side} side of computer')
+
+    mod = await api.peripheral.wrap(side)
+
+    await step(api, 'Connect remote monitor using wires, activate its modem')
+
+    for name in await mod.getNamesRemote():
+        if await mod.getTypeRemote(name) == 'monitor':
+            break
+    else:
+        assert False
+
+    async with api.term.redirect(api.peripheral.get_term_target(name)):
+        await api.term.setBackgroundColor(api.colors.blue)
+        await api.term.setTextColor(api.colors.white)
+        await api.term.clear()
+        await api.term.setCursorPos(1, 1)
+        await api.print('Redirected to monitor')
 
     await api.print('Test finished successfully')
 

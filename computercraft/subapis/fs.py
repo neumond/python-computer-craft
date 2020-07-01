@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Optional, List
 
 from .base import BaseSubAPI
-from ..lua import lua_string
+from ..lua import lua_args
 from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict
 
 
@@ -97,14 +97,13 @@ class FSAPI(BaseSubAPI):
             async for line in f:
                 ...
         '''
-        fid = self._cc._new_task_id()
-        var = 'temp[{}]'.format(lua_string(fid))
-        await self._cc.eval_coro('{} = fs.open({}, {})'.format(
-            var, lua_string(path), lua_string(mode)))
-        try:
+        create_expr = '{}.open({})'.format(
+            self.get_expr_code(),
+            lua_args(path, mode),
+        )
+        fin_tpl = '{e}.close()'
+        async with self._cc._create_temp_object(create_expr, fin_tpl) as var:
             yield (ReadHandle if 'r' in mode else WriteHandle)(self._cc, var)
-        finally:
-            await self._cc.eval_coro('{}.close(); {} = nil'.format(var, var))
 
     async def find(self, wildcard: str) -> List[str]:
         return array_string(await self._send('find', wildcard))

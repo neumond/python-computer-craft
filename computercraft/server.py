@@ -2,12 +2,14 @@ import asyncio
 import json
 import string
 from aiohttp import web, WSMsgType
+from contextlib import asynccontextmanager
 from traceback import print_exc
 from os.path import join, dirname, abspath
 from importlib import import_module
 import argparse
 
 from .subapis.root import RootAPIMixin
+from .lua import lua_string
 from . import rproc
 
 from .subapis.colors import ColorsAPI
@@ -147,6 +149,18 @@ class CCAPI(RootAPIMixin):
                 'action': 'unsub',
                 'event': event,
             })
+
+    @asynccontextmanager
+    async def _create_temp_object(self, create_expr: str, finalizer_template: str = ''):
+        fid = self._new_task_id()
+        var = 'temp[{}]'.format(lua_string(fid))
+        await self.eval_coro('{} = {}'.format(var, create_expr))
+        try:
+            yield var
+        finally:
+            finalizer_template += '; {e} = nil'
+            finalizer_template = finalizer_template.lstrip(' ;')
+            await self.eval_coro(finalizer_template.format(e=var))
 
 
 class CCApplication(web.Application):

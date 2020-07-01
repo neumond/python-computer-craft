@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Optional, List
 
 from .base import BaseSubAPI
-from ..lua import LuaTable, LuaNum
+from ..lua import LuaNum
 from ..rproc import nil, string, option_string, number, integer, boolean
 
 
@@ -36,7 +36,7 @@ class OSAPI(BaseSubAPI):
     async def setComputerLabel(self, label: Optional[str]):
         return nil(await self._send('setComputerLabel', label))
 
-    async def run(self, environment: LuaTable, programPath: str, *args: List[str]):
+    async def run(self, environment: dict, programPath: str, *args: List[str]):
         return boolean(await self._send('run', environment, programPath, *args))
 
     @asynccontextmanager

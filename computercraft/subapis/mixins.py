@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from ..lua import LuaExpr
 from ..rproc import boolean, nil, integer, tuple3_number, tuple2_integer
 
 
@@ -54,3 +55,11 @@ class TermMixin:
 
     async def setPaletteColor(self, colorID: int, r: float, g: float, b: float):
         return nil(await self._send('setPaletteColor', colorID, r, g, b))
+
+
+class TermTarget(LuaExpr):
+    def __init__(self, code):
+        self._code = code
+
+    def get_expr_code(self):
+        return self._code
