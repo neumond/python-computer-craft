@@ -254,9 +254,10 @@ async def test_commands_api(api):
             'y': xyz[1],
             'z': xyz[2],
             'ComputerId': AnyInstanceOf(int),
-            'id': 'computercraft:command_computer',
+            'id': 'computercraft:computer_command',
             'On': 1,
         },
+        'tags': {},
     }
 
     assert await api.commands.getBlockInfo(*xyz) == expected_binfo
@@ -283,9 +284,6 @@ async def test_commands_api(api):
 
 
 async def test_fs_api(api):
-    from pprint import pprint
-    pprint(get_class_table(api.fs.__class__))
-    pprint(await get_object_table(api, 'fs'))
     assert get_class_table(api.fs.__class__) \
         == await get_object_table(api, 'fs')
 
