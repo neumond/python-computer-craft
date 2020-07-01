@@ -54,6 +54,3 @@ class TermMixin:
 
     async def setPaletteColor(self, colorID: int, r: float, g: float, b: float):
         return nil(await self._send('setPaletteColor', colorID, r, g, b))
-
-    async def nativePaletteColor(self, colorID: int) -> Tuple[float, float, float]:
-        return tuple3_number(await self._send('nativePaletteColor', colorID))

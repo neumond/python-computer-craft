@@ -1,16 +1,7 @@
 from typing import Optional, Union
 
 from .base import BaseSubAPI
-from ..rproc import boolean, string, nil, option_integer, option_string, fact_option, fact_union
-
-
-option_string_bool = fact_option(fact_union(
-    (
-        lambda v: v is True or v is False,
-        boolean,
-    ),
-    pelse=string,
-))
+from ..rproc import boolean, nil, option_integer, option_string, option_string_bool
 
 
 class DiskAPI(BaseSubAPI):

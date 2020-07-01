@@ -1,13 +1,20 @@
-from typing import Optional, List, Tuple, Any
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from typing import Optional, List, Tuple, Any, Union
 
-from .base import BaseSubAPI
+from .base import BaseSubAPI, LuaNum
 from .mixins import TermMixin
-from ..rproc import boolean, nil, integer, string, option_integer, option_string, tuple2_integer, array_string
+from ..errors import LuaException
+from ..rproc import (
+    boolean, nil, integer, string, option_integer, option_string,
+    tuple2_integer, array_string, option_string_bool, fact_tuple,
+)
 
 
 class CCPeripheral(BaseSubAPI):
-    def __init__(self, cc, call_fn):
+    def __init__(self, cc, side, call_fn):
         super().__init__(cc)
+        self._side = side
         self._send = call_fn
 
 
@@ -30,8 +37,8 @@ class CCDrive(CCPeripheral):
     async def hasAudio(self) -> bool:
         return boolean(await self._send('hasAudio'))
 
-    async def getAudioTitle(self) -> Optional[str]:
-        return option_string(await self._send('getAudioTitle'))
+    async def getAudioTitle(self) -> Optional[Union[bool, str]]:
+        return option_string_bool(await self._send('getAudioTitle'))
 
     async def playAudio(self):
         return nil(await self._send('playAudio'))
@@ -47,6 +54,9 @@ class CCDrive(CCPeripheral):
 
 
 class CCMonitor(CCPeripheral, TermMixin):
+    async def getTextScale(self) -> int:
+        return integer(await self._send('getTextScale'))
+
     async def setTextScale(self, scale: int):
         return nil(await self._send('setTextScale', scale))
 
@@ -64,11 +74,21 @@ class CCComputer(CCPeripheral):
     async def getID(self) -> int:
         return integer(await self._send('getID'))
 
+    async def getLabel(self) -> Optional[str]:
+        return option_string(await self._send('getLabel'))
+
     async def isOn(self) -> bool:
         return boolean(await self._send('isOn'))
 
 
-class CCModem(CCPeripheral):
+@dataclass
+class ModemMessage:
+    reply_channel: int
+    content: Any
+    distance: LuaNum
+
+
+class ModemMixin:
     async def isOpen(self, channel: int) -> bool:
         return boolean(await self._send('isOpen', channel))
 
@@ -87,13 +107,41 @@ class CCModem(CCPeripheral):
     async def isWireless(self) -> bool:
         return boolean(await self._send('isWireless'))
 
-    # wired only functions below
+    def _mk_recv_filter(self, channel):
+        def filter(msg):
+            if msg[0] != self._side:
+                return False, None
+            if msg[1] != channel:
+                return False, None
+            return True, ModemMessage(*msg[2:])
+        return filter
+
+    @asynccontextmanager
+    async def receive(self, channel: int):
+        if await self.isOpen(channel):
+            raise Exception('Channel is busy')
+        await self.open(channel)
+        try:
+            async with self._cc.os.captureEvent('modem_message') as q:
+                q.filter = self._mk_recv_filter(channel)
+                yield q
+        finally:
+            await self.close(channel)
+
+
+class CCWirelessModem(CCPeripheral, ModemMixin):
+    pass
+
+
+class CCWiredModem(CCPeripheral, ModemMixin):
+    async def getNameLocal(self) -> Optional[str]:
+        return option_string(await self._send('getNameLocal'))
 
     async def getNamesRemote(self) -> List[str]:
         return array_string(await self._send('getNamesRemote'))
 
-    async def getTypeRemote(self, peripheralName: str) -> str:
-        return string(await self._send('getTypeRemote', peripheralName))
+    async def getTypeRemote(self, peripheralName: str) -> Optional[str]:
+        return option_string(await self._send('getTypeRemote', peripheralName))
 
     async def isPresentRemote(self, peripheralName: str) -> bool:
         return boolean(await self._send('isPresentRemote', peripheralName))
@@ -103,7 +151,11 @@ class CCModem(CCPeripheral):
         async def call_fn(method, *args):
             return await self._send('callRemote', peripheralName, method, *args)
 
-        return TYPE_MAP[await self.getTypeRemote(peripheralName)](self._cc, call_fn)
+        ptype = await self.getTypeRemote(peripheralName)
+        if ptype is None:
+            return None
+
+        return TYPE_MAP[ptype](self._cc, None, call_fn)
 
 
 class CCPrinter(CCPeripheral):
@@ -135,6 +187,39 @@ class CCPrinter(CCPeripheral):
         return integer(await self._send('getInkLevel'))
 
 
+class CCSpeaker(CCPeripheral):
+    async def playNote(self, instrument: str, volume: int = 1, pitch: int = 1) -> bool:
+        # instrument:
+        # https://minecraft.gamepedia.com/Note_Block#Instruments
+        # bass
+        # basedrum
+        # bell
+        # chime
+        # flute
+        # guitar
+        # hat
+        # snare
+        # xylophone
+        # iron_xylophone
+        # pling
+        # banjo
+        # bit
+        # didgeridoo
+        # cow_bell
+
+        # volume 0..3
+        # pitch 0..24
+        return boolean(await self._send('playNote', instrument, volume, pitch))
+
+    async def playSound(self, sound: str, volume: int = 1, pitch: int = 1):
+        # volume 0..3
+        # pitch 0..2
+        return boolean(await self._send('playSound', sound, volume, pitch))
+
+
+run_result = fact_tuple(boolean, option_string, tail_nils=1)
+
+
 class CCCommandBlock(CCPeripheral):
     async def getCommand(self) -> str:
         return string(await self._send('getCommand'))
@@ -143,15 +228,19 @@ class CCCommandBlock(CCPeripheral):
         return nil(await self._send('setCommand', command))
 
     async def runCommand(self):
-        return nil(await self._send('runCommand'))
+        success, error_msg = run_result(await self._send('runCommand'))
+        if not success:
+            raise LuaException(error_msg)
+        else:
+            assert error_msg is None
 
 
 TYPE_MAP = {
     'drive': CCDrive,
     'monitor': CCMonitor,
     'computer': CCComputer,
-    'modem': CCModem,
     'printer': CCPrinter,
+    'speaker': CCSpeaker,
     'command': CCCommandBlock,
 }
 
@@ -168,9 +257,19 @@ class PeripheralAPI(BaseSubAPI):
     async def getNames(self) -> List[str]:
         return array_string(await self._send('getNames'))
 
-    async def wrap(self, side: str) -> CCPeripheral:
-        # use instead getMethods and call
+    # use instead getMethods and call
+    async def wrap(self, side: str) -> Optional[CCPeripheral]:
         async def call_fn(method, *args):
             return await self._send('call', side, method, *args)
 
-        return TYPE_MAP[await self.getType(side)](self._cc, call_fn)
+        ptype = await self.getType(side)
+        if ptype is None:
+            return None
+
+        if ptype == 'modem':
+            if boolean(await self._send('call', side, 'isWireless')):
+                return CCWirelessModem(self._cc, side, call_fn)
+            else:
+                return CCWiredModem(self._cc, side, call_fn)
+        else:
+            return TYPE_MAP[ptype](self._cc, side, call_fn)

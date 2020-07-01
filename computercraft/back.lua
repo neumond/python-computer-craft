@@ -15,6 +15,18 @@ ws.send(textutils.serializeJSON{
     args={...},
 })
 
+function nullify_array(a, size)
+    local r = {}
+    for k=1,size do
+        if a[k] == nil then
+            r[k] = textutils.json_null
+        else
+            r[k] = a[k]
+        end
+    end
+    return r
+end
+
 while true do
     local event, p1, p2, p3, p4, p5 = os.pullEvent()
 
@@ -56,7 +68,7 @@ while true do
         ws.send(textutils.serializeJSON{
             action='event',
             event=event,
-            params={p1, p2, p3, p4, p5},
+            params=nullify_array({p1, p2, p3, p4, p5}, 5),
         })
     end
 

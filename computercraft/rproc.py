@@ -57,7 +57,7 @@ def any_list(result):
 def fact_tuple(*components, tail_nils=0):
     def proc(result):
         result = any_list(result)
-        assert len(components) + tail_nils >= len(result) >= len(components)
+        assert len(components) >= len(result) >= len(components) - tail_nils
         while len(result) < len(components):
             result.append(None)
         assert len(components) == len(result)
@@ -120,3 +120,12 @@ array_integer = fact_array(integer)
 array_string = fact_array(string)
 option_integer = fact_option(integer)
 option_string = fact_option(string)
+
+
+option_string_bool = fact_option(fact_union(
+    (
+        lambda v: v is True or v is False,
+        boolean,
+    ),
+    pelse=string,
+))

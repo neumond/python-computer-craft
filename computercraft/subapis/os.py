@@ -8,12 +8,18 @@ from ..rproc import nil, string, option_string, number, integer, boolean
 class CCEventQueue:
     def __init__(self, q):
         self._q = q
+        self.filter = self.default_filter
 
-    def __aiter__(self):
-        return self
+    @staticmethod
+    def default_filter(msg):
+        return True, msg
 
-    async def __anext__(self):
-        return await self._q.get()
+    async def __aiter__(self):
+        while True:
+            msg = await self._q.get()
+            emit, msg = self.filter(msg)
+            if emit:
+                yield msg
 
 
 class OSAPI(BaseSubAPI):

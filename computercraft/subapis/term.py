@@ -2,7 +2,7 @@ from typing import Tuple
 
 from .base import BaseSubAPI
 from .mixins import TermMixin
-from ..rproc import nil, tuple2_integer
+from ..rproc import nil, tuple2_integer, tuple3_number
 
 
 class CCWindow(BaseSubAPI, TermMixin):
@@ -28,6 +28,9 @@ class CCWindow(BaseSubAPI, TermMixin):
 
 class TermAPI(BaseSubAPI, TermMixin):
     _API = 'term'
+
+    async def nativePaletteColor(self, colorID: int) -> Tuple[float, float, float]:
+        return tuple3_number(await self._send('nativePaletteColor', colorID))
 
     # TODO
     # term.redirect(target) 	table previous terminal object

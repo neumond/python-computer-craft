@@ -1,4 +1,5 @@
 import asyncio
+import random
 from contextlib import contextmanager
 from time import monotonic
 from types import FunctionType
@@ -102,6 +103,14 @@ def get_class_table(cls):
     if methods:
         r['function'] = methods
     return r
+
+
+def get_multiclass_table(*cls):
+    result = {}
+    for c in cls:
+        for k, v in get_class_table(c).items():
+            result.setdefault(k, {}).update(v)
+    return result
 
 
 async def test_colors_api(api):
@@ -903,4 +912,551 @@ async def test_redstone_api(api):
 
     await api.print('Piston must have been activated\nRemove piston')
 
+    await api.print('Test finished successfully')
+
+
+async def test_peripheral_api(api):
+    tbl = await get_object_table(api, 'peripheral')
+
+    # use wrap
+    del tbl['function']['getMethods']
+    del tbl['function']['call']
+
+    # TODO: support these methods
+    del tbl['function']['getName']
+    del tbl['function']['find']
+
+    assert get_class_table(api.peripheral.__class__) == tbl
+
+    await step(api, 'Remove all peripherals')
+
+    side = 'top'
+
+    assert await api.peripheral.getNames() == []
+    assert await api.peripheral.getType(side) is None
+    assert await api.peripheral.isPresent(side) is False
+    assert await api.peripheral.wrap(side) is None
+
+    await step(api, f'Put disk drive on {side} side of computer')
+
+    assert await api.peripheral.getNames() == [side]
+    assert await api.peripheral.getType(side) == 'drive'
+    assert await api.peripheral.isPresent(side) is True
+    d = await api.peripheral.wrap(side)
+    assert d is not None
+    assert await d.isDiskPresent() is False
+
+    await api.print('Remove disk drive')
+
+    await api.print('Test finished successfully')
+
+
+async def test_disk_peripheral(api):
+    side = 'left'
+
+    await step(api, f'Put empty disk drive on {side} side of computer')
+
+    d = await api.peripheral.wrap(side)
+    assert d is not None
+
+    from computercraft.subapis.peripheral import CCDrive
+    tbl = await get_object_table(api, f'peripheral.wrap("{side}")')
+    assert get_class_table(CCDrive) == tbl
+
+    assert await d.isDiskPresent() is False
+    assert await d.hasData() is False
+    assert await d.getMountPath() is None
+    assert await d.setDiskLabel('text') is None
+    assert await d.getDiskLabel() is None
+    assert await d.getDiskID() is None
+    assert await d.hasAudio() is False
+    assert await d.getAudioTitle() is False  # False instead None!
+    assert await d.playAudio() is None
+    assert await d.stopAudio() is None
+    assert await d.ejectDisk() is None
+
+    await step(api, 'Put new CC diskette into disk drive')
+
+    assert await d.isDiskPresent() is True
+    assert await d.hasData() is True
+    assert isinstance(await d.getMountPath(), str)
+    assert isinstance(await d.getDiskID(), int)
+
+    assert await d.getDiskLabel() is None
+    assert await d.setDiskLabel('label') is None
+    assert await d.getDiskLabel() == 'label'
+    assert await d.setDiskLabel(None) is None
+    assert await d.getDiskLabel() is None
+
+    assert await d.hasAudio() is False
+    assert await d.getAudioTitle() is None
+    assert await d.playAudio() is None
+    assert await d.stopAudio() is None
+
+    assert await d.ejectDisk() is None
+
+    await step(api, 'Put any audio disk into disk drive')
+
+    assert await d.isDiskPresent() is True
+    assert await d.hasData() is False
+    assert await d.getMountPath() is None
+    assert await d.getDiskID() is None
+    assert await d.hasAudio() is True
+
+    label = await d.getAudioTitle()
+    assert isinstance(label, str)
+    assert label != 'label'
+    await api.print(f'Label is {label}')
+    assert await d.getDiskLabel() == label
+    with assert_raises(LuaException):
+        assert await d.setDiskLabel('label') is None
+    with assert_raises(LuaException):
+        assert await d.setDiskLabel(None) is None
+    # no effect
+    assert await d.getDiskLabel() == label
+
+    assert await d.playAudio() is None
+
+    await step(api, 'Audio must be playing now')
+
+    assert await d.stopAudio() is None
+    assert await d.ejectDisk() is None
+
+    await api.print('Test finished successfully')
+
+
+async def test_monitor_peripheral(api):
+    side = 'left'
+
+    await step(
+        api,
+        'Use advanced computer and monitor for colors\n'
+        f'Place single block monitor on {side} side of computer',
+    )
+
+    m = await api.peripheral.wrap(side)
+    assert m is not None
+
+    from computercraft.subapis.peripheral import CCMonitor
+    from computercraft.subapis.mixins import TermMixin
+
+    tbl = await get_object_table(api, f'peripheral.wrap("{side}")')
+
+    # remove British method names to make API lighter
+    del tbl['function']['getBackgroundColour']
+    del tbl['function']['getPaletteColour']
+    del tbl['function']['getTextColour']
+    del tbl['function']['isColour']
+    del tbl['function']['setBackgroundColour']
+    del tbl['function']['setPaletteColour']
+    del tbl['function']['setTextColour']
+    # NOTE: peripheral doesn't have nativePaletteColor method
+
+    assert get_multiclass_table(TermMixin, CCMonitor) == tbl
+
+    assert await m.getSize() == (7, 5)
+    assert await m.isColor() is True
+    assert await m.setTextColor(api.colors.white) is None
+    assert await m.setBackgroundColor(api.colors.black) is None
+    assert await m.clear() is None
+    assert await m.setCursorPos(1, 1) is None
+    assert await m.getCursorPos() == (1, 1)
+    assert await m.write('Alpha') is None
+    assert await m.getCursorPos() == (6, 1)
+    assert await m.setCursorBlink(False) is None
+    assert await m.getCursorBlink() is False
+    assert await m.setCursorBlink(True) is None
+    assert await m.getCursorBlink() is True
+
+    await step(api, 'You must have seen word Alpha with blinking cursor')
+
+    assert await m.clear() is None
+    assert await m.setCursorBlink(False) is None
+    for offs, (tc, bc) in enumerate((
+        (api.colors.lime, api.colors.green),
+        (api.colors.yellow, api.colors.brown),
+        (api.colors.red, api.colors.orange),
+    ), start=1):
+        assert await m.setTextColor(tc) is None
+        assert await m.getTextColor() == tc
+        assert await m.setBackgroundColor(bc) is None
+        assert await m.getBackgroundColor() == bc
+        assert await m.setCursorPos(offs, offs) is None
+        assert await m.getCursorPos() == (offs, offs)
+        assert await m.write('text') is None
+    assert await m.setBackgroundColor(api.colors.black) is None
+    await asyncio.sleep(1)
+    for i in range(2):
+        assert await m.scroll(-1) is None
+        await asyncio.sleep(0.5)
+    for i in range(2):
+        assert await m.scroll(1) is None
+        await asyncio.sleep(0.5)
+
+    await step(api, 'You must have seen three texts with different colors scrolling')
+
+    assert await m.setTextColor(api.colors.white) is None
+    assert await m.setBackgroundColor(api.colors.black) is None
+    assert await m.clear() is None
+    for i in range(1, 5):
+        assert await m.setCursorPos(1, i) is None
+        assert await m.write((str(i) + '  ') * 4) is None
+    await asyncio.sleep(2)
+    for i in range(2, 5, 2):
+        assert await m.setCursorPos(1, i) is None
+        assert await m.clearLine() is None
+
+    await step(api, 'You must have seen some lines disappearing')
+
+    assert await m.setBackgroundColor(api.colors.black) is None
+    assert await m.clear() is None
+    assert await m.setCursorPos(1, 1) is None
+    assert await m.blit(
+        'rainbow',
+        'e14d3ba',
+        'fffffff',
+    ) is None
+    assert await m.setCursorPos(1, 2) is None
+    assert await m.blit(
+        'rainbow',
+        '0000000',
+        'e14d3ba',
+    ) is None
+
+    await step(api, 'You must have seen per-letter colored text')
+
+    assert await m.setBackgroundColor(api.colors.black) is None
+    assert await m.setTextColor(api.colors.white) is None
+    assert await m.getTextScale() == 1
+    assert await m.setTextScale(5) is None
+    assert await m.getTextScale() == 5
+    assert await m.setCursorPos(1, 1) is None
+    assert await m.clear() is None
+    assert await m.getSize() == (1, 1)
+    assert await m.write('AAA') is None
+
+    await step(api, 'You must have seen single large letter A')
+
+    assert await m.setTextScale(1) is None
+    assert await m.setBackgroundColor(api.colors.white) is None
+    assert await m.clear() is None
+    for i, color in enumerate(api.colors):
+        await m.setPaletteColor(color, i / 15, 0, 0)
+    assert await m.setCursorPos(1, 1) is None
+    assert await m.blit(
+        ' redtex',
+        '0123456',
+        '0000000',
+    ) is None
+    assert await m.setCursorPos(1, 2) is None
+    assert await m.blit(
+        'tappear',
+        '789abcd',
+        '0000000',
+    ) is None
+    assert await m.setCursorPos(1, 3) is None
+    assert await m.blit(
+        's!',
+        'ef',
+        '00',
+    ) is None
+
+    await step(api, 'You must have seen different shades of red made using palettes')
+
+    await api.print('Remove monitor')
+    await api.print('Test finished successfully')
+
+
+async def test_computer_peripheral(api):
+    side = 'left'
+
+    await step(
+        api,
+        f'Place another computer on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = await api.peripheral.wrap(side)
+    assert c is not None
+
+    from computercraft.subapis.peripheral import CCComputer
+
+    tbl = await get_object_table(api, f'peripheral.wrap("{side}")')
+    assert get_class_table(CCComputer) == tbl
+
+    assert await c.isOn() is False
+    assert isinstance(await c.getID(), int)
+    assert await c.getLabel() is None
+    assert await c.turnOn() is None
+
+    await step(api, 'Computer must be turned on now')
+
+    assert await c.shutdown() is None
+
+    await step(api, 'Computer must shutdown')
+
+    await step(api, 'Now turn on computer manually and enter some commands')
+
+    assert await c.reboot() is None
+
+    await step(api, 'Computer must reboot')
+
+    await api.print('Test finished successfully')
+
+
+async def modem_server(api):
+    side = 'back'
+    m = await api.peripheral.wrap(side)
+    listen_channel = 5
+    async with m.receive(listen_channel) as q:
+        async for msg in q:
+            await api.print(repr(msg))
+            if msg.content == 'stop':
+                break
+            else:
+                await m.transmit(msg.reply_channel, listen_channel, msg.content)
+
+
+async def test_modem_peripheral(api):
+    # do this test twice: for wired and wireless modems
+
+    side = 'back'
+
+    await step(
+        api,
+        f'Attach modem to {side} side of computer\n'
+        f'Place another computer with similar modem at {side} side\n'
+        'In case of wired modems connect them\n'
+        'On another computer start py modem_server'
+    )
+
+    m = await api.peripheral.wrap(side)
+
+    remote_channel = 5
+    local_channel = 7
+
+    assert await m.isOpen(local_channel) is False
+    async with m.receive(local_channel) as q:
+        assert await m.isOpen(local_channel) is True
+        await m.transmit(remote_channel, local_channel, 1)
+        await m.transmit(remote_channel, local_channel, 'hi')
+        await m.transmit(remote_channel, local_channel, {'data': 5})
+        await m.transmit(remote_channel, local_channel, 'stop')
+
+        messages = []
+        async for msg in q:
+            assert msg.reply_channel == remote_channel
+            assert msg.distance > 0
+            messages.append(msg.content)
+            if len(messages) == 3:
+                break
+
+    assert messages == [1, 'hi', {'data': 5}]
+    assert await m.isOpen(local_channel) is False
+    assert await m.closeAll() is None
+    assert isinstance(await m.isWireless(), bool)
+
+    await api.print('Test finished successfully')
+
+
+async def test_printer_peripheral(api):
+    side = 'left'
+
+    await step(api, f'Attach empty printer at {side} side of computer')
+
+    m = await api.peripheral.wrap(side)
+
+    from computercraft.subapis.peripheral import CCPrinter
+    tbl = await get_object_table(api, f'peripheral.wrap("{side}")')
+    assert get_class_table(CCPrinter) == tbl
+
+    assert await m.getPaperLevel() == 0
+    assert await m.getInkLevel() == 0
+
+    # no paper
+    assert await m.newPage() is False
+    # page not started
+    with assert_raises(LuaException):
+        await m.endPage()
+    with assert_raises(LuaException):
+        await m.write('test')
+    with assert_raises(LuaException):
+        await m.setCursorPos(2, 2)
+    with assert_raises(LuaException):
+        await m.getCursorPos()
+    with assert_raises(LuaException):
+        await m.getPageSize()
+    with assert_raises(LuaException):
+        await m.setPageTitle('title')
+
+    await step(api, 'Put paper into printer')
+    paper_level = await m.getPaperLevel()
+    assert paper_level > 0
+    # no ink
+    assert await m.newPage() is False
+
+    await step(api, 'Put ink into printer')
+    ink_level = await m.getInkLevel()
+    assert ink_level > 0
+
+    assert await m.newPage() is True
+    assert await m.getPaperLevel() < paper_level
+    assert await m.getInkLevel() < ink_level
+
+    assert await m.setCursorPos(2, 2) is None
+    assert await m.getCursorPos() == (2, 2)
+    assert await m.setCursorPos(1, 1) is None
+    assert await m.getCursorPos() == (1, 1)
+    assert await m.setPageTitle('Green bottles') is None
+    assert await m.getPageSize() == (25, 21)
+
+    async def row(n=1):
+        _, r = await m.getCursorPos()
+        await m.setCursorPos(1, r + n)
+
+    def split_text(text, max_width=25):
+        for i in range(0, len(text), max_width):
+            yield text[i:i + max_width]
+
+    def split_by_words(text, max_width=25):
+        stack = []
+        stack_len = 0
+        for word in text.split(' '):
+            assert len(word) <= max_width
+            with_word = len(word) if stack_len == 0 else stack_len + 1 + len(word)
+            if with_word > max_width:
+                yield ' '.join(stack)
+                stack.clear()
+                stack_len = 0
+            else:
+                stack.append(word)
+                stack_len = with_word
+        if stack:
+            yield ' '.join(stack)
+
+    async def multiline_write(text):
+        _, r = await m.getCursorPos()
+        for pt in split_by_words(text):
+            assert await m.setCursorPos(1, r) is None
+            assert await m.write(pt) is None
+            r += 1
+        assert await m.setCursorPos(1, r) is None
+
+    assert await m.write('Green bottles'.center(25)) is None
+    await row(2)
+
+    x = 2
+    while x > 0:
+        await multiline_write(f'{x} green bottles hanging on the wall')
+        await multiline_write(f'{x} green bottles hanging on the wall')
+        await multiline_write('if one green bottle accidently falls')
+        x -= 1
+        await multiline_write(f'there will be {x} hanging on the wall')
+        await row()
+
+    assert await m.endPage() is True
+
+    await api.print('Test finished successfully')
+
+
+async def test_speaker_peripheral(api):
+    side = 'left'
+
+    await step(api, f'Attach speaker at {side} side of computer')
+
+    m = await api.peripheral.wrap(side)
+
+    from computercraft.subapis.peripheral import CCSpeaker
+    tbl = await get_object_table(api, f'peripheral.wrap("{side}")')
+    assert get_class_table(CCSpeaker) == tbl
+
+    for _ in range(48):
+        assert await m.playNote(
+            random.choice([
+                'bass', 'basedrum', 'bell', 'chime', 'flute', 'guitar', 'hat',
+                'snare', 'xylophone', 'iron_xylophone', 'pling', 'banjo',
+                'bit', 'didgeridoo', 'cow_bell',
+            ]),
+            3,
+            random.randint(0, 24)
+        ) is True
+        await asyncio.sleep(0.2)
+
+    assert await m.playSound('minecraft:entity.player.levelup') is True
+
+    await api.print('You must have heard notes and sounds')
+    await api.print('Test finished successfully')
+
+
+async def test_commandblock_peripheral(api):
+    side = 'left'
+
+    await step(api, f'Attach command block at {side} side of computer')
+
+    m = await api.peripheral.wrap(side)
+
+    from computercraft.subapis.peripheral import CCCommandBlock
+    tbl = await get_object_table(api, f'peripheral.wrap("{side}")')
+    assert get_class_table(CCCommandBlock) == tbl
+
+    assert await m.getCommand() == ''
+    assert await m.setCommand('say Hello from python side') is None
+    assert await m.getCommand() == 'say Hello from python side'
+    assert await m.runCommand() is None
+
+    assert await m.setCommand('time query daytime') is None
+    assert await m.getCommand() == 'time query daytime'
+    assert await m.runCommand() is None
+
+    assert await m.setCommand('') is None
+    assert await m.getCommand() == ''
+    with assert_raises(LuaException):
+        await m.runCommand()
+
+    await api.print('You must have seen chat message')
+    await api.print('Test finished successfully')
+
+
+async def test_turtle_peripheral(api):
+    raise NotImplementedError
+
+
+async def test_modem_wrap(api):
+    side = 'back'
+
+    await step(api, f'Attach and disable (right-click) wired modem at {side} side')
+
+    m = await api.peripheral.wrap(side)
+    assert await m.isWireless() is False
+    assert await m.getNameLocal() is None
+
+    await step(api, f'Enable (right-click) wired modem at {side} side')
+
+    assert isinstance(await m.getNameLocal(), str)
+
+    await step(api, 'Connect networked speaker peripheral & enable its modem')
+
+    names = await m.getNamesRemote()
+    assert isinstance(names, list)
+    assert len(names) > 0
+    speaker = []
+    for n in names:
+        assert isinstance(n, str)
+        if n.startswith('speaker_'):
+            speaker.append(n)
+    assert len(speaker) == 1
+    speaker = speaker[0]
+
+    assert await m.isPresentRemote('doesnotexist') is False
+    assert await m.getTypeRemote('doesnotexist') is None
+
+    assert await m.isPresentRemote(speaker) is True
+    assert await m.getTypeRemote(speaker) == 'speaker'
+
+    assert await m.wrapRemote('doesnotexist') is None
+    s = await m.wrapRemote(speaker)
+
+    assert await s.playSound('minecraft:entity.player.levelup') is True
+
+    await api.print('You must have heard levelup sound')
     await api.print('Test finished successfully')
