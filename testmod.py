@@ -604,7 +604,7 @@ async def test_os_api(api):
     with assert_takes_time(1.5, 3):
         async with api.os.captureEvent('timer') as timer_queue:
             timer_id = await api.os.startTimer(2)
-            async for etid, in timer_queue:
+            async for etid, *_ in timer_queue:
                 if etid == timer_id:
                     await api.print('Timer reached')
                     break
@@ -637,7 +637,7 @@ async def test_os_api(api):
     assert isinstance(await api.os.time(), (int, float))
     assert isinstance(await api.os.clock(), (int, float))
 
-    # TODO: run method
+    assert await api.os.run({}, 'rom/programs/fun/hello.lua') is True
 
     await api.print('Test finished successfully')
 
