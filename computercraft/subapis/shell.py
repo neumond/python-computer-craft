@@ -1,7 +1,7 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from .base import BaseSubAPI
-from ..rproc import nil, string, boolean, integer, array_string, fact_mono_dict
+from ..rproc import nil, string, boolean, integer, array_string, fact_mono_dict, option_string
 
 
 map_string_string = fact_mono_dict(string, string)
@@ -26,8 +26,8 @@ class ShellAPI(BaseSubAPI):
     async def resolve(self, localPath: str) -> str:
         return string(await self._send('resolve', localPath))
 
-    async def resolveProgram(self, name: str) -> str:
-        return string(await self._send('resolveProgram', name))
+    async def resolveProgram(self, name: str) -> Optional[str]:
+        return option_string(await self._send('resolveProgram', name))
 
     async def aliases(self) -> Dict[str, str]:
         return map_string_string(await self._send('aliases'))
@@ -44,10 +44,13 @@ class ShellAPI(BaseSubAPI):
     async def getRunningProgram(self) -> str:
         return string(await self._send('getRunningProgram'))
 
-    async def run(self, command: str, *args: List[str]):
+    async def run(self, command: str, *args: str) -> bool:
         return boolean(await self._send('run', command, *args))
 
-    async def openTab(self, command: str, *args: List[str]) -> int:
+    async def execute(self, command: str, *args: str) -> bool:
+        return boolean(await self._send('execute', command, *args))
+
+    async def openTab(self, command: str, *args: str) -> int:
         return integer(await self._send('openTab', command, *args))
 
     async def switchTab(self, tabID: int):
@@ -59,6 +62,11 @@ class ShellAPI(BaseSubAPI):
     async def completeProgram(self, prefix: str) -> List[str]:
         return array_string(await self._send('completeProgram', prefix))
 
-    # TODO: autocomplete functions
-    # async def setCompletionFunction(self, path: str)
-    # async def getCompletionInfo(self) -> LuaTable
+    # these functions won't be implemented
+    # it's far better to keep this in lua code
+
+    # setCompletionFunction
+    # getCompletionInfo
+
+    # we can create callbacks to python code, but this will require
+    # connection to python, and will break the shell if python disconnects

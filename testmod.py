@@ -1543,4 +1543,93 @@ async def test_pocket(api):
     await api.print('Test finished successfully')
 
 
+async def test_multishell(api):
+    from computercraft.subapis.multishell import MultishellAPI
+    tbl = await get_object_table(api, 'multishell')
+    assert get_class_table(MultishellAPI) == tbl
+
+    await step(api, 'Close all additional shells')
+
+    assert await api.multishell.getCount() == 1
+    assert await api.multishell.getCurrent() == 1
+    assert await api.multishell.getFocus() == 1
+    assert isinstance(await api.multishell.getTitle(1), str)
+
+    title = f'new title {random.randint(1, 1000000)}'
+    assert await api.multishell.setTitle(1, title) is None
+    assert await api.multishell.getTitle(1) == title
+
+    assert await api.multishell.setFocus(1) is True
+    assert await api.multishell.setFocus(0) is False
+    assert await api.multishell.setFocus(2) is False
+
+    assert await api.multishell.getTitle(2) is None
+
+    assert await api.multishell.launch({}, 'rom/programs/fun/hello.lua') == 2
+    assert isinstance(await api.multishell.getTitle(2), str)
+
+    await api.print('Test finished successfully')
+
+
+async def test_shell(api):
+    from computercraft.subapis.shell import ShellAPI
+    tbl = await get_object_table(api, 'shell')
+
+    del tbl['function']['setCompletionFunction']
+    del tbl['function']['getCompletionInfo']
+    assert get_class_table(ShellAPI) == tbl
+
+    assert await api.shell.complete('ls ro') == ['m/', 'm']
+    assert await api.shell.completeProgram('lu') == ['a']
+
+    ps = await api.shell.programs()
+    assert 'shutdown' in ps
+
+    als = await api.shell.aliases()
+    assert 'ls' in als
+    assert als['ls'] == 'list'
+    assert 'xls' not in als
+    assert await api.shell.setAlias('xls', 'list') is None
+    als = await api.shell.aliases()
+    assert 'xls' in als
+    assert als['xls'] == 'list'
+    assert await api.shell.clearAlias('xls') is None
+    als = await api.shell.aliases()
+    assert 'xls' not in als
+
+    assert await api.shell.getRunningProgram() == 'py'
+
+    assert await api.shell.resolveProgram('doesnotexist') is None
+    assert await api.shell.resolveProgram('hello') == 'rom/programs/fun/hello.lua'
+
+    assert await api.shell.dir() == ''
+    assert await api.shell.resolve('doesnotexist') == 'doesnotexist'
+    assert await api.shell.resolve('startup.lua') == 'startup.lua'
+    assert await api.shell.setDir('rom') is None
+    assert await api.shell.dir() == 'rom'
+    assert await api.shell.resolve('startup.lua') == 'rom/startup.lua'
+    assert await api.shell.setDir('') is None
+
+    assert isinstance(await api.shell.path(), str)
+    assert await api.shell.setPath(await api.shell.path()) is None
+
+    assert await api.shell.execute('hello') is True
+    assert await api.shell.run('hello') is True
+    assert await api.shell.execute('doesnotexist') is False
+    assert await api.shell.run('doesnotexist') is False
+
+    tab = await api.shell.openTab('hello')
+    assert isinstance(tab, int)
+
+    await step(api, f'Program has been launched in tab {tab}')
+
+    assert await api.shell.switchTab(tab) is None
+
+    await step(api, 'Computer will shutdown after test due to shell.exit')
+
+    assert await api.shell.exit() is None
+
+    await api.print('Test finished successfully')
+
+
 # vector won't be implemented, use python equivalent

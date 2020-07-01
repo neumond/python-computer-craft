@@ -10,6 +10,14 @@ class LuaExpr:
         raise NotImplementedError
 
 
+class ArbLuaExpr(LuaExpr):
+    def __init__(self, code: str):
+        self._code = code
+
+    def get_expr_code(self):
+        return self._code
+
+
 def lua_string(v):
     return '"{}"'.format(
         v.replace('\\', '\\\\')
