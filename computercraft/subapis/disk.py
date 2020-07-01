@@ -5,8 +5,6 @@ from ..rproc import boolean, nil, option_integer, option_string, option_string_b
 
 
 class DiskAPI(BaseSubAPI):
-    _API = 'disk'
-
     async def isPresent(self, side: str) -> bool:
         return boolean(await self._send('isPresent', side))
 

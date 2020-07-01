@@ -8,8 +8,6 @@ command_result = fact_tuple(boolean, array_string, option_integer, tail_nils=1)
 
 
 class CommandsAPI(BaseSubAPI):
-    _API = 'commands'
-
     async def exec(self, command: str) -> Tuple[bool, List[str], Optional[int]]:
         return command_result(await self._send('exec', command))
 

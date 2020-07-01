@@ -6,8 +6,6 @@ from ..rproc import nil, string, integer
 
 
 class TextutilsAPI(BaseSubAPI):
-    _API = 'textutils'
-
     async def slowWrite(self, text: str, rate: LuaNum = None):
         return nil(await self._send('slowWrite', text, rate))
 

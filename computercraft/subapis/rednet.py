@@ -6,8 +6,6 @@ from ..rproc import nil, integer, boolean, array_integer
 
 
 class RednetAPI(BaseSubAPI):
-    _API = 'rednet'
-
     async def open(self, side: str):
         return nil(await self._send('open', side))
 

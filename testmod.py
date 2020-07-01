@@ -80,8 +80,8 @@ for k in pairs({objname}) do
     end
 end
 return r""")
-    assert r[0] is True
-    return r[1]
+    assert len(r) == 1
+    return r[0]
 
 
 def get_class_table(cls):
@@ -281,6 +281,9 @@ async def test_commands_api(api):
 
 
 async def test_fs_api(api):
+    from pprint import pprint
+    pprint(get_class_table(api.fs.__class__))
+    pprint(await get_object_table(api, 'fs'))
     assert get_class_table(api.fs.__class__) \
         == await get_object_table(api, 'fs')
 
@@ -429,7 +432,7 @@ async def test_fs_api(api):
 
     assert await api.fs.getSize('tdir/banana') == 9
     async with api.fs.open('tdir/banana', 'r') as f:
-        assert await get_object_table(api, f._API) == {'function': {
+        assert await get_object_table(api, f.get_expr_code()) == {'function': {
             'close': True,
             'read': True,
             'readLine': True,
@@ -443,7 +446,7 @@ async def test_fs_api(api):
         assert await f.readAll() == ''
     assert await api.fs.getSize('tdir/banana') == 9
     async with api.fs.open('tdir/banana', 'a') as f:
-        assert await get_object_table(api, f._API) == {'function': {
+        assert await get_object_table(api, f.get_expr_code()) == {'function': {
             'close': True,
             'write': True,
             'writeLine': True,
@@ -455,7 +458,7 @@ async def test_fs_api(api):
         pass
     assert await api.fs.getSize('tdir/banana') == 0  # truncate
     async with api.fs.open('tdir/banana', 'w') as f:
-        assert await get_object_table(api, f._API) == {'function': {
+        assert await get_object_table(api, f.get_expr_code()) == {'function': {
             'close': True,
             'write': True,
             'writeLine': True,

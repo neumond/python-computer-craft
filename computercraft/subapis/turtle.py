@@ -10,8 +10,6 @@ option_any_dict = fact_option(any_dict)
 
 
 class TurtleAPI(BaseSubAPI):
-    _API = 'turtle'
-
     async def craft(self, quantity: int):
         return nil(await self._send('craft', quantity))
 

@@ -57,12 +57,11 @@ def lua_value(v):
     raise ValueError('Can\'t convert a value to lua {}'.format(v))
 
 
-def lua_args(*params, omit_nulls=True):
-    if omit_nulls:
-        for idx in range(len(params) - 1, -1, -1):
-            if params[idx] is not None:
-                break
-        else:
-            idx = -1
-        params = params[:idx + 1]
+def lua_args(*params):
+    for idx in range(len(params) - 1, -1, -1):
+        if params[idx] is not None:
+            break
+    else:
+        idx = -1
+    params = params[:idx + 1]
     return ', '.join(lua_value(p) for p in params)

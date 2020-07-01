@@ -27,8 +27,6 @@ class CCWindow(BaseSubAPI, TermMixin):
 
 
 class TermAPI(BaseSubAPI, TermMixin):
-    _API = 'term'
-
     async def nativePaletteColor(self, colorID: int) -> Tuple[float, float, float]:
         return tuple3_number(await self._send('nativePaletteColor', colorID))
 

@@ -15,8 +15,6 @@ setting = fact_scheme_dict({
 
 
 class SettingsAPI(BaseSubAPI):
-    _API = 'settings'
-
     async def define(self, name: str, description: str = None, default: Any = None, type: str = None):
         options = {}
         if description is not None:

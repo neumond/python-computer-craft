@@ -5,8 +5,6 @@ from ..rproc import string, nil, array_string, option_string
 
 
 class HelpAPI(BaseSubAPI):
-    _API = 'help'
-
     async def path(self) -> str:
         return string(await self._send('path'))
 

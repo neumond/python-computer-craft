@@ -5,8 +5,6 @@ from ..rproc import boolean, integer, tuple3_number
 
 
 class ColorsAPI(BaseSubAPI):
-    _API = 'colors'
-
     white = 0x1
     orange = 0x2
     magenta = 0x4

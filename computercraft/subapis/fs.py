@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import Optional, List
 
 from .base import BaseSubAPI
-from ..lua import LuaExpr, lua_string
+from ..lua import lua_string
 from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict
 
 
@@ -14,16 +14,7 @@ attribute = fact_scheme_dict({
 }, {})
 
 
-class BaseHandle(BaseSubAPI, LuaExpr):
-    def __init__(self, cc, var):
-        super().__init__(cc)
-        self._API = var
-
-    def get_expr_code(self):
-        return self._API
-
-
-class ReadHandle(BaseHandle):
+class ReadHandle(BaseSubAPI):
     async def read(self, count: int) -> Optional[str]:
         return option_string(await self._send('read', count))
 
@@ -43,7 +34,7 @@ class ReadHandle(BaseHandle):
         return line
 
 
-class WriteHandle(BaseHandle):
+class WriteHandle(BaseSubAPI):
     async def write(self, text: str):
         return nil(await self._send('write', text))
 
@@ -55,8 +46,6 @@ class WriteHandle(BaseHandle):
 
 
 class FSAPI(BaseSubAPI):
-    _API = 'fs'
-
     async def list(self, path: str) -> List[str]:
         return array_string(await self._send('list', path))
 
@@ -111,7 +100,7 @@ class FSAPI(BaseSubAPI):
         fid = self._cc._new_task_id()
         var = 'temp[{}]'.format(lua_string(fid))
         await self._cc.eval_coro('{} = fs.open({}, {})'.format(
-            var, *map(lua_string, [path, mode])))
+            var, lua_string(path), lua_string(mode)))
         try:
             yield (ReadHandle if 'r' in mode else WriteHandle)(self._cc, var)
         finally:
@@ -133,7 +122,7 @@ class FSAPI(BaseSubAPI):
         self, partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
     ) -> List[str]:
         return array_string(await self._send(
-            'complete', partialName, path, includeFiles, includeDirs, omit_nulls=False))
+            'complete', partialName, path, includeFiles, includeDirs))
 
     async def attributes(self, path: str) -> dict:
         return attribute(await self._send('attributes', path))

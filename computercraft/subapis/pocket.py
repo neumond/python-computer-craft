@@ -3,8 +3,6 @@ from ..rproc import flat_try_result
 
 
 class PocketAPI(BaseSubAPI):
-    _API = 'pocket'
-
     async def equipBack(self):
         return flat_try_result(await self._send('equipBack'))
 

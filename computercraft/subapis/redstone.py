@@ -5,8 +5,6 @@ from ..rproc import boolean, nil, integer, array_string
 
 
 class RedstoneAPI(BaseSubAPI):
-    _API = 'redstone'
-
     async def getSides(self) -> List[str]:
         return array_string(await self._send('getSides'))
 

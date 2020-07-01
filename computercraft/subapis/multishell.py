@@ -3,8 +3,6 @@ from ..rproc import integer, string, nil, boolean
 
 
 class MultishellAPI(BaseSubAPI):
-    _API = 'multishell'
-
     async def getCurrent(self) -> int:
         return integer(await self._send('getCurrent'))
 

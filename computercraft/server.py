@@ -55,25 +55,25 @@ class CCAPI(RootAPIMixin):
         self._event_to_tids = {}
         self._tid_to_event = {}
 
-        self.colors = ColorsAPI(self)
-        self.commands = CommandsAPI(self)
-        self.disk = DiskAPI(self)
-        self.fs = FSAPI(self)
-        self.gps = GpsAPI(self)
-        self.help = HelpAPI(self)
-        self.keys = KeysAPI(self)
-        self.multishell = MultishellAPI(self)
-        self.os = OSAPI(self)
-        self.peripheral = PeripheralAPI(self)
-        self.pocket = PocketAPI(self)
-        self.rednet = RednetAPI(self)
-        self.redstone = RedstoneAPI(self)
-        self.settings = SettingsAPI(self)
-        self.shell = ShellAPI(self)  # TODO: autocomplete functions
-        self.term = TermAPI(self)  # TODO: window redirections
-        self.textutils = TextutilsAPI(self)
-        self.turtle = TurtleAPI(self)
-        self.window = WindowAPI(self)  # TODO: unimplemented
+        self.colors = ColorsAPI(self, 'colors')
+        self.commands = CommandsAPI(self, 'commands')
+        self.disk = DiskAPI(self, 'disk')
+        self.fs = FSAPI(self, 'fs')
+        self.gps = GpsAPI(self, 'gps')
+        self.help = HelpAPI(self, 'help')
+        self.keys = KeysAPI(self, 'keys')
+        self.multishell = MultishellAPI(self, 'multishell')
+        self.os = OSAPI(self, 'os')
+        self.peripheral = PeripheralAPI(self, 'peripheral')
+        self.pocket = PocketAPI(self, 'pocket')
+        self.rednet = RednetAPI(self, 'rednet')
+        self.redstone = RedstoneAPI(self, 'redstone')
+        self.settings = SettingsAPI(self, 'settings')
+        self.shell = ShellAPI(self, 'shell')  # TODO: autocomplete functions
+        self.term = TermAPI(self, 'term')  # TODO: window redirections
+        self.textutils = TextutilsAPI(self, 'textutils')
+        self.turtle = TurtleAPI(self, 'turtle')
+        self.window = WindowAPI(self, 'window')  # TODO: unimplemented
 
         async def prog_wrap():
             err = None

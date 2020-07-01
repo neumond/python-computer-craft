@@ -24,8 +24,6 @@ class CCEventQueue:
 
 
 class OSAPI(BaseSubAPI):
-    _API = 'os'
-
     async def version(self) -> str:
         return string(await self._send('version'))
 
@@ -36,7 +34,7 @@ class OSAPI(BaseSubAPI):
         return option_string(await self._send('getComputerLabel'))
 
     async def setComputerLabel(self, label: Optional[str]):
-        return nil(await self._send('setComputerLabel', label, omit_nulls=False))
+        return nil(await self._send('setComputerLabel', label))
 
     async def run(self, environment: LuaTable, programPath: str, *args: List[str]):
         return boolean(await self._send('run', environment, programPath, *args))
@@ -72,7 +70,7 @@ class OSAPI(BaseSubAPI):
             await self._cc._stop_queue(tid)
 
     async def queueEvent(self, event: str, *params):
-        return nil(await self._send('queueEvent', event, *params, omit_nulls=False))
+        return nil(await self._send('queueEvent', event, *params))
 
     async def clock(self) -> LuaNum:
         # number of game ticks * 0.05, roughly seconds

@@ -4,21 +4,32 @@ from typing import Optional, List, Tuple, Any, Union
 
 from .base import BaseSubAPI
 from .mixins import TermMixin
-from ..lua import LuaNum
+from ..lua import LuaNum, lua_args
 from ..rproc import (
     boolean, nil, integer, string, option_integer, option_string,
     tuple2_integer, array_string, option_string_bool, try_result,
 )
 
 
-class CCPeripheral(BaseSubAPI):
-    def __init__(self, cc, side, call_fn):
-        super().__init__(cc)
-        self._side = side
-        self._send = call_fn
+class BasePeripheral:
+    # NOTE: is not LuaExpr, you can't pass peripheral as parameter
+
+    def __init__(self, cc, lua_method_expr, *prepend_params):
+        self._cc = cc
+        self._lua_method_expr = lua_method_expr
+        self._prepend_params = prepend_params
+
+    async def _send(self, method, *params):
+        return await self._method(method, *params)
+
+    async def _method(self, name, *params):
+        return await self._cc.eval_coro('return {}({})'.format(
+            self._lua_method_expr,
+            lua_args(*self._prepend_params, name, *params),
+        ))
 
 
-class CCDrive(CCPeripheral):
+class CCDrive(BasePeripheral):
     async def isDiskPresent(self) -> bool:
         return boolean(await self._send('isDiskPresent'))
 
@@ -53,7 +64,7 @@ class CCDrive(CCPeripheral):
         return option_integer(await self._send('getDiskID'))
 
 
-class CCMonitor(CCPeripheral, TermMixin):
+class CCMonitor(BasePeripheral, TermMixin):
     async def getTextScale(self) -> int:
         return integer(await self._send('getTextScale'))
 
@@ -61,7 +72,7 @@ class CCMonitor(CCPeripheral, TermMixin):
         return nil(await self._send('setTextScale', scale))
 
 
-class CCComputer(CCPeripheral):
+class CCComputer(BasePeripheral):
     async def turnOn(self):
         return nil(await self._send('turnOn'))
 
@@ -129,11 +140,11 @@ class ModemMixin:
             await self.close(channel)
 
 
-class CCWirelessModem(CCPeripheral, ModemMixin):
+class CCWirelessModem(BasePeripheral, ModemMixin):
     pass
 
 
-class CCWiredModem(CCPeripheral, ModemMixin):
+class CCWiredModem(BasePeripheral, ModemMixin):
     async def getNameLocal(self) -> Optional[str]:
         return option_string(await self._send('getNameLocal'))
 
@@ -146,19 +157,21 @@ class CCWiredModem(CCPeripheral, ModemMixin):
     async def isPresentRemote(self, peripheralName: str) -> bool:
         return boolean(await self._send('isPresentRemote', peripheralName))
 
-    async def wrapRemote(self, peripheralName: str) -> CCPeripheral:
+    async def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
         # use instead getMethodsRemote and callRemote
-        async def call_fn(method, *args):
-            return await self._send('callRemote', peripheralName, method, *args)
 
         ptype = await self.getTypeRemote(peripheralName)
         if ptype is None:
             return None
 
-        return TYPE_MAP[ptype](self._cc, None, call_fn)
+        return TYPE_MAP[ptype](
+            self._cc,
+            self._lua_method_expr, *self._prepend_params,
+            'callRemote', peripheralName,
+        )
 
 
-class CCPrinter(CCPeripheral):
+class CCPrinter(BasePeripheral):
     async def newPage(self) -> bool:
         return boolean(await self._send('newPage'))
 
@@ -187,7 +200,7 @@ class CCPrinter(CCPeripheral):
         return integer(await self._send('getInkLevel'))
 
 
-class CCSpeaker(CCPeripheral):
+class CCSpeaker(BasePeripheral):
     async def playNote(self, instrument: str, volume: int = 1, pitch: int = 1) -> bool:
         # instrument:
         # https://minecraft.gamepedia.com/Note_Block#Instruments
@@ -217,7 +230,7 @@ class CCSpeaker(CCPeripheral):
         return boolean(await self._send('playSound', sound, volume, pitch))
 
 
-class CCCommandBlock(CCPeripheral):
+class CCCommandBlock(BasePeripheral):
     async def getCommand(self) -> str:
         return string(await self._send('getCommand'))
 
@@ -239,8 +252,6 @@ TYPE_MAP = {
 
 
 class PeripheralAPI(BaseSubAPI):
-    _API = 'peripheral'
-
     async def isPresent(self, side: str) -> bool:
         return boolean(await self._send('isPresent', side))
 
@@ -251,18 +262,17 @@ class PeripheralAPI(BaseSubAPI):
         return array_string(await self._send('getNames'))
 
     # use instead getMethods and call
-    async def wrap(self, side: str) -> Optional[CCPeripheral]:
-        async def call_fn(method, *args):
-            return await self._send('call', side, method, *args)
-
+    async def wrap(self, side: str) -> Optional[BasePeripheral]:
         ptype = await self.getType(side)
         if ptype is None:
             return None
 
+        m = self.get_expr_code() + '.call'
+
         if ptype == 'modem':
             if boolean(await self._send('call', side, 'isWireless')):
-                return CCWirelessModem(self._cc, side, call_fn)
+                return CCWirelessModem(self._cc, m, side)
             else:
-                return CCWiredModem(self._cc, side, call_fn)
+                return CCWiredModem(self._cc, m, side)
         else:
-            return TYPE_MAP[ptype](self._cc, side, call_fn)
+            return TYPE_MAP[ptype](self._cc, m, side)

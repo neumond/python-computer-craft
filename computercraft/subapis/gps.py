@@ -9,9 +9,7 @@ option_tuple3_number = fact_option(tuple3_number)
 
 
 class GpsAPI(BaseSubAPI):
-    _API = 'gps'
-
     CHANNEL_GPS = 65534
 
     async def locate(self, timeout: LuaNum = None, debug: bool = None) -> Optional[Tuple[LuaNum, LuaNum, LuaNum]]:
-        return option_tuple3_number(await self._send('locate', timeout, debug, omit_nulls=False))
+        return option_tuple3_number(await self._send('locate', timeout, debug))

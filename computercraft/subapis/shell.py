@@ -8,8 +8,6 @@ map_string_string = fact_mono_dict(string, string)
 
 
 class ShellAPI(BaseSubAPI):
-    _API = 'shell'
-
     async def exit(self):
         return nil(await self._send('exit'))
 
