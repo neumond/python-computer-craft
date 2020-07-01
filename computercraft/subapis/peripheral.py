@@ -4,10 +4,9 @@ from typing import Optional, List, Tuple, Any, Union
 
 from .base import BaseSubAPI, LuaNum
 from .mixins import TermMixin
-from ..errors import LuaException
 from ..rproc import (
     boolean, nil, integer, string, option_integer, option_string,
-    tuple2_integer, array_string, option_string_bool, fact_tuple,
+    tuple2_integer, array_string, option_string_bool, try_result,
 )
 
 
@@ -217,9 +216,6 @@ class CCSpeaker(CCPeripheral):
         return boolean(await self._send('playSound', sound, volume, pitch))
 
 
-run_result = fact_tuple(boolean, option_string, tail_nils=1)
-
-
 class CCCommandBlock(CCPeripheral):
     async def getCommand(self) -> str:
         return string(await self._send('getCommand'))
@@ -228,11 +224,7 @@ class CCCommandBlock(CCPeripheral):
         return nil(await self._send('setCommand', command))
 
     async def runCommand(self):
-        success, error_msg = run_result(await self._send('runCommand'))
-        if not success:
-            raise LuaException(error_msg)
-        else:
-            assert error_msg is None
+        return try_result(await self._send('runCommand'))
 
 
 TYPE_MAP = {

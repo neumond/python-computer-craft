@@ -20,6 +20,7 @@ from .subapis.keys import KeysAPI
 from .subapis.multishell import MultishellAPI
 from .subapis.os import OSAPI
 from .subapis.peripheral import PeripheralAPI
+from .subapis.pocket import PocketAPI
 from .subapis.rednet import RednetAPI
 from .subapis.redstone import RedstoneAPI
 from .subapis.settings import SettingsAPI
@@ -64,6 +65,7 @@ class CCAPI(RootAPIMixin):
         self.multishell = MultishellAPI(self)
         self.os = OSAPI(self)
         self.peripheral = PeripheralAPI(self)
+        self.pocket = PocketAPI(self)
         self.rednet = RednetAPI(self)
         self.redstone = RedstoneAPI(self)
         self.settings = SettingsAPI(self)

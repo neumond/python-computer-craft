@@ -1417,10 +1417,6 @@ async def test_commandblock_peripheral(api):
     await api.print('Test finished successfully')
 
 
-async def test_turtle_peripheral(api):
-    raise NotImplementedError
-
-
 async def test_modem_wrap(api):
     side = 'back'
 
@@ -1460,3 +1456,88 @@ async def test_modem_wrap(api):
 
     await api.print('You must have heard levelup sound')
     await api.print('Test finished successfully')
+
+
+async def test_turtle_peripheral(api):
+    raise NotImplementedError
+
+
+async def test_textutils(api):
+    assert await api.textutils.slowWrite('write ') is None
+    assert await api.textutils.slowWrite('write ', 5) is None
+    assert await api.textutils.slowPrint('print') is None
+    assert await api.textutils.slowPrint('print', 5) is None
+
+    assert await api.textutils.formatTime(0) == '0:00 AM'
+    assert await api.textutils.formatTime(0, True) == '0:00'
+
+    table = [
+        api.colors.red,
+        ['Planet', 'Distance', 'Mass'],
+        api.colors.gray,
+        ['Mercury', '0.387', '0.055'],
+        api.colors.lightGray,
+        ['Venus', '0.723', '0.815'],
+        api.colors.green,
+        ['Earth', '1.000', '1.000'],
+        api.colors.red,
+        ['Mars', '1.524', '0.107'],
+        api.colors.orange,
+        ['Jupiter', '5.203', '318'],
+        api.colors.yellow,
+        ['Saturn', '9.537', '95'],
+        api.colors.cyan,
+        ['Uranus', '19.191', '14.5'],
+        api.colors.blue,
+        ['Neptune', '30.069', '17'],
+        api.colors.white,
+    ]
+
+    assert await api.textutils.tabulate(*table) is None
+
+    lines = await api.textutils.pagedPrint('''
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Suspendisse feugiat diam et velit aliquam, nec porttitor eros facilisis.
+Nulla facilisi.
+Sed eget dui vel tellus aliquam fermentum.
+Aliquam sed lorem congue, dignissim nulla in, porta diam.
+Aliquam erat volutpat.
+    '''.strip())
+    assert isinstance(lines, int)
+    assert lines > 0
+
+    assert await api.textutils.pagedTabulate(*table[:-1], *table[2:-1], *table[2:]) is None
+
+    assert api.textutils.complete('co', ['command', 'row', 'column']) == [
+        'mmand', 'lumn']
+
+    await api.print('Test finished successfully')
+
+
+async def test_pocket(api):
+    assert await api.peripheral.isPresent('back') is False
+
+    from computercraft.subapis.pocket import PocketAPI
+    tbl = await get_object_table(api, 'pocket')
+    assert get_class_table(PocketAPI) == tbl
+
+    await step(api, 'Clean inventory from any pocket upgrades')
+
+    with assert_raises(LuaException):
+        await api.pocket.equipBack()
+    with assert_raises(LuaException):
+        await api.pocket.unequipBack()
+    assert await api.peripheral.isPresent('back') is False
+
+    await step(api, 'Put any pocket upgrade to inventory')
+
+    assert await api.pocket.equipBack() is None
+    assert await api.peripheral.isPresent('back') is True
+
+    assert await api.pocket.unequipBack() is None
+    assert await api.peripheral.isPresent('back') is False
+
+    await api.print('Test finished successfully')
+
+
+# vector won't be implemented, use python equivalent

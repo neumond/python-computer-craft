@@ -120,6 +120,22 @@ array_integer = fact_array(integer)
 array_string = fact_array(string)
 option_integer = fact_option(integer)
 option_string = fact_option(string)
+_try_result = fact_tuple(boolean, option_string, tail_nils=1)
+
+
+def try_result(result):
+    success, error_msg = _try_result(result)
+    if success:
+        assert error_msg is None
+        return None
+    else:
+        raise LuaException(error_msg)
+
+
+def flat_try_result(result):
+    if result is True:
+        return None
+    return try_result(result)
 
 
 option_string_bool = fact_option(fact_union(
