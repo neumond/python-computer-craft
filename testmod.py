@@ -232,8 +232,10 @@ async def test_disk_api(api):
 
 
 async def test_commands_api(api):
-    assert get_class_table(api.commands.__class__) \
-        == await get_object_table(api, 'commands.native')
+    tbl = await get_object_table(api, 'commands.native')
+    # remove in favor of exec
+    del tbl['function']['execAsync']
+    assert get_class_table(api.commands.__class__) == tbl
 
     xyz = await api.commands.getBlockPosition()
 

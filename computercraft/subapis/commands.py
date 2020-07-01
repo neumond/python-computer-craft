@@ -1,7 +1,7 @@
 from typing import Tuple, List, Optional
 
 from .base import BaseSubAPI
-from ..rproc import tuple3_integer, any_dict, any_list, array_string, integer, fact_tuple, boolean, option_integer
+from ..rproc import tuple3_integer, any_dict, any_list, array_string, fact_tuple, boolean, option_integer
 
 
 command_result = fact_tuple(boolean, array_string, option_integer, tail_nils=1)
@@ -10,9 +10,6 @@ command_result = fact_tuple(boolean, array_string, option_integer, tail_nils=1)
 class CommandsAPI(BaseSubAPI):
     async def exec(self, command: str) -> Tuple[bool, List[str], Optional[int]]:
         return command_result(await self._send('exec', command))
-
-    async def execAsync(self, command: str) -> int:
-        return integer(await self._send('execAsync', command))
 
     async def list(self) -> List[str]:
         return array_string(await self._send('list'))
