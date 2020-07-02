@@ -1807,4 +1807,57 @@ async def test_paintutils(api):
     await api.print('Test finished successfully')
 
 
+async def test_rednet(api):
+    from computercraft.subapis.rednet import RednetAPI
+    tbl = await get_object_table(api, 'rednet')
+    del tbl['function']['run']
+    assert get_class_table(RednetAPI) == tbl
+
+    side = 'back'
+
+    await step(api, f'Attach modem to {side} side of computer')
+
+    assert await api.rednet.isOpen(side) is False
+    assert await api.rednet.isOpen() is False
+
+    with assert_raises(LuaException):
+        await api.rednet.close('doesnotexist')
+
+    assert await api.rednet.close(side) is None
+
+    with assert_raises(LuaException):
+        await api.rednet.open('doesnotexist')
+
+    assert await api.rednet.open(side) is None
+    assert await api.rednet.isOpen(side) is True
+
+    with assert_raises(LuaException):
+        # disallowed hostname
+        await api.rednet.host('helloproto', 'localhost')
+    assert await api.rednet.host('helloproto', 'alpha') is None
+
+    cid = await api.os.getComputerID()
+
+    assert await api.rednet.lookup('helloproto', 'localhost') == cid
+    assert await api.rednet.lookup('helloproto') == [cid]
+    assert await api.rednet.lookup('nonexistent', 'localhost') is None
+    assert await api.rednet.lookup('nonexistent') == []
+
+    assert await api.rednet.unhost('helloproto') is None
+
+    assert await api.rednet.send(cid + 100, 'message', 'anyproto') is True
+    assert await api.rednet.broadcast('message', 'anyproto') is None
+
+    assert await api.rednet.receive(timeout=1) is None
+    assert await asyncio.gather(
+        api.rednet.receive(timeout=1),
+        api.rednet.send(cid, 'message'),
+    ) == [(cid, 'message', None), True]
+
+    assert await api.rednet.close() is None
+    assert await api.rednet.isOpen(side) is False
+
+    await api.print('Test finished successfully')
+
+
 # vector won't be implemented, use python equivalent
