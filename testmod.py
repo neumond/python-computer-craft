@@ -1734,4 +1734,77 @@ async def test_redirect_to_remote_monitor(api):
     await api.print('Test finished successfully')
 
 
+pixels = '''
+0000000030030033333333330000000003000000000000000
+0333300000000033333333300000000000333333000000330
+0803000000803033333333000000000000880330300003000
+0800800030330333333333000300883000888880000033000
+3333000000003333333333300080038880000080000888003
+33333ddd3333333333333333300000333330000000000d033
+333dddddd3333333333333333333333333333333333ddd333
+3333ccdd333333333333344444444333333333333dddddd33
+333cc33d3333333333334444444444333333333335d3cc33d
+5ddc33333333333333344444444444433333333333333cd55
+dddc555d3333333333344444444444433333333333d5dc5dd
+d5dd5dd4bbbbbbbbb999b00b00300b3bb9999bbbb4ddddddd
+ddd55444bb999993bbb33390b030bb9999bbbbbbb444ddddd
+55dd44bbbbbbbbbbbbb9bb3003003bbb339bbbbbbbb44444d
+dd444bbbbbbbbbbb99933bbb0030b999bbbbbbbbbbbbbbb44
+444bbbbbbbbbbbbbbb9bbb33b309933bbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbb9bbbb3bbbb99bbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbb399399bbbbbbbbbbbbbbbbbbbbb
+'''.strip()
+
+
+async def test_paintutils(api):
+    from computercraft.subapis.paintutils import PaintutilsAPI
+    tbl = await get_object_table(api, 'paintutils')
+    assert get_class_table(PaintutilsAPI) == tbl
+
+    async with api.fs.open('img.nfp', 'w') as f:
+        await f.write(pixels)
+
+    # from pprint import pprint
+    int_pixels = await api.paintutils.loadImage('img.nfp')
+    assert len(int_pixels) > 0
+    assert len(int_pixels[0]) > 0
+    assert await api.paintutils.parseImage(pixels) == int_pixels
+
+    assert await api.paintutils.drawImage(int_pixels, 1, 1) is None
+
+    await asyncio.sleep(2)
+
+    await api.term.setTextColor(api.colors.white)
+    await api.term.setBackgroundColor(api.colors.black)
+    await api.term.clear()
+    await api.term.setBackgroundColor(api.colors.green)
+
+    by = 3
+    bx = 3
+
+    assert await api.paintutils.drawPixel(bx, by) is None
+    assert await api.paintutils.drawPixel(bx + 1, by, api.colors.red) is None
+
+    bx += 5
+
+    assert await api.paintutils.drawLine(bx, by, bx + 3, by + 3) is None
+    assert await api.paintutils.drawLine(bx + 3, by, bx, by + 3, api.colors.red) is None
+
+    bx += 5
+    assert await api.paintutils.drawBox(bx, by, bx + 3, by + 3) is None
+    bx += 5
+    assert await api.paintutils.drawBox(bx, by, bx + 3, by + 3, api.colors.red) is None
+
+    bx += 5
+    assert await api.paintutils.drawFilledBox(bx, by, bx + 3, by + 3) is None
+    bx += 5
+    assert await api.paintutils.drawFilledBox(bx, by, bx + 3, by + 3, api.colors.red) is None
+
+    await api.term.setCursorPos(1, by + 6)
+
+    await asyncio.sleep(2)
+
+    await api.print('Test finished successfully')
+
+
 # vector won't be implemented, use python equivalent

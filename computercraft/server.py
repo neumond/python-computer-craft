@@ -21,6 +21,7 @@ from .subapis.help import HelpAPI
 from .subapis.keys import KeysAPI
 from .subapis.multishell import MultishellAPI
 from .subapis.os import OSAPI
+from .subapis.paintutils import PaintutilsAPI
 from .subapis.peripheral import PeripheralAPI
 from .subapis.pocket import PocketAPI
 from .subapis.rednet import RednetAPI
@@ -66,16 +67,17 @@ class CCAPI(RootAPIMixin):
         self.keys = KeysAPI(self, 'keys')
         self.multishell = MultishellAPI(self, 'multishell')
         self.os = OSAPI(self, 'os')
+        self.paintutils = PaintutilsAPI(self, 'paintutils')
         self.peripheral = PeripheralAPI(self, 'peripheral')
         self.pocket = PocketAPI(self, 'pocket')
         self.rednet = RednetAPI(self, 'rednet')
         self.redstone = RedstoneAPI(self, 'redstone')
         self.settings = SettingsAPI(self, 'settings')
-        self.shell = ShellAPI(self, 'shell')  # TODO: autocomplete functions
-        self.term = TermAPI(self, 'term')  # TODO: window redirections
+        self.shell = ShellAPI(self, 'shell')
+        self.term = TermAPI(self, 'term')
         self.textutils = TextutilsAPI(self, 'textutils')
         self.turtle = TurtleAPI(self, 'turtle')
-        self.window = WindowAPI(self, 'window')  # TODO: unimplemented
+        self.window = WindowAPI(self, 'window')
 
         async def prog_wrap():
             err = None
