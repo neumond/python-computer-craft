@@ -55,7 +55,7 @@ def always_true(r):
 
 
 class TurtleAPI(BaseSubAPI):
-    async def craft(self, quantity: int = 1) -> bool:
+    async def craft(self, quantity: int = 64) -> bool:
         return craft_result(await self._send('craft', quantity))
 
     async def forward(self) -> bool:

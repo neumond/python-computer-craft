@@ -4,6 +4,7 @@ from typing import Optional, List, Tuple, Any, Union
 
 from .base import BaseSubAPI
 from .mixins import TermMixin, TermTarget
+from .turtle import craft_result
 from ..lua import LuaNum, lua_args
 from ..rproc import (
     boolean, nil, integer, string, option_integer, option_string,
@@ -248,6 +249,11 @@ class CCCommandBlock(BasePeripheral):
         return try_result(await self._send('runCommand'))
 
 
+class CCWorkbench(BasePeripheral):
+    async def craft(self, quantity: int = 64) -> bool:
+        return craft_result(await self._send('craft', quantity))
+
+
 TYPE_MAP = {
     'drive': CCDrive,
     'monitor': CCMonitor,
@@ -255,6 +261,7 @@ TYPE_MAP = {
     'printer': CCPrinter,
     'speaker': CCSpeaker,
     'command': CCCommandBlock,
+    'workbench': CCWorkbench,
 }
 
 

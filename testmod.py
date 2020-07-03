@@ -2077,27 +2077,34 @@ async def test_turtle(api):
     assert await api.turtle.dropUp() is True
     assert await api.turtle.getItemCount() == 0
 
-    await step(
-        api,
-        'Clean inventory of turtle\n'
-        'Put crafting table into slot 1\n'
-        'Put 8 cobblestones into slot 2',
-    )
+    async def craft1():
+        return await api.turtle.craft()
 
+    async def craft2():
+        c = await api.peripheral.wrap('right')
+        return await c.craft()
+
+    await step(api, 'Put crafting table into slot 1')
     assert await api.turtle.select(1) is None
     assert await api.turtle.equipRight() is None
 
-    assert await api.turtle.select(2) is None
-    assert await api.turtle.craft() is False
-    for idx in [1, 3, 5, 7, 9, 10, 11]:
-        assert await api.turtle.transferTo(idx, 1)
-    assert await api.turtle.craft() is True
+    for craft_fn in craft1, craft2:
+        await step(
+            api,
+            'Clean inventory of turtle\n'
+            'Put 8 cobblestones into slot 1',
+        )
 
-    assert await api.turtle.select(1) is None
-    assert await api.turtle.getItemDetail(1) == {
-        'count': 1,
-        'name': 'minecraft:furnace',
-    }
+        assert await api.turtle.select(1) is None
+        assert await craft_fn() is False
+        for idx in [2, 3, 5, 7, 9, 10, 11]:
+            assert await api.turtle.transferTo(idx, 1)
+        assert await craft_fn() is True
+        assert await craft_fn() is False
+        assert await api.turtle.getItemDetail() == {
+            'count': 1,
+            'name': 'minecraft:furnace',
+        }
 
     await api.print('Test finished successfully')
 
