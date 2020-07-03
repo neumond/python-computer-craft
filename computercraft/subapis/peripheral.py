@@ -73,7 +73,7 @@ class CCMonitor(BasePeripheral, TermMixin):
         return nil(await self._send('setTextScale', scale))
 
 
-class CCComputer(BasePeripheral):
+class ComputerMixin:
     async def turnOn(self):
         return nil(await self._send('turnOn'))
 
@@ -91,6 +91,14 @@ class CCComputer(BasePeripheral):
 
     async def isOn(self) -> bool:
         return boolean(await self._send('isOn'))
+
+
+class CCComputer(BasePeripheral, ComputerMixin):
+    pass
+
+
+class CCTurtle(BasePeripheral, ComputerMixin):
+    pass
 
 
 @dataclass
@@ -258,6 +266,7 @@ TYPE_MAP = {
     'drive': CCDrive,
     'monitor': CCMonitor,
     'computer': CCComputer,
+    'turtle': CCTurtle,
     'printer': CCPrinter,
     'speaker': CCSpeaker,
     'command': CCCommandBlock,

@@ -1172,41 +1172,48 @@ async def test_monitor_peripheral(api):
     await api.print('Test finished successfully')
 
 
-async def test_computer_peripheral(api):
+async def _computer_peri(api, place_thing, thing):
     side = 'left'
 
     await step(
         api,
-        f'Place another computer on {side} side of computer\n'
+        f'Place {place_thing} on {side} side of computer\n'
         "Don't turn it on!",
     )
 
     c = await api.peripheral.wrap(side)
     assert c is not None
 
-    from computercraft.subapis.peripheral import CCComputer
-
+    from computercraft.subapis.peripheral import ComputerMixin
     tbl = await get_object_table(api, f'peripheral.wrap("{side}")')
-    assert get_class_table(CCComputer) == tbl
+    assert get_class_table(ComputerMixin) == tbl
 
     assert await c.isOn() is False
     assert isinstance(await c.getID(), int)
     assert await c.getLabel() is None
     assert await c.turnOn() is None
 
-    await step(api, 'Computer must be turned on now')
+    await step(api, f'{thing.capitalize()} must be turned on now')
 
     assert await c.shutdown() is None
 
-    await step(api, 'Computer must shutdown')
+    await step(api, f'{thing.capitalize()} must shutdown')
 
-    await step(api, 'Now turn on computer manually and enter some commands')
+    await step(api, f'Now turn on {thing} manually and enter some commands')
 
     assert await c.reboot() is None
 
-    await step(api, 'Computer must reboot')
+    await step(api, f'{thing.capitalize()} must reboot')
 
     await api.print('Test finished successfully')
+
+
+async def test_computer_peripheral(api):
+    await _computer_peri(api, 'another computer', 'computer')
+
+
+async def test_turtle_peripheral(api):
+    await _computer_peri(api, 'turtle', 'turtle')
 
 
 async def modem_server(api):
@@ -1461,10 +1468,6 @@ async def test_modem_wrap(api):
 
     await api.print('You must have heard levelup sound')
     await api.print('Test finished successfully')
-
-
-async def test_turtle_peripheral(api):
-    raise NotImplementedError
 
 
 async def test_textutils(api):
