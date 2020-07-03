@@ -1,38 +1,83 @@
 from typing import Optional
 
 from .base import BaseSubAPI
-from ..lua import LuaNum
 from ..errors import LuaException
-from ..rproc import nil, integer, number, boolean, fact_option, any_dict
+from ..rproc import integer, boolean, fact_option, any_dict, flat_try_result
 
 
 option_any_dict = fact_option(any_dict)
 
 
+def inspect_result(r):
+    assert isinstance(r, list)
+    assert len(r) == 2
+    success, data = r
+    assert isinstance(success, bool)
+    if not success:
+        if data == 'No block to inspect':
+            return None
+        raise LuaException(data)
+    else:
+        return any_dict(data)
+
+
+def boolean_with_error_exclusion(exclude_msg):
+    def proc(r):
+        if r is True:
+            return True
+        assert isinstance(r, list)
+        assert len(r) == 2
+        success, msg = r
+        assert isinstance(success, bool)
+        if not success:
+            if msg == exclude_msg:
+                return False
+            raise LuaException(msg)
+        else:
+            return True
+    return proc
+
+
+dig_result = boolean_with_error_exclusion('Nothing to dig here')
+move_result = boolean_with_error_exclusion('Movement obstructed')
+place_result = boolean_with_error_exclusion('Cannot place block here')
+suck_result = boolean_with_error_exclusion('No items to take')
+drop_result = boolean_with_error_exclusion('No items to drop')
+transfer_result = boolean_with_error_exclusion('No space for items')
+attack_result = boolean_with_error_exclusion('Nothing to attack here')
+craft_result = boolean_with_error_exclusion('No matching recipes')
+
+
+def always_true(r):
+    assert boolean(r) is True
+    # return value is useless
+    return None
+
+
 class TurtleAPI(BaseSubAPI):
-    async def craft(self, quantity: int):
-        return nil(await self._send('craft', quantity))
+    async def craft(self, quantity: int = 1) -> bool:
+        return craft_result(await self._send('craft', quantity))
 
-    async def forward(self):
-        return nil(await self._send('forward'))
+    async def forward(self) -> bool:
+        return move_result(await self._send('forward'))
 
-    async def back(self):
-        return nil(await self._send('back'))
+    async def back(self) -> bool:
+        return move_result(await self._send('back'))
 
-    async def up(self):
-        return nil(await self._send('up'))
+    async def up(self) -> bool:
+        return move_result(await self._send('up'))
 
-    async def down(self):
-        return nil(await self._send('down'))
+    async def down(self) -> bool:
+        return move_result(await self._send('down'))
 
     async def turnLeft(self):
-        return nil(await self._send('turnLeft'))
+        return always_true(await self._send('turnLeft'))
 
     async def turnRight(self):
-        return nil(await self._send('turnRight'))
+        return always_true(await self._send('turnRight'))
 
     async def select(self, slotNum: int):
-        return nil(await self._send('select', slotNum))
+        return always_true(await self._send('select', slotNum))
 
     async def getSelectedSlot(self) -> int:
         return integer(await self._send('getSelectedSlot'))
@@ -47,37 +92,37 @@ class TurtleAPI(BaseSubAPI):
         return option_any_dict(await self._send('getItemDetail', slotNum))
 
     async def equipLeft(self):
-        return nil(await self._send('equipLeft'))
+        return always_true(await self._send('equipLeft'))
 
     async def equipRight(self):
-        return nil(await self._send('equipRight'))
+        return always_true(await self._send('equipRight'))
 
-    async def attack(self):
-        return nil(await self._send('attack'))
+    async def attack(self) -> bool:
+        return attack_result(await self._send('attack'))
 
-    async def attackUp(self):
-        return nil(await self._send('attackUp'))
+    async def attackUp(self) -> bool:
+        return attack_result(await self._send('attackUp'))
 
-    async def attackDown(self):
-        return nil(await self._send('attackDown'))
+    async def attackDown(self) -> bool:
+        return attack_result(await self._send('attackDown'))
 
-    async def dig(self):
-        return nil(await self._send('dig'))
+    async def dig(self) -> bool:
+        return dig_result(await self._send('dig'))
 
-    async def digUp(self):
-        return nil(await self._send('digUp'))
+    async def digUp(self) -> bool:
+        return dig_result(await self._send('digUp'))
 
-    async def digDown(self):
-        return nil(await self._send('digDown'))
+    async def digDown(self) -> bool:
+        return dig_result(await self._send('digDown'))
 
-    async def place(self, signText: str = None):
-        return nil(await self._send('place', signText))
+    async def place(self, signText: str = None) -> bool:
+        return place_result(await self._send('place', signText))
 
-    async def placeUp(self):
-        return nil(await self._send('placeUp'))
+    async def placeUp(self) -> bool:
+        return place_result(await self._send('placeUp'))
 
-    async def placeDown(self):
-        return nil(await self._send('placeDown'))
+    async def placeDown(self) -> bool:
+        return place_result(await self._send('placeDown'))
 
     async def detect(self) -> bool:
         return boolean(await self._send('detect'))
@@ -88,22 +133,14 @@ class TurtleAPI(BaseSubAPI):
     async def detectDown(self) -> bool:
         return boolean(await self._send('detectDown'))
 
-    async def _inspect(self, method):
-        try:
-            return any_dict(await self._send(method))
-        except LuaException as e:
-            if e.args == ('No block to inspect', ):
-                return None
-            raise e
-
     async def inspect(self) -> Optional[dict]:
-        return self._inspect('inspect')
+        return inspect_result(await self._send('inspect'))
 
     async def inspectUp(self) -> Optional[dict]:
-        return self._inspect('inspectUp')
+        return inspect_result(await self._send('inspectUp'))
 
     async def inspectDown(self) -> Optional[dict]:
-        return self._inspect('inspectDown')
+        return inspect_result(await self._send('inspectDown'))
 
     async def compare(self) -> bool:
         return boolean(await self._send('compare'))
@@ -117,32 +154,32 @@ class TurtleAPI(BaseSubAPI):
     async def compareTo(self, slot: int) -> bool:
         return boolean(await self._send('compareTo', slot))
 
-    async def drop(self, count: LuaNum = None):
-        return nil(await self._send('drop', count))
+    async def drop(self, count: int = None) -> bool:
+        return drop_result(await self._send('drop', count))
 
-    async def dropUp(self, count: LuaNum = None):
-        return nil(await self._send('dropUp', count))
+    async def dropUp(self, count: int = None) -> bool:
+        return drop_result(await self._send('dropUp', count))
 
-    async def dropDown(self, count: LuaNum = None):
-        return nil(await self._send('dropDown', count))
+    async def dropDown(self, count: int = None) -> bool:
+        return drop_result(await self._send('dropDown', count))
 
-    async def suck(self, amount: LuaNum = None):
-        return nil(await self._send('suck', amount))
+    async def suck(self, amount: int = None) -> bool:
+        return suck_result(await self._send('suck', amount))
 
-    async def suckUp(self, amount: LuaNum = None):
-        return nil(await self._send('suckUp', amount))
+    async def suckUp(self, amount: int = None) -> bool:
+        return suck_result(await self._send('suckUp', amount))
 
-    async def suckDown(self, amount: LuaNum = None):
-        return nil(await self._send('suckDown', amount))
+    async def suckDown(self, amount: int = None) -> bool:
+        return suck_result(await self._send('suckDown', amount))
 
-    async def refuel(self, quantity: LuaNum = None):
-        return nil(await self._send('refuel', quantity))
+    async def refuel(self, quantity: int = None):
+        return flat_try_result(await self._send('refuel', quantity))
 
-    async def getFuelLevel(self) -> LuaNum:
-        return number(await self._send('getFuelLevel'))
+    async def getFuelLevel(self) -> int:
+        return integer(await self._send('getFuelLevel'))
 
-    async def getFuelLimit(self) -> LuaNum:
-        return number(await self._send('getFuelLimit'))
+    async def getFuelLimit(self) -> int:
+        return integer(await self._send('getFuelLimit'))
 
-    async def transferTo(self, slot: int, quantity: int = None):
-        return nil(await self._send('transferTo', slot, quantity))
+    async def transferTo(self, slot: int, quantity: int = None) -> bool:
+        return transfer_result(await self._send('transferTo', slot, quantity))

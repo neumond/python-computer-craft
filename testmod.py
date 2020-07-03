@@ -36,11 +36,13 @@ async def read(api):
 
 
 @contextmanager
-def assert_raises(etype):
+def assert_raises(etype, message=None):
     try:
         yield
     except Exception as e:
         assert isinstance(e, etype)
+        if message is not None:
+            assert e.args == (message, )
     else:
         raise AssertionError(f'Exception of type {etype} was not raised')
 
@@ -1856,6 +1858,281 @@ async def test_rednet(api):
 
     assert await api.rednet.close() is None
     assert await api.rednet.isOpen(side) is False
+
+    await api.print('Test finished successfully')
+
+
+async def test_turtle(api):
+    from computercraft.subapis.turtle import TurtleAPI
+    tbl = await get_object_table(api, 'turtle')
+    assert tbl['table'] == {'native': True}
+    del tbl['table']
+    tbl['function'].setdefault('craft', True)
+    assert get_class_table(TurtleAPI) == tbl
+
+    flimit = await api.turtle.getFuelLimit()
+    assert isinstance(flimit, int)
+    assert flimit > 0
+
+    flevel = await api.turtle.getFuelLevel()
+    assert isinstance(flevel, int)
+    assert 0 <= flevel <= flimit
+
+    assert await api.turtle.select(2) is None
+    assert await api.turtle.getSelectedSlot() == 2
+    with assert_raises(LuaException):
+        await api.turtle.select(0)
+    assert await api.turtle.select(1) is None
+    assert await api.turtle.getSelectedSlot() == 1
+
+    await step(api, 'Put 3 coals into slot 1')
+
+    assert await api.turtle.getItemCount() == 3
+    assert await api.turtle.getItemCount(1) == 3
+
+    assert await api.turtle.getItemDetail() == {
+        'count': 3,
+        'name': 'minecraft:coal',
+    }
+    assert await api.turtle.getItemDetail(1) == {
+        'count': 3,
+        'name': 'minecraft:coal',
+    }
+
+    assert await api.turtle.getItemSpace() == 61
+    assert await api.turtle.getItemSpace(1) == 61
+
+    assert await api.turtle.refuel(1) is None
+
+    assert await api.turtle.getFuelLevel() > flevel
+    flevel = await api.turtle.getFuelLevel()
+    assert await api.turtle.getItemCount() == 2
+
+    assert await api.turtle.refuel() is None
+
+    assert await api.turtle.getFuelLevel() > flevel
+    assert await api.turtle.getItemCount() == 0
+
+    with assert_raises(LuaException):
+        await api.turtle.refuel(1)
+    with assert_raises(LuaException):
+        await api.turtle.refuel()
+
+    await step(api, 'Remove blocks in front/below/above turtle')
+
+    assert await api.turtle.detect() is False
+    assert await api.turtle.detectUp() is False
+    assert await api.turtle.detectDown() is False
+
+    assert await api.turtle.inspect() is None
+    assert await api.turtle.inspectUp() is None
+    assert await api.turtle.inspectDown() is None
+
+    await step(api, 'Put cobblestone blocks in front/below/above turtle')
+
+    assert await api.turtle.detect() is True
+    assert await api.turtle.detectUp() is True
+    assert await api.turtle.detectDown() is True
+
+    for c in [
+        await api.turtle.inspect(),
+        await api.turtle.inspectUp(),
+        await api.turtle.inspectDown()
+    ]:
+        assert isinstance(c, dict)
+        assert c['name'] == 'minecraft:cobblestone'
+
+    assert await api.turtle.select(1) is None
+    assert await api.turtle.getItemCount() == 0
+    assert await api.turtle.equipLeft() is None
+
+    assert await api.turtle.select(2) is None
+    assert await api.turtle.getItemCount() == 0
+    assert await api.turtle.equipRight() is None
+
+    if (
+        await api.turtle.getItemCount(1) != 0
+        or await api.turtle.getItemCount(2) != 0
+    ):
+        await step(api, 'Remove all items from slots 1 and 2')
+
+    assert await api.turtle.select(1) is None
+    if await api.turtle.getItemDetail(1) != {
+        'count': 1,
+        'name': 'minecraft:diamond_pickaxe',
+    }:
+        await step(api, 'Put fresh diamond pickaxe at slot 1')
+
+    assert await api.turtle.equipLeft() is None
+
+    assert await api.turtle.dig() is True
+    assert await api.turtle.dig() is False
+    assert await api.turtle.digUp() is True
+    assert await api.turtle.digUp() is False
+    assert await api.turtle.digDown() is True
+    assert await api.turtle.digDown() is False
+
+    assert await api.turtle.getItemCount() == 3
+
+    assert await api.turtle.forward() is True
+    assert await api.turtle.back() is True
+    assert await api.turtle.up() is True
+    assert await api.turtle.down() is True
+    assert await api.turtle.turnLeft() is None
+    assert await api.turtle.turnRight() is None
+
+    assert await api.turtle.place() is True
+    assert await api.turtle.place() is False
+    assert await api.turtle.placeUp() is True
+    assert await api.turtle.placeUp() is False
+    assert await api.turtle.placeDown() is True
+    with assert_raises(LuaException, 'No items to place'):
+        await api.turtle.placeDown()
+
+    await step(api, 'Put 3 cobblestone blocks to slot 1')
+
+    assert await api.turtle.getItemCount(1) == 3
+    assert await api.turtle.getItemCount(2) == 0
+
+    assert await api.turtle.compare() is True
+    assert await api.turtle.compareUp() is True
+    assert await api.turtle.compareDown() is True
+
+    assert await api.turtle.select(2) is None
+
+    assert await api.turtle.compare() is False
+    assert await api.turtle.compareUp() is False
+    assert await api.turtle.compareDown() is False
+
+    assert await api.turtle.select(1) is None
+
+    assert await api.turtle.transferTo(2, 1) is True
+    assert await api.turtle.getItemCount(1) == 2
+    assert await api.turtle.getItemCount(2) == 1
+    assert await api.turtle.compareTo(2) is True
+
+    assert await api.turtle.transferTo(2) is True
+    assert await api.turtle.getItemCount(1) == 0
+    assert await api.turtle.getItemCount(2) == 3
+    assert await api.turtle.compareTo(2) is False
+
+    assert await api.turtle.select(2) is None
+    assert await api.turtle.transferTo(1) is True
+    assert await api.turtle.select(1) is None
+    assert await api.turtle.dig() is True
+    assert await api.turtle.digUp() is True
+    assert await api.turtle.digDown() is True
+    assert await api.turtle.getItemCount() == 6
+
+    assert await api.turtle.drop(1) is True
+    assert await api.turtle.dropUp(1) is True
+    assert await api.turtle.dropDown(1) is True
+    assert await api.turtle.getItemCount() == 3
+    assert await api.turtle.drop() is True
+    assert await api.turtle.getItemCount() == 0
+    assert await api.turtle.drop() is False
+
+    await step(
+        api,
+        'Collect dropped cobblestone\n'
+        'Drop stack of sticks right in front of the turtle\n'
+        'Its better to build 1-block room then throw sticks there',
+    )
+
+    assert await api.turtle.suck(1) is True
+    assert await api.turtle.getItemCount() == 1
+    assert await api.turtle.suck() is True
+    assert await api.turtle.getItemCount() == 64
+    assert await api.turtle.suck() is False
+    assert await api.turtle.drop() is True
+    assert await api.turtle.getItemCount() == 0
+
+    await step(
+        api,
+        'Collect dropped sticks\n'
+        'Drop stack of sticks right below the turtle\n'
+        'Its better to build 1-block room then throw sticks there',
+    )
+
+    assert await api.turtle.suckDown(1) is True
+    assert await api.turtle.getItemCount() == 1
+    assert await api.turtle.suckDown() is True
+    assert await api.turtle.getItemCount() == 64
+    assert await api.turtle.suckDown() is False
+    assert await api.turtle.dropDown() is True
+    assert await api.turtle.getItemCount() == 0
+
+    await step(
+        api,
+        'Collect dropped sticks\n'
+        'Drop stack of sticks right above the turtle\n'
+        'Its better to build 1-block room then throw sticks there',
+    )
+
+    assert await api.turtle.suckUp(1) is True
+    assert await api.turtle.getItemCount() == 1
+    assert await api.turtle.suckUp() is True
+    assert await api.turtle.getItemCount() == 64
+    assert await api.turtle.suckUp() is False
+    assert await api.turtle.dropUp() is True
+    assert await api.turtle.getItemCount() == 0
+
+    await step(
+        api,
+        'Clean inventory of turtle\n'
+        'Put crafting table into slot 1\n'
+        'Put 8 cobblestones into slot 2',
+    )
+
+    assert await api.turtle.select(1) is None
+    assert await api.turtle.equipRight() is None
+
+    assert await api.turtle.select(2) is None
+    assert await api.turtle.craft() is False
+    for idx in [1, 3, 5, 7, 9, 10, 11]:
+        assert await api.turtle.transferTo(idx, 1)
+    assert await api.turtle.craft() is True
+
+    assert await api.turtle.select(1) is None
+    assert await api.turtle.getItemDetail(1) == {
+        'count': 1,
+        'name': 'minecraft:furnace',
+    }
+
+    await api.print('Test finished successfully')
+
+
+async def test_turtle_attack(api):
+    await step(
+        api,
+        'NOTE: this test is unreliable\n'
+        'Build 1x1x1 stone cage in front of turtle\n'
+        'Spawn here a chicken',
+    )
+
+    assert await api.turtle.attack() is True
+    assert await api.turtle.attack() is True
+    assert await api.turtle.attack() is False
+
+    await step(
+        api,
+        'Build 1x1x1 stone cage below turtle\n'
+        'Spawn here a chicken',
+    )
+
+    assert await api.turtle.attackDown() is True
+    assert await api.turtle.attackDown() is True
+    assert await api.turtle.attackDown() is False
+
+    await step(
+        api,
+        'Build 1x1x1 stone cage above turtle\n'
+        'Spawn here a chicken',
+    )
+
+    assert await api.turtle.attackUp() is True
+    assert await api.turtle.attackUp() is True
+    assert await api.turtle.attackUp() is False
 
     await api.print('Test finished successfully')
 
