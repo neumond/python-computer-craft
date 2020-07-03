@@ -484,6 +484,24 @@ async def test_fs_api(api):
 
     assert await api.fs.exists('tdir/banana') is True
 
+    async with api.fs.open('tdir/binfile', 'wb') as f:
+        assert await f.write('a' * 9) is None
+        assert await f.seek() == 9
+        assert await f.seek('set', 0) == 0
+        assert await f.write('b' * 3) is None
+        assert await f.seek('cur', -1) == 2
+        assert await f.write('c' * 3) is None
+        assert await f.seek('end') == 9
+        assert await f.write('d' * 3) is None
+        with assert_raises(LuaException):
+            await f.seek('set', -10)
+
+    async with api.fs.open('tdir/binfile', 'rb') as f:
+        assert await f.readAll() == 'bbcccaaaaddd'
+
+    async with api.fs.open('tdir/binfile', 'rb') as f:
+        assert isinstance(await f.read(), int)
+
     assert await api.fs.delete('tdir') is None
     assert await api.fs.delete('tfile') is None
     assert await api.fs.delete('doesnotexist') is None

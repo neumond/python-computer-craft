@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from .base import BaseSubAPI
+from ..errors import LuaException
 from ..lua import lua_args
-from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict
+from ..rproc import boolean, string, integer, nil, array_string, option_string, option_integer, fact_scheme_dict
 
 
 attribute = fact_scheme_dict({
@@ -14,9 +15,20 @@ attribute = fact_scheme_dict({
 }, {})
 
 
+class SeekMixin:
+    async def seek(self, whence: str = None, offset: int = None) -> int:
+        # whence: set, cur, end
+        r = await self._send('seek', whence, offset)
+        if isinstance(r, list):
+            assert r[0] is False
+            raise LuaException(r[1])
+        return integer(r)
+
+
 class ReadHandle(BaseSubAPI):
-    async def read(self, count: int) -> Optional[str]:
-        return option_string(await self._send('read', count))
+    async def read(self, count: int = None) -> Optional[Union[str, int]]:
+        r = await self._send('read', count)
+        return option_integer(r) if count is None else option_string(r)
 
     async def readLine(self) -> Optional[str]:
         return option_string(await self._send('readLine'))
@@ -34,6 +46,10 @@ class ReadHandle(BaseSubAPI):
         return line
 
 
+class BinaryReadHandle(ReadHandle, SeekMixin):
+    pass
+
+
 class WriteHandle(BaseSubAPI):
     async def write(self, text: str):
         return nil(await self._send('write', text))
@@ -43,6 +59,10 @@ class WriteHandle(BaseSubAPI):
 
     async def flush(self):
         return nil(await self._send('flush'))
+
+
+class BinaryWriteHandle(WriteHandle, SeekMixin):
+    pass
 
 
 class FSAPI(BaseSubAPI):
@@ -103,7 +123,11 @@ class FSAPI(BaseSubAPI):
         )
         fin_tpl = '{e}.close()'
         async with self._cc._create_temp_object(create_expr, fin_tpl) as var:
-            yield (ReadHandle if 'r' in mode else WriteHandle)(self._cc, var)
+            if 'b' in mode:
+                hcls = BinaryReadHandle if 'r' in mode else BinaryWriteHandle
+            else:
+                hcls = ReadHandle if 'r' in mode else WriteHandle
+            yield hcls(self._cc, var)
 
     async def find(self, wildcard: str) -> List[str]:
         return array_string(await self._send('find', wildcard))
