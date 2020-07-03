@@ -502,6 +502,9 @@ async def test_fs_api(api):
     async with api.fs.open('tdir/binfile', 'rb') as f:
         assert isinstance(await f.read(), int)
 
+    async with api.fs.open('tdir/binfile', 'r') as f:
+        assert [line async for line in f] == ['bbcccaaaaddd']
+
     assert await api.fs.delete('tdir') is None
     assert await api.fs.delete('tfile') is None
     assert await api.fs.delete('doesnotexist') is None
