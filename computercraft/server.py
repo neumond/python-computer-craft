@@ -48,15 +48,15 @@ def base36(n):
 
 
 class CCAPI(RootAPIMixin):
-    def __init__(self, nid, program, cleanup_callback):
+    def __init__(self, nid, program, sender):
         self._id = nid
         self._task_autoid = 1
-        self._cmd = asyncio.Queue(maxsize=1)
         self._result_locks = {}
         self._result_values = {}
         self._result_queues = {}
         self._event_to_tids = {}
         self._tid_to_event = {}
+        self._sender = sender
 
         self.colors = ColorsAPI(self, 'colors')
         self.commands = CommandsAPI(self, 'commands')
@@ -81,12 +81,14 @@ class CCAPI(RootAPIMixin):
 
         async def prog_wrap():
             err = None
+            cancel = False
             try:
                 await program(self)
             except asyncio.CancelledError:
                 print('program {} cancelled'.format(self._id))
                 print_exc()
                 err = 'program has been cancelled'
+                cancel = True
             except Exception as e:
                 print('program {} crashed: {} {}'.format(self._id, type(e), e))
                 print_exc()
@@ -94,13 +96,16 @@ class CCAPI(RootAPIMixin):
             else:
                 print('program {} finished'.format(self._id))
             finally:
-                c = {'action': 'close'}
-                if err is not None:
-                    c['error'] = err
-                await self._cmd.put(c)
-                cleanup_callback()
+                if not cancel:
+                    c = {'action': 'close'}
+                    if err is not None:
+                        c['error'] = err
+                    await self._sender(c)
 
         self._task = asyncio.create_task(prog_wrap())
+
+    def cancel(self):
+        self._task.cancel()
 
     def _new_task_id(self) -> str:
         task_id = base36(self._task_autoid)
@@ -110,7 +115,7 @@ class CCAPI(RootAPIMixin):
     async def _eval(self, lua_code, immediate=False):
         task_id = self._new_task_id()
         self._result_locks[task_id] = asyncio.Event()
-        await self._cmd.put({
+        await self._sender({
             'action': 'task',
             'task_id': task_id,
             'code': lua_code,
@@ -133,7 +138,7 @@ class CCAPI(RootAPIMixin):
         self._result_queues[task_id] = asyncio.Queue()
         es = self._event_to_tids.setdefault(event, set())
         if not es:
-            await self._cmd.put({
+            await self._sender({
                 'action': 'sub',
                 'event': event,
             })
@@ -147,7 +152,7 @@ class CCAPI(RootAPIMixin):
         del self._tid_to_event[task_id]
         self._event_to_tids[event].discard(task_id)
         if not self._event_to_tids[event]:
-            await self._cmd.put({
+            await self._sender({
                 'action': 'unsub',
                 'event': event,
             })
@@ -166,16 +171,6 @@ class CCAPI(RootAPIMixin):
 
 
 class CCApplication(web.Application):
-    @staticmethod
-    async def _sender(ws, api):
-        while not ws.closed:
-            cmd = await api._cmd.get()
-            # print(f'_sender: {cmd}')
-            if not ws.closed:
-                await ws.send_json(cmd)
-            if cmd['action'] == 'close':
-                break
-
     @staticmethod
     async def _json_messages(ws):
         async for msg in ws:
@@ -207,7 +202,8 @@ class CCApplication(web.Application):
                     'error': "program doesn't exist",
                 })
                 return None
-            return CCAPI(msg['computer'], program, lambda: None)
+
+            return CCAPI(msg['computer'], program, ws.send_json)
 
     async def ws(self, request):
         ws = web.WebSocketResponse()
@@ -215,21 +211,23 @@ class CCApplication(web.Application):
 
         api = await self._launch_program(ws)
         if api is not None:
-            asyncio.create_task(self._sender(ws, api))
-            async for msg in self._json_messages(ws):
-                if msg['action'] == 'event':
-                    for task_id in api._event_to_tids.get(msg['event'], ()):
-                        await api._result_queues[task_id].put(msg['params'])
-                elif msg['action'] == 'task_result':
-                    api._result_values[msg['task_id']] = msg['result']
-                    api._result_locks[msg['task_id']].set()
-                    # print(msg['task_id'], msg['yields'])
-                else:
-                    await ws.send_json({
-                        'action': 'close',
-                        'error': 'protocol error',
-                    })
-                    break
+            try:
+                async for msg in self._json_messages(ws):
+                    if msg['action'] == 'event':
+                        for task_id in api._event_to_tids.get(msg['event'], ()):
+                            await api._result_queues[task_id].put(msg['params'])
+                    elif msg['action'] == 'task_result':
+                        api._result_values[msg['task_id']] = msg['result']
+                        api._result_locks[msg['task_id']].set()
+                        # print(msg['task_id'], msg['yields'])
+                    else:
+                        await ws.send_json({
+                            'action': 'close',
+                            'error': 'protocol error',
+                        })
+                        break
+            finally:
+                api.cancel()
 
         return ws
 
