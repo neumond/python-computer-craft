@@ -223,6 +223,7 @@ class CCApplication(web.Application):
                 elif msg['action'] == 'task_result':
                     api._result_values[msg['task_id']] = msg['result']
                     api._result_locks[msg['task_id']].set()
+                    # print(msg['task_id'], msg['yields'])
                 else:
                     await ws.send_json({
                         'action': 'close',

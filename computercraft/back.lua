@@ -4,6 +4,7 @@ local event_sub = {}
 genv.temp = temp
 local url = 'http://127.0.0.1:4343/'
 local tasks = {}
+local ycounts = {}
 
 ws = http.websocket(url..'ws/')
 if ws == false then
@@ -39,6 +40,7 @@ while true do
                     action='task_result',
                     task_id=msg.task_id,
                     result={false, err},
+                    yields=0,
                 })
             else
                 setfenv(fn, genv)
@@ -47,9 +49,11 @@ while true do
                         action='task_result',
                         task_id=msg.task_id,
                         result={fn()},
+                        yields=0,
                     })
                 else
                     tasks[msg.task_id] = coroutine.create(fn)
+                    ycounts[msg.task_id] = 0
                 end
             end
         elseif msg.action == 'sub' then
@@ -80,12 +84,16 @@ while true do
                 action='task_result',
                 task_id=task_id,
                 result=r,
+                yields=ycounts[task_id],
             })
             del_tasks[task_id] = true
+        else
+            ycounts[msg.task_id] = ycounts[msg.task_id] + 1
         end
     end
     for task_id in pairs(del_tasks) do
         tasks[task_id] = nil
+        ycounts[msg.task_id] = nil
     end
 end
 
