@@ -56,6 +56,11 @@ while true do
                     ycounts[msg.task_id] = 0
                 end
             end
+        elseif msg.action == 'drop' then
+            for _, task_id in ipairs(msg.task_ids) do
+                tasks[task_id] = nil
+                ycounts[task_id] = nil
+            end
         elseif msg.action == 'sub' then
             event_sub[msg.event] = true
         elseif msg.action == 'unsub' then
@@ -88,12 +93,12 @@ while true do
             })
             del_tasks[task_id] = true
         else
-            ycounts[msg.task_id] = ycounts[msg.task_id] + 1
+            ycounts[task_id] = ycounts[task_id] + 1
         end
     end
     for task_id in pairs(del_tasks) do
         tasks[task_id] = nil
-        ycounts[msg.task_id] = nil
+        ycounts[task_id] = nil
     end
 end
 

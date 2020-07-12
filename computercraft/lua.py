@@ -73,3 +73,11 @@ def lua_args(*params):
         idx = -1
     params = params[:idx + 1]
     return ', '.join(lua_value(p) for p in params)
+
+
+def lua_call(name, *params):
+    return '{}({})'.format(name, lua_args(*params))
+
+
+def return_lua_call(name, *params):
+    return 'return ' + lua_call(name, *params)

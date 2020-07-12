@@ -19,7 +19,7 @@ if is_register_command(argv[1:]):
 
 setup(
     name='computercraft',
-    version='0.2.0',
+    version='0.3.0',
     description='Pythonization of ComputerCraft Minecraft mod. Write Python instead Lua!',
     long_description=longdesc,
     url='https://github.com/neumond/python-computer-craft',
@@ -38,7 +38,7 @@ setup(
     keywords='computercraft minecraft',
     packages=['computercraft', 'computercraft.subapis'],
     package_data={'computercraft': ['back.lua']},
-    install_requires=['aiohttp'],
+    install_requires=['aiohttp', 'greenlet'],
     entry_points={
         'console_scripts': ['computercraft = computercraft.server:main'],
     },

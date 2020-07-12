@@ -1,21 +1,36 @@
 from typing import Optional, List
 
-from .base import BaseSubAPI
 from ..rproc import string, nil, array_string, option_string
+from ..sess import eval_lua_method_factory
 
 
-class HelpAPI(BaseSubAPI):
-    async def path(self) -> str:
-        return string(await self._send('path'))
+method = eval_lua_method_factory('help.')
 
-    async def setPath(self, path: str):
-        return nil(await self._send('setPath', path))
 
-    async def lookup(self, topic: str) -> Optional[str]:
-        return option_string(await self._send('lookup', topic))
+__all__ = (
+    'path',
+    'setPath',
+    'lookup',
+    'topics',
+    'completeTopic',
+)
 
-    async def topics(self) -> List[str]:
-        return array_string(await self._send('topics'))
 
-    async def completeTopic(self, topicPrefix: str) -> List[str]:
-        return array_string(await self._send('completeTopic', topicPrefix))
+def path() -> str:
+    return string(method('path'))
+
+
+def setPath(path: str):
+    return nil(method('setPath', path))
+
+
+def lookup(topic: str) -> Optional[str]:
+    return option_string(method('lookup', topic))
+
+
+def topics() -> List[str]:
+    return array_string(method('topics'))
+
+
+def completeTopic(topicPrefix: str) -> List[str]:
+    return array_string(method('completeTopic', topicPrefix))

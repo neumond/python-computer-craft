@@ -1,18 +1,15 @@
 from ..lua import LuaExpr, lua_args
+from ..sess import eval_lua
 
 
 class BaseSubAPI(LuaExpr):
-    def __init__(self, cc, lua_expr):
-        self._cc = cc
+    def __init__(self, lua_expr):
         self._lua_expr = lua_expr
 
     def get_expr_code(self):
         return self._lua_expr
 
-    async def _send(self, method, *params):
-        return await self._method(method, *params)
-
-    async def _method(self, name, *params):
-        return await self._cc.eval_coro('return {}.{}({})'.format(
-            self._lua_expr, name, lua_args(*params),
+    def _method(self, name, *params):
+        return eval_lua('return {}.{}({})'.format(
+            self.get_expr_code(), name, lua_args(*params),
         ))

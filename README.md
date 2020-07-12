@@ -1,6 +1,16 @@
 # Pythonized CC Tweaked (ComputerCraft) API
 
-1. Enable localhost in mod server config
+**Warning**: CPython can't build safe sandboxes for arbitrary untrusted code
+[(read more)](https://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html).
+Never use code in this repo if you don't trust your players!
+
+1. Download and install wheel from github releases
+
+    ```sh
+    pip install computercraft-*.whl
+    ```
+
+2. Enable localhost in mod server config
 
     In case of singleplayer it's located inside your saves folder.
     In case of multiplayer check your server folder.
@@ -13,80 +23,90 @@
 		action = "allow"  # change here deny to allow
     ```
 
-2. Create module named `examplemod.py`:
+3. Start python server:
 
-    ```python
-    async def hello(api):
-        await api.print('Hello world!')
-    ```
-
-3. Start a server:
-
-    ```bash
-    python -m computercraft.server examplemod
+    ```sh
+    python -m computercraft.server
     ```
 
 4. In minecraft, open up any computer and type:
 
-    ```bash
+    ```sh
     wget http://127.0.0.1:8080/ py
-    py hello
+    py
     ```
 
+    Now you have python REPL in computercraft!
+    To quit REPL type `exit()` and press enter.
+
 `py` is short Lua program that interacts with the server.
-Argument is the name of coroutine inside the module.
-`api` object contains almost everything *as is* in ComputerCraft documentation:
+`cc` module contains almost everything *as is* in ComputerCraft documentation:
 
 ```python
-async def program(api):
-    await api.disk.eject('right')
-    await api.print(await api.os.getComputerLabel())
-    # ...
-```
+from cc import disk, os
 
-Using python coroutines allows launching commands in parallel, effectively replacing `parallel` API:
-
-```python
-async def program(api):
-    # Since os.sleep is mostly waiting for events, it doesn't block execution of parallel threads
-    # and this snippet takes approximately 2 seconds to complete.
-    await asyncio.gather(api.os.sleep(2), api.os.sleep(2))
+disk.eject('right')
+print(os.getComputerLabel())
 ```
 
 Opening a file:
 
 ```python
-async def program(api):
-    async with api.fs.open('filename', 'r') as f:
-        async for line in f:
-            await api.print(line)
+from cc import fs
+
+with fs.open('filename', 'r') as f:
+    for line in f:
+        print(line)
 ```
 
-Capturing event:
+Waiting for event:
 
 ```python
-async def program(api):
-    async with api.os.captureEvent('timer') as timer_event_queue:
-        timer_id = await api.os.startTimer(2)
-        async for etid, *_ in timer_event_queue:
-            if etid == timer_id:
-                  await api.print('Timer reached')
-                  break
+from cc import os
+
+timer_id = os.startTimer(2)
+while True:
+    e = os.pullEvent('timer')
+    if e[1] == timer_id:
+        print('Timer reached')
+        break
 ```
 
 Using modems:
 
 ```python
-async def program(api):
-    modem = await api.peripheral.wrap('back')
-    listen_channel = 5
-    async with modem.receive(listen_channel) as q:
-        async for msg in q:
-            await api.print(repr(msg))
-            if msg.content == 'stop':
-                break
-            else:
-                await modem.transmit(msg.reply_channel, listen_channel, msg.content)
+from cc import peripheral
+
+modem = peripheral.wrap('back')
+listen_channel = 5
+# this automatically opens and closes modem on listen_channel
+for msg in modem.receive(listen_channel):
+    print(repr(msg))
+    if msg.content == 'stop':
+        break
+    else:
+        modem.transmit(msg.reply_channel, listen_channel, msg.content)
 ```
 
-More examples can be found in `testmod.py`.
+Using parallel:
+
+```python
+from cc import parallel, os
+
+def fn():
+    os.sleep(2)
+    print('done')
+
+parallel.waitForAll(fn, fn, fn)
+```
+
+Importing in-game files as modules:
+
+```python
+from cc import import_file
+
+p = import_file('/disk/program.py')  # absolute
+m = import_file('lib.py', __file__)  # relative to current file
+```
+
+More examples can be found in repository.

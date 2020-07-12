@@ -1,43 +1,49 @@
-from contextlib import asynccontextmanager
+from contextlib import contextmanager
 from typing import Tuple
 
-from ..lua import lua_args
+from ..lua import lua_call
 from ..rproc import nil, tuple2_integer, tuple3_string
+from ..sess import eval_lua_method_factory, lua_context_object
 from .base import BaseSubAPI
 from .mixins import TermMixin, TermTarget
 
 
 class CCWindow(BaseSubAPI, TermMixin):
-    async def setVisible(self, visibility: bool):
-        return nil(await self._send('setVisible', visibility))
+    def setVisible(self, visibility: bool):
+        return nil(self._method('setVisible', visibility))
 
-    async def redraw(self):
-        return nil(await self._send('redraw'))
+    def redraw(self):
+        return nil(self._method('redraw'))
 
-    async def restoreCursor(self):
-        return nil(await self._send('restoreCursor'))
+    def restoreCursor(self):
+        return nil(self._method('restoreCursor'))
 
-    async def getPosition(self) -> Tuple[int, int]:
-        return tuple2_integer(await self._send('getPosition'))
+    def getPosition(self) -> Tuple[int, int]:
+        return tuple2_integer(self._method('getPosition'))
 
-    async def reposition(self, x: int, y: int, width: int = None, height: int = None, parent: TermTarget = None):
-        return nil(await self._send('reposition', x, y, width, height, parent))
+    def reposition(self, x: int, y: int, width: int = None, height: int = None, parent: TermTarget = None):
+        return nil(self._method('reposition', x, y, width, height, parent))
 
-    async def getLine(self, y: int) -> Tuple[str, str, str]:
-        return tuple3_string(await self._send('getLine', y))
+    def getLine(self, y: int) -> Tuple[str, str, str]:
+        return tuple3_string(self._method('getLine', y))
 
     def get_term_target(self) -> TermTarget:
         return TermTarget(self.get_expr_code())
 
 
-class WindowAPI(BaseSubAPI):
-    @asynccontextmanager
-    async def create(
-        self, parentTerm: TermTarget, x: int, y: int, width: int, height: int, visible: bool = None,
-    ) -> CCWindow:
-        create_expr = '{}.create({})'.format(
-            self.get_expr_code(),
-            lua_args(parentTerm, x, y, width, height, visible),
-        )
-        async with self._cc._create_temp_object(create_expr) as var:
-            yield CCWindow(self._cc, var)
+method = eval_lua_method_factory('window.')
+
+
+__all__ = (
+    'create',
+)
+
+
+@contextmanager
+def create(
+    parentTerm: TermTarget, x: int, y: int, width: int, height: int, visible: bool = None,
+) -> CCWindow:
+    with lua_context_object(
+        lua_call('window.create', parentTerm, x, y, width, height, visible),
+    ) as var:
+        yield CCWindow(var)

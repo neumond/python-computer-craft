@@ -1,10 +1,11 @@
-from contextlib import asynccontextmanager
+from contextlib import contextmanager
 from typing import Optional, List, Union
 
 from .base import BaseSubAPI
 from ..errors import LuaException
-from ..lua import lua_args
+from ..lua import lua_call
 from ..rproc import boolean, string, integer, nil, array_string, option_string, option_integer, fact_scheme_dict
+from ..sess import eval_lua_method_factory, lua_context_object
 
 
 attribute = fact_scheme_dict({
@@ -16,9 +17,9 @@ attribute = fact_scheme_dict({
 
 
 class SeekMixin:
-    async def seek(self, whence: str = None, offset: int = None) -> int:
+    def seek(self, whence: str = None, offset: int = None) -> int:
         # whence: set, cur, end
-        r = await self._send('seek', whence, offset)
+        r = self._method('seek', whence, offset)
         if isinstance(r, list):
             assert r[0] is False
             raise LuaException(r[1])
@@ -26,23 +27,25 @@ class SeekMixin:
 
 
 class ReadHandle(BaseSubAPI):
-    async def read(self, count: int = None) -> Optional[Union[str, int]]:
-        r = await self._send('read', count)
+    # TODO: binary handle must return bytes instead string
+
+    def read(self, count: int = None) -> Optional[Union[str, int]]:
+        r = self._method('read', count)
         return option_integer(r) if count is None else option_string(r)
 
-    async def readLine(self) -> Optional[str]:
-        return option_string(await self._send('readLine'))
+    def readLine(self) -> Optional[str]:
+        return option_string(self._method('readLine'))
 
-    async def readAll(self) -> str:
-        return string(await self._send('readAll'))
+    def readAll(self) -> str:
+        return string(self._method('readAll'))
 
-    def __aiter__(self):
+    def __iter__(self):
         return self
 
-    async def __anext__(self):
-        line = await self.readLine()
+    def __next__(self):
+        line = self.readLine()
         if line is None:
-            raise StopAsyncIteration
+            raise StopIteration
         return line
 
 
@@ -51,101 +54,144 @@ class BinaryReadHandle(ReadHandle, SeekMixin):
 
 
 class WriteHandle(BaseSubAPI):
-    async def write(self, text: str):
-        return nil(await self._send('write', text))
+    def write(self, text: str):
+        return nil(self._method('write', text))
 
-    async def writeLine(self, text: str):
-        return nil(await self._send('writeLine', text))
+    def writeLine(self, text: str):
+        return nil(self._method('writeLine', text))
 
-    async def flush(self):
-        return nil(await self._send('flush'))
+    def flush(self):
+        return nil(self._method('flush'))
 
 
 class BinaryWriteHandle(WriteHandle, SeekMixin):
     pass
 
 
-class FSAPI(BaseSubAPI):
-    async def list(self, path: str) -> List[str]:
-        return array_string(await self._send('list', path))
+method = eval_lua_method_factory('fs.')
 
-    async def exists(self, path: str) -> bool:
-        return boolean(await self._send('exists', path))
 
-    async def isDir(self, path: str) -> bool:
-        return boolean(await self._send('isDir', path))
+__all__ = (
+    'list',
+    'exists',
+    'isDir',
+    'isReadOnly',
+    'getDrive',
+    'getSize',
+    'getFreeSpace',
+    'getCapacity',
+    'makeDir',
+    'move',
+    'copy',
+    'delete',
+    'combine',
+    'open',
+    'find',
+    'getDir',
+    'getName',
+    'isDriveRoot',
+    'complete',
+    'attributes',
+)
 
-    async def isReadOnly(self, path: str) -> bool:
-        return boolean(await self._send('isReadOnly', path))
 
-    async def getDrive(self, path: str) -> Optional[str]:
-        return option_string(await self._send('getDrive', path))
+def list(path: str) -> List[str]:
+    return array_string(method('list', path))
 
-    async def getSize(self, path: str) -> int:
-        return integer(await self._send('getSize', path))
 
-    async def getFreeSpace(self, path: str) -> int:
-        return integer(await self._send('getFreeSpace', path))
+def exists(path: str) -> bool:
+    return boolean(method('exists', path))
 
-    async def getCapacity(self, path: str) -> int:
-        return integer(await self._send('getCapacity', path))
 
-    async def makeDir(self, path: str):
-        return nil(await self._send('makeDir', path))
+def isDir(path: str) -> bool:
+    return boolean(method('isDir', path))
 
-    async def move(self, fromPath: str, toPath: str):
-        return nil(await self._send('move', fromPath, toPath))
 
-    async def copy(self, fromPath: str, toPath: str):
-        return nil(await self._send('copy', fromPath, toPath))
+def isReadOnly(path: str) -> bool:
+    return boolean(method('isReadOnly', path))
 
-    async def delete(self, path: str):
-        return nil(await self._send('delete', path))
 
-    async def combine(self, basePath: str, localPath: str) -> str:
-        return string(await self._send('combine', basePath, localPath))
+def getDrive(path: str) -> Optional[str]:
+    return option_string(method('getDrive', path))
 
-    @asynccontextmanager
-    async def open(self, path: str, mode: str):
-        '''
-        Usage:
 
-        async with api.fs.open('filename', 'w') as f:
-            await f.writeLine('textline')
+def getSize(path: str) -> int:
+    return integer(method('getSize', path))
 
-        async with api.fs.open('filename', 'r') as f:
-            async for line in f:
-                ...
-        '''
-        create_expr = '{}.open({})'.format(
-            self.get_expr_code(),
-            lua_args(path, mode),
-        )
-        fin_tpl = '{e}.close()'
-        async with self._cc._create_temp_object(create_expr, fin_tpl) as var:
-            if 'b' in mode:
-                hcls = BinaryReadHandle if 'r' in mode else BinaryWriteHandle
-            else:
-                hcls = ReadHandle if 'r' in mode else WriteHandle
-            yield hcls(self._cc, var)
 
-    async def find(self, wildcard: str) -> List[str]:
-        return array_string(await self._send('find', wildcard))
+def getFreeSpace(path: str) -> int:
+    return integer(method('getFreeSpace', path))
 
-    async def getDir(self, path: str) -> str:
-        return string(await self._send('getDir', path))
 
-    async def getName(self, path: str) -> str:
-        return string(await self._send('getName', path))
+def getCapacity(path: str) -> int:
+    return integer(method('getCapacity', path))
 
-    async def isDriveRoot(self, path: str) -> bool:
-        return boolean(await self._send('isDriveRoot', path))
 
-    async def complete(
-        self, partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
-    ) -> List[str]:
-        return array_string(await self._send(
-            'complete', partialName, path, includeFiles, includeDirs))
+def makeDir(path: str):
+    return nil(method('makeDir', path))
 
-    async def attributes(self, path: str) -> dict:
-        return attribute(await self._send('attributes', path))
+
+def move(fromPath: str, toPath: str):
+    return nil(method('move', fromPath, toPath))
+
+
+def copy(fromPath: str, toPath: str):
+    return nil(method('copy', fromPath, toPath))
+
+
+def delete(path: str):
+    return nil(method('delete', path))
+
+
+def combine(basePath: str, localPath: str) -> str:
+    return string(method('combine', basePath, localPath))
+
+
+@contextmanager
+def open(path: str, mode: str):
+    '''
+    Usage:
+
+    with fs.open('filename', 'w') as f:
+        f.writeLine('textline')
+
+    with fs.open('filename', 'r') as f:
+        for line in f:
+            ...
+    '''
+    with lua_context_object(
+        lua_call('fs.open', path, mode),
+        '{e}.close()',
+    ) as var:
+        if 'b' in mode:
+            hcls = BinaryReadHandle if 'r' in mode else BinaryWriteHandle
+        else:
+            hcls = ReadHandle if 'r' in mode else WriteHandle
+        yield hcls(var)
+
+
+def find(wildcard: str) -> List[str]:
+    return array_string(method('find', wildcard))
+
+
+def getDir(path: str) -> str:
+    return string(method('getDir', path))
+
+
+def getName(path: str) -> str:
+    return string(method('getName', path))
+
+
+def isDriveRoot(path: str) -> bool:
+    return boolean(method('isDriveRoot', path))
+
+
+def complete(
+    partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
+) -> List[str]:
+    return array_string(method(
+        'complete', partialName, path, includeFiles, includeDirs))
+
+
+def attributes(path: str) -> dict:
+    return attribute(method('attributes', path))

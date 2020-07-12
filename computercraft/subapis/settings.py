@@ -1,7 +1,7 @@
 from typing import Any, List
 
-from .base import BaseSubAPI
 from ..rproc import nil, boolean, string, array_string, fact_scheme_dict
+from ..sess import eval_lua_method_factory
 
 
 setting = fact_scheme_dict({
@@ -12,42 +12,65 @@ setting = fact_scheme_dict({
     'type': string,
     'value': lambda v: v,
 })
+method = eval_lua_method_factory('settings.')
 
 
-class SettingsAPI(BaseSubAPI):
-    async def define(self, name: str, description: str = None, default: Any = None, type: str = None):
-        options = {}
-        if description is not None:
-            options['description'] = description
-        if default is not None:
-            options['default'] = default
-        if type is not None:
-            options['type'] = type
-        return nil(await self._send('define', name, options))
+__all__ = (
+    'define',
+    'undefine',
+    'getDetails',
+    'set',
+    'get',
+    'unset',
+    'clear',
+    'getNames',
+    'load',
+    'save',
+)
 
-    async def undefine(self, name: str):
-        return nil(await self._send('undefine', name))
 
-    async def getDetails(self, name: str) -> dict:
-        return setting(await self._send('getDetails', name))
+def define(name: str, description: str = None, default: Any = None, type: str = None):
+    options = {}
+    if description is not None:
+        options['description'] = description
+    if default is not None:
+        options['default'] = default
+    if type is not None:
+        options['type'] = type
+    return nil(method('define', name, options))
 
-    async def set(self, name: str, value: Any):
-        return nil(await self._send('set', name, value))
 
-    async def get(self, name: str, default: Any = None) -> Any:
-        return await self._send('get', name, default)
+def undefine(name: str):
+    return nil(method('undefine', name))
 
-    async def unset(self, name: str):
-        return nil(await self._send('unset', name))
 
-    async def clear(self):
-        return nil(await self._send('clear'))
+def getDetails(name: str) -> dict:
+    return setting(method('getDetails', name))
 
-    async def getNames(self) -> List[str]:
-        return array_string(await self._send('getNames'))
 
-    async def load(self, path: str = None) -> bool:
-        return boolean(await self._send('load', path))
+def set(name: str, value: Any):
+    return nil(method('set', name, value))
 
-    async def save(self, path: str = None) -> bool:
-        return boolean(await self._send('save', path))
+
+def get(name: str, default: Any = None) -> Any:
+    return method('get', name, default)
+
+
+def unset(name: str):
+    return nil(method('unset', name))
+
+
+def clear():
+    return nil(method('clear'))
+
+
+def getNames() -> List[str]:
+    return array_string(method('getNames'))
+
+
+def load(path: str = None) -> bool:
+    return boolean(method('load', path))
+
+
+def save(path: str = None) -> bool:
+    return boolean(method('save', path))

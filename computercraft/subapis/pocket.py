@@ -1,10 +1,19 @@
-from .base import BaseSubAPI
 from ..rproc import flat_try_result
+from ..sess import eval_lua_method_factory
 
 
-class PocketAPI(BaseSubAPI):
-    async def equipBack(self):
-        return flat_try_result(await self._send('equipBack'))
+method = eval_lua_method_factory('pocket.')
 
-    async def unequipBack(self) -> bool:
-        return flat_try_result(await self._send('unequipBack'))
+
+__all__ = (
+    'equipBack',
+    'unequipBack',
+)
+
+
+def equipBack():
+    return flat_try_result(method('equipBack'))
+
+
+def unequipBack():
+    return flat_try_result(method('unequipBack'))

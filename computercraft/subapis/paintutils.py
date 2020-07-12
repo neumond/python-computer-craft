@@ -1,30 +1,47 @@
 from typing import List
 
-from .base import BaseSubAPI
 from ..rproc import nil, integer, fact_array
+from ..sess import eval_lua_method_factory
 
 
 array_2d_integer = fact_array(fact_array(integer))
+method = eval_lua_method_factory('paintutils.')
 
 
-class PaintutilsAPI(BaseSubAPI):
-    async def parseImage(self, data: str) -> List[List[int]]:
-        return array_2d_integer(await self._send('parseImage', data))
+__all__ = (
+    'parseImage',
+    'loadImage',
+    'drawPixel',
+    'drawLine',
+    'drawBox',
+    'drawFilledBox',
+    'drawImage',
+)
 
-    async def loadImage(self, path: str) -> List[List[int]]:
-        return array_2d_integer(await self._send('loadImage', path))
 
-    async def drawPixel(self, x: int, y: int, color: int = None):
-        return nil(await self._send('drawPixel', x, y, color))
+def parseImage(data: str) -> List[List[int]]:
+    return array_2d_integer(method('parseImage', data))
 
-    async def drawLine(self, startX: int, startY: int, endX: int, endY: int, color: int = None):
-        return nil(await self._send('drawLine', startX, startY, endX, endY, color))
 
-    async def drawBox(self, startX: int, startY: int, endX: int, endY: int, color: int = None):
-        return nil(await self._send('drawBox', startX, startY, endX, endY, color))
+def loadImage(path: str) -> List[List[int]]:
+    return array_2d_integer(method('loadImage', path))
 
-    async def drawFilledBox(self, startX: int, startY: int, endX: int, endY: int, color: int = None):
-        return nil(await self._send('drawFilledBox', startX, startY, endX, endY, color))
 
-    async def drawImage(self, image: List[List[int]], xPos: int, yPos: int):
-        return nil(await self._send('drawImage', image, xPos, yPos))
+def drawPixel(x: int, y: int, color: int = None):
+    return nil(method('drawPixel', x, y, color))
+
+
+def drawLine(startX: int, startY: int, endX: int, endY: int, color: int = None):
+    return nil(method('drawLine', startX, startY, endX, endY, color))
+
+
+def drawBox(startX: int, startY: int, endX: int, endY: int, color: int = None):
+    return nil(method('drawBox', startX, startY, endX, endY, color))
+
+
+def drawFilledBox(startX: int, startY: int, endX: int, endY: int, color: int = None):
+    return nil(method('drawFilledBox', startX, startY, endX, endY, color))
+
+
+def drawImage(image: List[List[int]], xPos: int, yPos: int):
+    return nil(method('drawImage', image, xPos, yPos))

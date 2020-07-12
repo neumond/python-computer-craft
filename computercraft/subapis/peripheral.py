@@ -1,96 +1,92 @@
-from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Optional, List, Tuple, Any, Union
 
-from .base import BaseSubAPI
 from .mixins import TermMixin, TermTarget
 from .turtle import craft_result
-from ..lua import LuaNum, lua_args
+from ..lua import LuaNum, lua_args, return_lua_call
 from ..rproc import (
     boolean, nil, integer, string, option_integer, option_string,
     tuple2_integer, array_string, option_string_bool, try_result,
 )
+from ..sess import eval_lua, eval_lua_method_factory
 
 
 class BasePeripheral:
     # NOTE: is not LuaExpr, you can't pass peripheral as parameter
+    # TODO: to fix this we can supply separate lua expr, result of .wrap()
 
-    def __init__(self, cc, lua_method_expr, *prepend_params):
-        self._cc = cc
+    def __init__(self, lua_method_expr, *prepend_params):
         self._lua_method_expr = lua_method_expr
         self._prepend_params = prepend_params
 
-    async def _send(self, method, *params):
-        return await self._method(method, *params)
-
-    async def _method(self, name, *params):
-        return await self._cc.eval_coro('return {}({})'.format(
+    def _method(self, name, *params):
+        return eval_lua(return_lua_call(
             self._lua_method_expr,
-            lua_args(*self._prepend_params, name, *params),
+            *self._prepend_params, name, *params,
         ))
 
 
 class CCDrive(BasePeripheral):
-    async def isDiskPresent(self) -> bool:
-        return boolean(await self._send('isDiskPresent'))
+    def isDiskPresent(self) -> bool:
+        return boolean(self._method('isDiskPresent'))
 
-    async def getDiskLabel(self) -> Optional[str]:
-        return option_string(await self._send('getDiskLabel'))
+    def getDiskLabel(self) -> Optional[str]:
+        return option_string(self._method('getDiskLabel'))
 
-    async def setDiskLabel(self, label: str):
-        return nil(await self._send('setDiskLabel', label))
+    def setDiskLabel(self, label: str):
+        return nil(self._method('setDiskLabel', label))
 
-    async def hasData(self) -> bool:
-        return boolean(await self._send('hasData'))
+    def hasData(self) -> bool:
+        return boolean(self._method('hasData'))
 
-    async def getMountPath(self) -> Optional[str]:
-        return option_string(await self._send('getMountPath'))
+    def getMountPath(self) -> Optional[str]:
+        return option_string(self._method('getMountPath'))
 
-    async def hasAudio(self) -> bool:
-        return boolean(await self._send('hasAudio'))
+    def hasAudio(self) -> bool:
+        return boolean(self._method('hasAudio'))
 
-    async def getAudioTitle(self) -> Optional[Union[bool, str]]:
-        return option_string_bool(await self._send('getAudioTitle'))
+    def getAudioTitle(self) -> Optional[Union[bool, str]]:
+        return option_string_bool(self._method('getAudioTitle'))
 
-    async def playAudio(self):
-        return nil(await self._send('playAudio'))
+    def playAudio(self):
+        return nil(self._method('playAudio'))
 
-    async def stopAudio(self):
-        return nil(await self._send('stopAudio'))
+    def stopAudio(self):
+        return nil(self._method('stopAudio'))
 
-    async def ejectDisk(self):
-        return nil(await self._send('ejectDisk'))
+    def ejectDisk(self):
+        return nil(self._method('ejectDisk'))
 
-    async def getDiskID(self) -> Optional[int]:
-        return option_integer(await self._send('getDiskID'))
+    def getDiskID(self) -> Optional[int]:
+        return option_integer(self._method('getDiskID'))
 
 
 class CCMonitor(BasePeripheral, TermMixin):
-    async def getTextScale(self) -> int:
-        return integer(await self._send('getTextScale'))
+    def getTextScale(self) -> int:
+        return integer(self._method('getTextScale'))
 
-    async def setTextScale(self, scale: int):
-        return nil(await self._send('setTextScale', scale))
+    def setTextScale(self, scale: int):
+        return nil(self._method('setTextScale', scale))
 
 
 class ComputerMixin:
-    async def turnOn(self):
-        return nil(await self._send('turnOn'))
+    def turnOn(self):
+        return nil(self._method('turnOn'))
 
-    async def shutdown(self):
-        return nil(await self._send('shutdown'))
+    def shutdown(self):
+        return nil(self._method('shutdown'))
 
-    async def reboot(self):
-        return nil(await self._send('reboot'))
+    def reboot(self):
+        return nil(self._method('reboot'))
 
-    async def getID(self) -> int:
-        return integer(await self._send('getID'))
+    def getID(self) -> int:
+        return integer(self._method('getID'))
 
-    async def getLabel(self) -> Optional[str]:
-        return option_string(await self._send('getLabel'))
+    def getLabel(self) -> Optional[str]:
+        return option_string(self._method('getLabel'))
 
-    async def isOn(self) -> bool:
-        return boolean(await self._send('isOn'))
+    def isOn(self) -> bool:
+        return boolean(self._method('isOn'))
 
 
 class CCComputer(BasePeripheral, ComputerMixin):
@@ -109,48 +105,45 @@ class ModemMessage:
 
 
 class ModemMixin:
-    async def isOpen(self, channel: int) -> bool:
-        return boolean(await self._send('isOpen', channel))
+    def isOpen(self, channel: int) -> bool:
+        return boolean(self._method('isOpen', channel))
 
-    async def open(self, channel: int):
-        return nil(await self._send('open', channel))
+    def open(self, channel: int):
+        return nil(self._method('open', channel))
 
-    async def close(self, channel: int):
-        return nil(await self._send('close', channel))
+    def close(self, channel: int):
+        return nil(self._method('close', channel))
 
-    async def closeAll(self):
-        return nil(await self._send('closeAll'))
+    def closeAll(self):
+        return nil(self._method('closeAll'))
 
-    async def transmit(self, channel: int, replyChannel: int, message: Any):
-        return nil(await self._send('transmit', channel, replyChannel, message))
+    def transmit(self, channel: int, replyChannel: int, message: Any):
+        return nil(self._method('transmit', channel, replyChannel, message))
 
-    async def isWireless(self) -> bool:
-        return boolean(await self._send('isWireless'))
+    def isWireless(self) -> bool:
+        return boolean(self._method('isWireless'))
 
     @property
     def _side(self):
         return self._prepend_params[0]
 
-    def _mk_recv_filter(self, channel):
-        def filter(msg):
-            if msg[0] != self._side:
-                return False, None
-            if msg[1] != channel:
-                return False, None
-            return True, ModemMessage(*msg[2:])
-        return filter
+    def receive(self, channel: int):
+        from .os import pullEvent
 
-    @asynccontextmanager
-    async def receive(self, channel: int):
-        if await self.isOpen(channel):
+        if self.isOpen(channel):
             raise Exception('Channel is busy')
-        await self.open(channel)
+
+        self.open(channel)
         try:
-            async with self._cc.os.captureEvent('modem_message') as q:
-                q.filter = self._mk_recv_filter(channel)
-                yield q
+            while True:
+                evt = pullEvent('modem_message')
+                if evt[0] != self._side:
+                    continue
+                if evt[1] != channel:
+                    continue
+                yield ModemMessage(*evt[2:])
         finally:
-            await self.close(channel)
+            self.close(channel)
 
 
 class CCWirelessModem(BasePeripheral, ModemMixin):
@@ -158,28 +151,27 @@ class CCWirelessModem(BasePeripheral, ModemMixin):
 
 
 class CCWiredModem(BasePeripheral, ModemMixin):
-    async def getNameLocal(self) -> Optional[str]:
-        return option_string(await self._send('getNameLocal'))
+    def getNameLocal(self) -> Optional[str]:
+        return option_string(self._method('getNameLocal'))
 
-    async def getNamesRemote(self) -> List[str]:
-        return array_string(await self._send('getNamesRemote'))
+    def getNamesRemote(self) -> List[str]:
+        return array_string(self._method('getNamesRemote'))
 
-    async def getTypeRemote(self, peripheralName: str) -> Optional[str]:
-        return option_string(await self._send('getTypeRemote', peripheralName))
+    def getTypeRemote(self, peripheralName: str) -> Optional[str]:
+        return option_string(self._method('getTypeRemote', peripheralName))
 
-    async def isPresentRemote(self, peripheralName: str) -> bool:
-        return boolean(await self._send('isPresentRemote', peripheralName))
+    def isPresentRemote(self, peripheralName: str) -> bool:
+        return boolean(self._method('isPresentRemote', peripheralName))
 
-    async def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
+    def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
         # use instead getMethodsRemote and callRemote
         # NOTE: you can also use peripheral.wrap(peripheralName)
 
-        ptype = await self.getTypeRemote(peripheralName)
+        ptype = self.getTypeRemote(peripheralName)
         if ptype is None:
             return None
 
         return TYPE_MAP[ptype](
-            self._cc,
             self._lua_method_expr, *self._prepend_params,
             'callRemote', peripheralName,
         )
@@ -188,36 +180,36 @@ class CCWiredModem(BasePeripheral, ModemMixin):
 
 
 class CCPrinter(BasePeripheral):
-    async def newPage(self) -> bool:
-        return boolean(await self._send('newPage'))
+    def newPage(self) -> bool:
+        return boolean(self._method('newPage'))
 
-    async def endPage(self) -> bool:
-        return boolean(await self._send('endPage'))
+    def endPage(self) -> bool:
+        return boolean(self._method('endPage'))
 
-    async def write(self, text: str):
-        return nil(await self._send('write', text))
+    def write(self, text: str):
+        return nil(self._method('write', text))
 
-    async def setCursorPos(self, x: int, y: int):
-        return nil(await self._send('setCursorPos', x, y))
+    def setCursorPos(self, x: int, y: int):
+        return nil(self._method('setCursorPos', x, y))
 
-    async def getCursorPos(self) -> Tuple[int, int]:
-        return tuple2_integer(await self._send('getCursorPos'))
+    def getCursorPos(self) -> Tuple[int, int]:
+        return tuple2_integer(self._method('getCursorPos'))
 
-    async def getPageSize(self) -> Tuple[int, int]:
-        return tuple2_integer(await self._send('getPageSize'))
+    def getPageSize(self) -> Tuple[int, int]:
+        return tuple2_integer(self._method('getPageSize'))
 
-    async def setPageTitle(self, title: str):
-        return nil(await self._send('setPageTitle', title))
+    def setPageTitle(self, title: str):
+        return nil(self._method('setPageTitle', title))
 
-    async def getPaperLevel(self) -> int:
-        return integer(await self._send('getPaperLevel'))
+    def getPaperLevel(self) -> int:
+        return integer(self._method('getPaperLevel'))
 
-    async def getInkLevel(self) -> int:
-        return integer(await self._send('getInkLevel'))
+    def getInkLevel(self) -> int:
+        return integer(self._method('getInkLevel'))
 
 
 class CCSpeaker(BasePeripheral):
-    async def playNote(self, instrument: str, volume: int = 1, pitch: int = 1) -> bool:
+    def playNote(self, instrument: str, volume: int = 1, pitch: int = 1) -> bool:
         # instrument:
         # https://minecraft.gamepedia.com/Note_Block#Instruments
         # bass
@@ -238,28 +230,28 @@ class CCSpeaker(BasePeripheral):
 
         # volume 0..3
         # pitch 0..24
-        return boolean(await self._send('playNote', instrument, volume, pitch))
+        return boolean(self._method('playNote', instrument, volume, pitch))
 
-    async def playSound(self, sound: str, volume: int = 1, pitch: int = 1):
+    def playSound(self, sound: str, volume: int = 1, pitch: int = 1):
         # volume 0..3
         # pitch 0..2
-        return boolean(await self._send('playSound', sound, volume, pitch))
+        return boolean(self._method('playSound', sound, volume, pitch))
 
 
 class CCCommandBlock(BasePeripheral):
-    async def getCommand(self) -> str:
-        return string(await self._send('getCommand'))
+    def getCommand(self) -> str:
+        return string(self._method('getCommand'))
 
-    async def setCommand(self, command: str):
-        return nil(await self._send('setCommand', command))
+    def setCommand(self, command: str):
+        return nil(self._method('setCommand', command))
 
-    async def runCommand(self):
-        return try_result(await self._send('runCommand'))
+    def runCommand(self):
+        return try_result(self._method('runCommand'))
 
 
 class CCWorkbench(BasePeripheral):
-    async def craft(self, quantity: int = 64) -> bool:
-        return craft_result(await self._send('craft', quantity))
+    def craft(self, quantity: int = 64) -> bool:
+        return craft_result(self._method('craft', quantity))
 
 
 TYPE_MAP = {
@@ -274,34 +266,48 @@ TYPE_MAP = {
 }
 
 
-class PeripheralAPI(BaseSubAPI):
-    async def isPresent(self, side: str) -> bool:
-        return boolean(await self._send('isPresent', side))
+method = eval_lua_method_factory('peripheral.')
 
-    async def getType(self, side: str) -> Optional[str]:
-        return option_string(await self._send('getType', side))
 
-    async def getNames(self) -> List[str]:
-        return array_string(await self._send('getNames'))
+__all__ = (
+    'isPresent',
+    'getType',
+    'getNames',
+    'wrap',
+    'get_term_target',
+)
 
-    # use instead getMethods and call
-    async def wrap(self, side: str) -> Optional[BasePeripheral]:
-        ptype = await self.getType(side)
-        if ptype is None:
-            return None
 
-        m = self.get_expr_code() + '.call'
+def isPresent(side: str) -> bool:
+    return boolean(method('isPresent', side))
 
-        if ptype == 'modem':
-            if boolean(await self._send('call', side, 'isWireless')):
-                return CCWirelessModem(self._cc, m, side)
-            else:
-                return CCWiredModem(self._cc, m, side)
+
+def getType(side: str) -> Optional[str]:
+    return option_string(method('getType', side))
+
+
+def getNames() -> List[str]:
+    return array_string(method('getNames'))
+
+
+# use instead getMethods and call
+def wrap(side: str) -> Optional[BasePeripheral]:
+    ptype = getType(side)
+    if ptype is None:
+        return None
+
+    m = 'peripheral.call'
+
+    if ptype == 'modem':
+        if boolean(method('call', side, 'isWireless')):
+            return CCWirelessModem(m, side)
         else:
-            return TYPE_MAP[ptype](self._cc, m, side)
+            return CCWiredModem(m, side)
+    else:
+        return TYPE_MAP[ptype](m, side)
 
-    def get_term_target(self, side: str) -> TermTarget:
-        return TermTarget('{}.wrap({})'.format(
-            self.get_expr_code(),
-            lua_args(side),
-        ))
+
+def get_term_target(side: str) -> TermTarget:
+    return TermTarget('peripheral.wrap({})'.format(
+        lua_args(side),
+    ))

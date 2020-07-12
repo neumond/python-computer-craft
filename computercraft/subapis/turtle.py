@@ -1,10 +1,11 @@
 from typing import Optional
 
-from .base import BaseSubAPI
 from ..errors import LuaException
 from ..rproc import integer, boolean, fact_option, any_dict, flat_try_result
+from ..sess import eval_lua_method_factory
 
 
+method = eval_lua_method_factory('turtle.')
 option_any_dict = fact_option(any_dict)
 
 
@@ -54,132 +55,220 @@ def always_true(r):
     return None
 
 
-class TurtleAPI(BaseSubAPI):
-    async def craft(self, quantity: int = 64) -> bool:
-        return craft_result(await self._send('craft', quantity))
+__all__ = (
+    'craft',
+    'forward',
+    'back',
+    'up',
+    'down',
+    'turnLeft',
+    'turnRight',
+    'select',
+    'getSelectedSlot',
+    'getItemCount',
+    'getItemSpace',
+    'getItemDetail',
+    'equipLeft',
+    'equipRight',
+    'attack',
+    'attackUp',
+    'attackDown',
+    'dig',
+    'digUp',
+    'digDown',
+    'place',
+    'placeUp',
+    'placeDown',
+    'detect',
+    'detectUp',
+    'detectDown',
+    'inspect',
+    'inspectUp',
+    'inspectDown',
+    'compare',
+    'compareUp',
+    'compareDown',
+    'compareTo',
+    'drop',
+    'dropUp',
+    'dropDown',
+    'suck',
+    'suckUp',
+    'suckDown',
+    'refuel',
+    'getFuelLevel',
+    'getFuelLimit',
+    'transferTo',
+)
 
-    async def forward(self) -> bool:
-        return move_result(await self._send('forward'))
 
-    async def back(self) -> bool:
-        return move_result(await self._send('back'))
+def craft(quantity: int = 64) -> bool:
+    return craft_result(method('craft', quantity))
 
-    async def up(self) -> bool:
-        return move_result(await self._send('up'))
 
-    async def down(self) -> bool:
-        return move_result(await self._send('down'))
+def forward() -> bool:
+    return move_result(method('forward'))
 
-    async def turnLeft(self):
-        return always_true(await self._send('turnLeft'))
 
-    async def turnRight(self):
-        return always_true(await self._send('turnRight'))
+def back() -> bool:
+    return move_result(method('back'))
 
-    async def select(self, slotNum: int):
-        return always_true(await self._send('select', slotNum))
 
-    async def getSelectedSlot(self) -> int:
-        return integer(await self._send('getSelectedSlot'))
+def up() -> bool:
+    return move_result(method('up'))
 
-    async def getItemCount(self, slotNum: int = None) -> int:
-        return integer(await self._send('getItemCount', slotNum))
 
-    async def getItemSpace(self, slotNum: int = None) -> int:
-        return integer(await self._send('getItemSpace', slotNum))
+def down() -> bool:
+    return move_result(method('down'))
 
-    async def getItemDetail(self, slotNum: int = None) -> dict:
-        return option_any_dict(await self._send('getItemDetail', slotNum))
 
-    async def equipLeft(self):
-        return always_true(await self._send('equipLeft'))
+def turnLeft():
+    return always_true(method('turnLeft'))
 
-    async def equipRight(self):
-        return always_true(await self._send('equipRight'))
 
-    async def attack(self) -> bool:
-        return attack_result(await self._send('attack'))
+def turnRight():
+    return always_true(method('turnRight'))
 
-    async def attackUp(self) -> bool:
-        return attack_result(await self._send('attackUp'))
 
-    async def attackDown(self) -> bool:
-        return attack_result(await self._send('attackDown'))
+def select(slotNum: int):
+    return always_true(method('select', slotNum))
 
-    async def dig(self) -> bool:
-        return dig_result(await self._send('dig'))
 
-    async def digUp(self) -> bool:
-        return dig_result(await self._send('digUp'))
+def getSelectedSlot() -> int:
+    return integer(method('getSelectedSlot'))
 
-    async def digDown(self) -> bool:
-        return dig_result(await self._send('digDown'))
 
-    async def place(self, signText: str = None) -> bool:
-        return place_result(await self._send('place', signText))
+def getItemCount(slotNum: int = None) -> int:
+    return integer(method('getItemCount', slotNum))
 
-    async def placeUp(self) -> bool:
-        return place_result(await self._send('placeUp'))
 
-    async def placeDown(self) -> bool:
-        return place_result(await self._send('placeDown'))
+def getItemSpace(slotNum: int = None) -> int:
+    return integer(method('getItemSpace', slotNum))
 
-    async def detect(self) -> bool:
-        return boolean(await self._send('detect'))
 
-    async def detectUp(self) -> bool:
-        return boolean(await self._send('detectUp'))
+def getItemDetail(slotNum: int = None) -> dict:
+    return option_any_dict(method('getItemDetail', slotNum))
 
-    async def detectDown(self) -> bool:
-        return boolean(await self._send('detectDown'))
 
-    async def inspect(self) -> Optional[dict]:
-        return inspect_result(await self._send('inspect'))
+def equipLeft():
+    return always_true(method('equipLeft'))
 
-    async def inspectUp(self) -> Optional[dict]:
-        return inspect_result(await self._send('inspectUp'))
 
-    async def inspectDown(self) -> Optional[dict]:
-        return inspect_result(await self._send('inspectDown'))
+def equipRight():
+    return always_true(method('equipRight'))
 
-    async def compare(self) -> bool:
-        return boolean(await self._send('compare'))
 
-    async def compareUp(self) -> bool:
-        return boolean(await self._send('compareUp'))
+def attack() -> bool:
+    return attack_result(method('attack'))
 
-    async def compareDown(self) -> bool:
-        return boolean(await self._send('compareDown'))
 
-    async def compareTo(self, slot: int) -> bool:
-        return boolean(await self._send('compareTo', slot))
+def attackUp() -> bool:
+    return attack_result(method('attackUp'))
 
-    async def drop(self, count: int = None) -> bool:
-        return drop_result(await self._send('drop', count))
 
-    async def dropUp(self, count: int = None) -> bool:
-        return drop_result(await self._send('dropUp', count))
+def attackDown() -> bool:
+    return attack_result(method('attackDown'))
 
-    async def dropDown(self, count: int = None) -> bool:
-        return drop_result(await self._send('dropDown', count))
 
-    async def suck(self, amount: int = None) -> bool:
-        return suck_result(await self._send('suck', amount))
+def dig() -> bool:
+    return dig_result(method('dig'))
 
-    async def suckUp(self, amount: int = None) -> bool:
-        return suck_result(await self._send('suckUp', amount))
 
-    async def suckDown(self, amount: int = None) -> bool:
-        return suck_result(await self._send('suckDown', amount))
+def digUp() -> bool:
+    return dig_result(method('digUp'))
 
-    async def refuel(self, quantity: int = None):
-        return flat_try_result(await self._send('refuel', quantity))
 
-    async def getFuelLevel(self) -> int:
-        return integer(await self._send('getFuelLevel'))
+def digDown() -> bool:
+    return dig_result(method('digDown'))
 
-    async def getFuelLimit(self) -> int:
-        return integer(await self._send('getFuelLimit'))
 
-    async def transferTo(self, slot: int, quantity: int = None) -> bool:
-        return transfer_result(await self._send('transferTo', slot, quantity))
+def place(signText: str = None) -> bool:
+    return place_result(method('place', signText))
+
+
+def placeUp() -> bool:
+    return place_result(method('placeUp'))
+
+
+def placeDown() -> bool:
+    return place_result(method('placeDown'))
+
+
+def detect() -> bool:
+    return boolean(method('detect'))
+
+
+def detectUp() -> bool:
+    return boolean(method('detectUp'))
+
+
+def detectDown() -> bool:
+    return boolean(method('detectDown'))
+
+
+def inspect() -> Optional[dict]:
+    return inspect_result(method('inspect'))
+
+
+def inspectUp() -> Optional[dict]:
+    return inspect_result(method('inspectUp'))
+
+
+def inspectDown() -> Optional[dict]:
+    return inspect_result(method('inspectDown'))
+
+
+def compare() -> bool:
+    return boolean(method('compare'))
+
+
+def compareUp() -> bool:
+    return boolean(method('compareUp'))
+
+
+def compareDown() -> bool:
+    return boolean(method('compareDown'))
+
+
+def compareTo(slot: int) -> bool:
+    return boolean(method('compareTo', slot))
+
+
+def drop(count: int = None) -> bool:
+    return drop_result(method('drop', count))
+
+
+def dropUp(count: int = None) -> bool:
+    return drop_result(method('dropUp', count))
+
+
+def dropDown(count: int = None) -> bool:
+    return drop_result(method('dropDown', count))
+
+
+def suck(amount: int = None) -> bool:
+    return suck_result(method('suck', amount))
+
+
+def suckUp(amount: int = None) -> bool:
+    return suck_result(method('suckUp', amount))
+
+
+def suckDown(amount: int = None) -> bool:
+    return suck_result(method('suckDown', amount))
+
+
+def refuel(quantity: int = None):
+    return flat_try_result(method('refuel', quantity))
+
+
+def getFuelLevel() -> int:
+    return integer(method('getFuelLevel'))
+
+
+def getFuelLimit() -> int:
+    return integer(method('getFuelLimit'))
+
+
+def transferTo(slot: int, quantity: int = None) -> bool:
+    return transfer_result(method('transferTo', slot, quantity))

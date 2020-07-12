@@ -1,41 +1,68 @@
 from typing import List
 
-from .base import BaseSubAPI
 from ..rproc import boolean, nil, integer, array_string
+from ..sess import eval_lua_method_factory
 
 
-class RedstoneAPI(BaseSubAPI):
-    async def getSides(self) -> List[str]:
-        return array_string(await self._send('getSides'))
+method = eval_lua_method_factory('redstone.')
 
-    async def getInput(self, side: str) -> bool:
-        return boolean(await self._send('getInput', side))
 
-    async def setOutput(self, side: str, value: bool):
-        return nil(await self._send('setOutput', side, value))
+__all__ = (
+    'getSides',
+    'getInput',
+    'setOutput',
+    'getOutput',
+    'getAnalogInput',
+    'setAnalogOutput',
+    'getAnalogOutput',
+    'getBundledInput',
+    'setBundledOutput',
+    'getBundledOutput',
+    'testBundledInput',
+)
 
-    async def getOutput(self, side: str) -> bool:
-        return boolean(await self._send('getOutput', side))
 
-    async def getAnalogInput(self, side: str) -> int:
-        return integer(await self._send('getAnalogInput', side))
+def getSides(self) -> List[str]:
+    return array_string(method('getSides'))
 
-    async def setAnalogOutput(self, side: str, strength: int):
-        return nil(await self._send('setAnalogOutput', side, strength))
 
-    async def getAnalogOutput(self, side: str) -> int:
-        return integer(await self._send('getAnalogOutput', side))
+def getInput(side: str) -> bool:
+    return boolean(method('getInput', side))
 
-    # bundled cables are not available in vanilla
 
-    async def getBundledInput(self, side: str) -> int:
-        return integer(await self._send('getBundledInput', side))
+def setOutput(side: str, value: bool):
+    return nil(method('setOutput', side, value))
 
-    async def setBundledOutput(self, side: str, colors: int):
-        return nil(await self._send('setBundledOutput', side, colors))
 
-    async def getBundledOutput(self, side: str) -> int:
-        return integer(await self._send('getBundledOutput', side))
+def getOutput(side: str) -> bool:
+    return boolean(method('getOutput', side))
 
-    async def testBundledInput(self, side: str, color: int) -> bool:
-        return boolean(await self._send('testBundledInput', side, color))
+
+def getAnalogInput(side: str) -> int:
+    return integer(method('getAnalogInput', side))
+
+
+def setAnalogOutput(side: str, strength: int):
+    return nil(method('setAnalogOutput', side, strength))
+
+
+def getAnalogOutput(side: str) -> int:
+    return integer(method('getAnalogOutput', side))
+
+
+# bundled cables are not available in vanilla
+
+def getBundledInput(side: str) -> int:
+    return integer(method('getBundledInput', side))
+
+
+def setBundledOutput(side: str, colors: int):
+    return nil(method('setBundledOutput', side, colors))
+
+
+def getBundledOutput(side: str) -> int:
+    return integer(method('getBundledOutput', side))
+
+
+def testBundledInput(side: str, color: int) -> bool:
+    return boolean(method('testBundledInput', side, color))

@@ -5,56 +5,56 @@ from ..rproc import boolean, nil, integer, tuple3_number, tuple2_integer
 
 
 class TermMixin:
-    async def write(self, text: str):
-        return nil(await self._send('write', text))
+    def write(self, text: str):
+        return nil(self._method('write', text))
 
-    async def blit(self, text: str, textColors: str, backgroundColors: str):
-        return nil(await self._send('blit', text, textColors, backgroundColors))
+    def blit(self, text: str, textColors: str, backgroundColors: str):
+        return nil(self._method('blit', text, textColors, backgroundColors))
 
-    async def clear(self):
-        return nil(await self._send('clear'))
+    def clear(self):
+        return nil(self._method('clear'))
 
-    async def clearLine(self):
-        return nil(await self._send('clearLine'))
+    def clearLine(self):
+        return nil(self._method('clearLine'))
 
-    async def getCursorPos(self) -> Tuple[int, int]:
-        return tuple2_integer(await self._send('getCursorPos'))
+    def getCursorPos(self) -> Tuple[int, int]:
+        return tuple2_integer(self._method('getCursorPos'))
 
-    async def setCursorPos(self, x: int, y: int):
-        return nil(await self._send('setCursorPos', x, y))
+    def setCursorPos(self, x: int, y: int):
+        return nil(self._method('setCursorPos', x, y))
 
-    async def getCursorBlink(self) -> bool:
-        return boolean(await self._send('getCursorBlink'))
+    def getCursorBlink(self) -> bool:
+        return boolean(self._method('getCursorBlink'))
 
-    async def setCursorBlink(self, value: bool):
-        return nil(await self._send('setCursorBlink', value))
+    def setCursorBlink(self, value: bool):
+        return nil(self._method('setCursorBlink', value))
 
-    async def isColor(self) -> bool:
-        return boolean(await self._send('isColor'))
+    def isColor(self) -> bool:
+        return boolean(self._method('isColor'))
 
-    async def getSize(self) -> Tuple[int, int]:
-        return tuple2_integer(await self._send('getSize'))
+    def getSize(self) -> Tuple[int, int]:
+        return tuple2_integer(self._method('getSize'))
 
-    async def scroll(self, lines: int):
-        return nil(await self._send('scroll', lines))
+    def scroll(self, lines: int):
+        return nil(self._method('scroll', lines))
 
-    async def setTextColor(self, colorID: int):
-        return nil(await self._send('setTextColor', colorID))
+    def setTextColor(self, colorID: int):
+        return nil(self._method('setTextColor', colorID))
 
-    async def getTextColor(self) -> int:
-        return integer(await self._send('getTextColor'))
+    def getTextColor(self) -> int:
+        return integer(self._method('getTextColor'))
 
-    async def setBackgroundColor(self, colorID: int):
-        return nil(await self._send('setBackgroundColor', colorID))
+    def setBackgroundColor(self, colorID: int):
+        return nil(self._method('setBackgroundColor', colorID))
 
-    async def getBackgroundColor(self) -> int:
-        return integer(await self._send('getBackgroundColor'))
+    def getBackgroundColor(self) -> int:
+        return integer(self._method('getBackgroundColor'))
 
-    async def getPaletteColor(self, colorID: int) -> Tuple[float, float, float]:
-        return tuple3_number(await self._send('getPaletteColor', colorID))
+    def getPaletteColor(self, colorID: int) -> Tuple[float, float, float]:
+        return tuple3_number(self._method('getPaletteColor', colorID))
 
-    async def setPaletteColor(self, colorID: int, r: float, g: float, b: float):
-        return nil(await self._send('setPaletteColor', colorID, r, g, b))
+    def setPaletteColor(self, colorID: int, r: float, g: float, b: float):
+        return nil(self._method('setPaletteColor', colorID, r, g, b))
 
 
 class TermTarget(LuaExpr):

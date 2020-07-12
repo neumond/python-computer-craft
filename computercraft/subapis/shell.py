@@ -1,72 +1,112 @@
 from typing import List, Dict, Optional
 
-from .base import BaseSubAPI
 from ..rproc import nil, string, boolean, integer, array_string, fact_mono_dict, option_string
+from ..sess import eval_lua_method_factory
 
 
 map_string_string = fact_mono_dict(string, string)
+method = eval_lua_method_factory('shell.')
 
 
-class ShellAPI(BaseSubAPI):
-    async def exit(self):
-        return nil(await self._send('exit'))
+__all__ = (
+    'exit',
+    'dir',
+    'setDir',
+    'path',
+    'setPath',
+    'resolve',
+    'resolveProgram',
+    'aliases',
+    'setAlias',
+    'clearAlias',
+    'programs',
+    'getRunningProgram',
+    'run',
+    'execute',
+    'openTab',
+    'switchTab',
+    'complete',
+    'completeProgram',
+)
 
-    async def dir(self) -> str:
-        return string(await self._send('dir'))
 
-    async def setDir(self, path: str):
-        return nil(await self._send('setDir', path))
+def exit(self):
+    return nil(method('exit'))
 
-    async def path(self) -> str:
-        return string(await self._send('path'))
 
-    async def setPath(self, path: str):
-        return nil(await self._send('setPath', path))
+def dir(self) -> str:
+    return string(method('dir'))
 
-    async def resolve(self, localPath: str) -> str:
-        return string(await self._send('resolve', localPath))
 
-    async def resolveProgram(self, name: str) -> Optional[str]:
-        return option_string(await self._send('resolveProgram', name))
+def setDir(path: str):
+    return nil(method('setDir', path))
 
-    async def aliases(self) -> Dict[str, str]:
-        return map_string_string(await self._send('aliases'))
 
-    async def setAlias(self, alias: str, program: str):
-        return nil(await self._send('setAlias', alias, program))
+def path(self) -> str:
+    return string(method('path'))
 
-    async def clearAlias(self, alias: str):
-        return nil(await self._send('clearAlias', alias))
 
-    async def programs(self, showHidden: bool = None) -> List[str]:
-        return array_string(await self._send('programs', showHidden))
+def setPath(path: str):
+    return nil(method('setPath', path))
 
-    async def getRunningProgram(self) -> str:
-        return string(await self._send('getRunningProgram'))
 
-    async def run(self, command: str, *args: str) -> bool:
-        return boolean(await self._send('run', command, *args))
+def resolve(localPath: str) -> str:
+    return string(method('resolve', localPath))
 
-    async def execute(self, command: str, *args: str) -> bool:
-        return boolean(await self._send('execute', command, *args))
 
-    async def openTab(self, command: str, *args: str) -> int:
-        return integer(await self._send('openTab', command, *args))
+def resolveProgram(name: str) -> Optional[str]:
+    return option_string(method('resolveProgram', name))
 
-    async def switchTab(self, tabID: int):
-        return nil(await self._send('switchTab', tabID))
 
-    async def complete(self, prefix: str) -> List[str]:
-        return array_string(await self._send('complete', prefix))
+def aliases(self) -> Dict[str, str]:
+    return map_string_string(method('aliases'))
 
-    async def completeProgram(self, prefix: str) -> List[str]:
-        return array_string(await self._send('completeProgram', prefix))
 
-    # these functions won't be implemented
-    # it's far better to keep this in lua code
+def setAlias(alias: str, program: str):
+    return nil(method('setAlias', alias, program))
 
-    # setCompletionFunction
-    # getCompletionInfo
 
-    # we can create callbacks to python code, but this will require
-    # connection to python, and will break the shell if python disconnects
+def clearAlias(alias: str):
+    return nil(method('clearAlias', alias))
+
+
+def programs(showHidden: bool = None) -> List[str]:
+    return array_string(method('programs', showHidden))
+
+
+def getRunningProgram(self) -> str:
+    return string(method('getRunningProgram'))
+
+
+def run(command: str, *args: str) -> bool:
+    return boolean(method('run', command, *args))
+
+
+def execute(command: str, *args: str) -> bool:
+    return boolean(method('execute', command, *args))
+
+
+def openTab(command: str, *args: str) -> int:
+    return integer(method('openTab', command, *args))
+
+
+def switchTab(tabID: int):
+    return nil(method('switchTab', tabID))
+
+
+def complete(prefix: str) -> List[str]:
+    return array_string(method('complete', prefix))
+
+
+def completeProgram(prefix: str) -> List[str]:
+    return array_string(method('completeProgram', prefix))
+
+# TODO: ?
+# these functions won't be implemented
+# it's far better to keep this in lua code
+
+# setCompletionFunction
+# getCompletionInfo
+
+# we can create callbacks to python code, but this will require
+# connection to python, and will break the shell if python disconnects
