@@ -178,11 +178,9 @@ class CCGreenlet:
         parent_g = get_current_greenlet()
         if parent_g is self._sess._server_greenlet:
             self._parent = None
-            debug(self._task_id, 'G.__init__', 'parent None')
         else:
             self._parent = parent_g.cc_greenlet
             self._parent._children.add(self._task_id)
-            debug(self._task_id, 'G.__init__', 'parent', self._parent._task_id)
 
         self._children = set()
         self._g = greenlet(body_fn)
@@ -190,13 +188,11 @@ class CCGreenlet:
 
     def detach_children(self):
         if self._children:
-            debug(self._task_id, 'G.detach_children', self._children)
             ch = list(self._children)
             self._children.clear()
             self._sess.drop(ch)
 
     def _on_death(self, error=None):
-        debug(self._task_id, 'G._on_death', error)
         self._sess._greenlets.pop(self._task_id, None)
         self.detach_children()
         if error is not None:
@@ -213,19 +209,14 @@ class CCGreenlet:
     def switch(self, *args, **kwargs):
         # switch must be called from server greenlet
         assert get_current_greenlet() is self._sess._server_greenlet
-        debug(self._task_id, 'G.switch', args, kwargs)
         try:
             task = self._g.switch(*args, **kwargs)
         except SystemExit:
-            debug(self._task_id, 'G.switch: ', 'SystemExit')
             self._on_death(True)
             return
-        except Exception as e:
-            debug(self._task_id, 'G.switch: ', 'Exception', e, type(e), format_exc(limit=None, chain=False))
+        except Exception:
             self._on_death({'error': format_exc(limit=None, chain=False)})
             return
-
-        debug(self._task_id, 'G.switch: result', repr(task))
 
         # lua_eval call or simply idle
         if isinstance(task, dict):
@@ -233,14 +224,11 @@ class CCGreenlet:
             while x._g.dead:
                 x = x._parent
             tid = x._task_id
-            debug(self._task_id, 'G.switch: start task for', tid)
             self._sess._sender({
                 'action': 'task',
                 'task_id': tid,
                 **task,
             })
-        else:
-            debug(self._task_id, f'G.switch: {"dead" if self._g.dead else "idle"}')
 
         if self._g.dead:
             if self._parent is None:
@@ -264,7 +252,6 @@ class CCSession:
         if task_id not in self._greenlets:
             # ignore for dropped tasks
             return
-        debug('on_task_result', task_id, result)
         self._greenlets[task_id].switch(result)
 
     def create_task_id(self):
@@ -280,8 +267,6 @@ class CCSession:
         all_tids = []
         for task_id in task_ids:
             all_tids.extend(collect(task_id))
-
-        debug('Sess.drop', all_tids)
 
         self._sender({
             'action': 'drop',

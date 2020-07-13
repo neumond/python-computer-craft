@@ -1,4 +1,4 @@
-from ..sess import debug, CCGreenlet, get_current_greenlet
+from ..sess import CCGreenlet, get_current_greenlet
 
 
 __all__ = (
@@ -16,8 +16,7 @@ def waitForAny(*task_fns):
         g.defer_switch()
 
     try:
-        result = sess._server_greenlet.switch()
-        debug('waitForAny switch result', result)
+        sess._server_greenlet.switch()
     finally:
         pgl.detach_children()
 
@@ -32,8 +31,6 @@ def waitForAll(*task_fns):
 
     try:
         for _ in range(len(task_fns)):
-            result = sess._server_greenlet.switch()
-            debug('waitForAll switch result', result)
-        debug('waitForAll finish')
+            sess._server_greenlet.switch()
     finally:
         pgl.detach_children()
