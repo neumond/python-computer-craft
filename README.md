@@ -59,15 +59,14 @@ with fs.open('filename', 'r') as f:
         print(line)
 ```
 
-Waiting for event:
+Waiting for event (`os.captureEvent` instead `os.pullEvent`):
 
 ```python
 from cc import os
 
 timer_id = os.startTimer(2)
-while True:
-    e = os.pullEvent('timer')
-    if e[1] == timer_id:
+for e in os.captureEvent('timer'):
+    if e[0] == timer_id:
         print('Timer reached')
         break
 ```

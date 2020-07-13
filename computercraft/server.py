@@ -49,7 +49,7 @@ class CCApplication(web.Application):
         if sess is not None:
             async for msg in self._json_messages(ws):
                 if msg['action'] == 'event':
-                    pass
+                    sess.on_event(msg['event'], msg['params'])
                 elif msg['action'] == 'task_result':
                     sess.on_task_result(msg['task_id'], msg['result'])
                 else:

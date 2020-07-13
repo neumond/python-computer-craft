@@ -2,6 +2,7 @@ import asyncio
 import string
 import sys
 from code import InteractiveConsole
+from collections import deque
 from contextlib import contextmanager
 from functools import partial
 from importlib import import_module
@@ -138,8 +139,7 @@ def eval_lua(lua_code, immediate=False):
         'code': lua_code,
         'immediate': immediate,
     })
-    # do not uncomment this, or use sys.__stdout__.write
-    # print('{} → {}'.format(lua_code, repr(result)))
+    # debug('{} → {}'.format(lua_code, repr(result)))
     if not immediate:
         result = rproc.coro(result)
     return result
@@ -237,6 +237,56 @@ class CCGreenlet:
                 self._on_death()
 
 
+class CCEventRouter:
+    def __init__(self, on_first_sub, on_last_unsub, resume_task):
+        self._stacks = {}
+        self._active = {}
+        self._on_first_sub = on_first_sub
+        self._on_last_unsub = on_last_unsub
+        self._resume_task = resume_task
+
+    def sub(self, task_id, event):
+        if event not in self._stacks:
+            self._stacks[event] = {}
+            self._on_first_sub(event)
+        se = self._stacks[event]
+        if task_id in se:
+            raise Exception('Same task subscribes to the same event twice')
+        se[task_id] = deque()
+
+    def unsub(self, task_id, event):
+        if event not in self._stacks:
+            return
+        self._stacks[event].pop(task_id, None)
+        if len(self._stacks[event]) == 0:
+            self._on_last_unsub(event)
+            del self._stacks[event]
+
+    def on_event(self, event, params):
+        if event not in self._stacks:
+            self._on_last_unsub(event)
+            return
+        for task_id, queue in self._stacks[event].items():
+            queue.append(params)
+            if self._active.get(task_id) == event:
+                self._set_task_status(task_id, event, False)
+                self._resume_task(task_id)
+
+    def get_from_stack(self, task_id, event):
+        queue = self._stacks[event][task_id]
+        try:
+            return queue.popleft()
+        except IndexError:
+            self._set_task_status(task_id, event, True)
+            return None
+
+    def _set_task_status(self, task_id, event, waits: bool):
+        if waits:
+            self._active[task_id] = event
+        else:
+            self._active.pop(task_id, None)
+
+
 class CCSession:
     def __init__(self, computer_id, sender):
         # computer_id is unique identifier of a CCSession
@@ -246,6 +296,11 @@ class CCSession:
         self._greenlets = {}
         self._server_greenlet = get_current_greenlet()
         self._program_greenlet = None
+        self._evr = CCEventRouter(
+            lambda event: self._sender({'action': 'sub', 'event': event}),
+            lambda event: self._sender({'action': 'unsub', 'event': event}),
+            lambda task_id: self._greenlets[task_id].defer_switch('event'),
+        )
 
     def on_task_result(self, task_id, result):
         assert get_current_greenlet() is self._server_greenlet
@@ -253,6 +308,9 @@ class CCSession:
             # ignore for dropped tasks
             return
         self._greenlets[task_id].switch(result)
+
+    def on_event(self, event, params):
+        self._evr.on_event(event, params)
 
     def create_task_id(self):
         return next(self._tid_allocator)

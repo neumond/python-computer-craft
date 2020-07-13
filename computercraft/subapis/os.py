@@ -1,8 +1,8 @@
 from typing import Optional, List
 
 from ..lua import LuaNum
-from ..rproc import nil, string, option_string, number, integer, boolean, any_list
-from ..sess import eval_lua_method_factory
+from ..rproc import nil, string, option_string, number, integer, boolean
+from ..sess import eval_lua_method_factory, get_current_greenlet
 
 
 method = eval_lua_method_factory('os.')
@@ -14,8 +14,7 @@ __all__ = (
     'getComputerLabel',
     'setComputerLabel',
     'run',
-    'pullEvent',
-    'pullEventRaw',
+    'captureEvent',
     'queueEvent',
     'clock',
     'time',
@@ -51,12 +50,21 @@ def run(environment: dict, programPath: str, *args: List[str]):
     return boolean(method('run', environment, programPath, *args))
 
 
-def pullEvent(event: str = None) -> tuple:
-    return tuple(any_list(method('pullEvent', event)))
-
-
-def pullEventRaw(event: str = None) -> tuple:
-    return tuple(any_list(method('pullEventRaw', event)))
+def captureEvent(event: str):
+    glet = get_current_greenlet().cc_greenlet
+    sess = glet._sess
+    evr = sess._evr
+    evr.sub(glet._task_id, event)
+    try:
+        while True:
+            val = evr.get_from_stack(glet._task_id, event)
+            if val is None:
+                res = sess._server_greenlet.switch()
+                assert res == 'event'
+            else:
+                yield val
+    finally:
+        evr.unsub(glet._task_id, event)
 
 
 def queueEvent(event: str, *params):

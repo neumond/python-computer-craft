@@ -21,9 +21,8 @@ assert _lib.get_class_table(os) == tbl
 
 with _lib.assert_takes_time(1.5, 3):
     timer_id = os.startTimer(2)
-    while True:
-        e = os.pullEvent('timer')
-        if e[1] == timer_id:
+    for e in os.captureEvent('timer'):
+        if e[0] == timer_id:
             print('Timer reached')
             break
 

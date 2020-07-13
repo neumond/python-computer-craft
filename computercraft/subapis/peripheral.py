@@ -128,21 +128,19 @@ class ModemMixin:
         return self._prepend_params[0]
 
     def receive(self, channel: int):
-        from .os import pullEvent
+        from .os import captureEvent
 
         if self.isOpen(channel):
             raise Exception('Channel is busy')
 
         self.open(channel)
         try:
-            while True:
-                evt = pullEvent('modem_message')
-                assert evt[0] == 'modem_message'
-                if evt[1] != self._side:
+            for evt in captureEvent('modem_message'):
+                if evt[0] != self._side:
                     continue
-                if evt[2] != channel:
+                if evt[1] != channel:
                     continue
-                yield ModemMessage(*evt[3:])
+                yield ModemMessage(*evt[2:])
         finally:
             self.close(channel)
 
