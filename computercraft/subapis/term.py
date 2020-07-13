@@ -24,6 +24,7 @@ __all__ = (
     'getCursorPos',
     'setCursorPos',
     'getCursorBlink',
+    'setCursorBlink',
     'isColor',
     'getSize',
     'scroll',
@@ -33,6 +34,10 @@ __all__ = (
     'getBackgroundColor',
     'getPaletteColor',
     'setPaletteColor',
+    'nativePaletteColor',
+    'redirect',
+    'get_current_target',
+    'get_native_target',
 )
 
 
@@ -43,6 +48,7 @@ clearLine = tapi.clearLine
 getCursorPos = tapi.getCursorPos
 setCursorPos = tapi.setCursorPos
 getCursorBlink = tapi.getCursorBlink
+setCursorBlink = tapi.setCursorBlink
 isColor = tapi.isColor
 getSize = tapi.getSize
 scroll = tapi.scroll

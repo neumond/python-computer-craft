@@ -73,7 +73,7 @@ class StdFileProxy:
                     "stdin readline method with parameter")
             return rproc.string(eval_lua(
                 return_lua_call('io.read')
-            ))
+            )) + '\n'
 
     def write(self, s):
         if _is_global_greenlet():

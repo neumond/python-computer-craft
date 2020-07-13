@@ -13,6 +13,8 @@ del tbl['function']['call']
 del tbl['function']['getName']
 del tbl['function']['find']
 
+tbl['function']['get_term_target'] = True
+
 assert _lib.get_class_table(peripheral) == tbl
 
 _lib.step('Remove all peripherals')

@@ -51,11 +51,11 @@ def run(environment: dict, programPath: str, *args: List[str]):
     return boolean(method('run', environment, programPath, *args))
 
 
-def pullEvent(event: str) -> tuple:
+def pullEvent(event: str = None) -> tuple:
     return tuple(any_list(method('pullEvent', event)))
 
 
-def pullEventRaw(event: str) -> tuple:
+def pullEventRaw(event: str = None) -> tuple:
     return tuple(any_list(method('pullEventRaw', event)))
 
 

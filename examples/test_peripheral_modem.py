@@ -1,4 +1,4 @@
-from cc import import_file, parallel, peripheral
+from cc import import_file, parallel, os, peripheral
 
 _lib = import_file('_lib.py', __file__)
 
@@ -22,10 +22,14 @@ messages = []
 
 
 def _send():
-    m.transmit(remote_channel, local_channel, 1)
-    m.transmit(remote_channel, local_channel, 'hi')
-    m.transmit(remote_channel, local_channel, {'data': 5})
-    m.transmit(remote_channel, local_channel, 'stop')
+    for msg in [
+        1,
+        'hi',
+        {'data': 5},
+        'stop',
+    ]:
+        os.sleep(1)
+        m.transmit(remote_channel, local_channel, msg)
 
 
 def _recv():
@@ -39,6 +43,7 @@ def _recv():
             break
 
 
+assert m.closeAll() is None
 parallel.waitForAll(_recv, _send)
 
 assert messages == [1, 'hi', {'data': 5}]

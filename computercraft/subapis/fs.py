@@ -1,3 +1,4 @@
+import builtins
 from contextlib import contextmanager
 from typing import Optional, List, Union
 
@@ -20,7 +21,7 @@ class SeekMixin:
     def seek(self, whence: str = None, offset: int = None) -> int:
         # whence: set, cur, end
         r = self._method('seek', whence, offset)
-        if isinstance(r, list):
+        if isinstance(r, builtins.list):
             assert r[0] is False
             raise LuaException(r[1])
         return integer(r)

@@ -50,7 +50,7 @@ def broadcast(message: Any, protocol: str = None):
 
 
 def receive(
-    self, protocolFilter: str = None, timeout: LuaNum = None,
+    protocolFilter: str = None, timeout: LuaNum = None,
 ) -> Optional[Tuple[int, Any, Optional[str]]]:
     return recv_result(method('receive', protocolFilter, timeout))
 

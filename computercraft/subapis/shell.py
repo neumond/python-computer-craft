@@ -30,11 +30,11 @@ __all__ = (
 )
 
 
-def exit(self):
+def exit():
     return nil(method('exit'))
 
 
-def dir(self) -> str:
+def dir() -> str:
     return string(method('dir'))
 
 
@@ -42,7 +42,7 @@ def setDir(path: str):
     return nil(method('setDir', path))
 
 
-def path(self) -> str:
+def path() -> str:
     return string(method('path'))
 
 
@@ -58,7 +58,7 @@ def resolveProgram(name: str) -> Optional[str]:
     return option_string(method('resolveProgram', name))
 
 
-def aliases(self) -> Dict[str, str]:
+def aliases() -> Dict[str, str]:
     return map_string_string(method('aliases'))
 
 
@@ -74,7 +74,7 @@ def programs(showHidden: bool = None) -> List[str]:
     return array_string(method('programs', showHidden))
 
 
-def getRunningProgram(self) -> str:
+def getRunningProgram() -> str:
     return string(method('getRunningProgram'))
 
 

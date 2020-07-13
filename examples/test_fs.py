@@ -220,7 +220,7 @@ with fs.open('tdir/binfile', 'rb') as f:
     assert isinstance(f.read(), int)
 
 with fs.open('tdir/binfile', 'r') as f:
-    assert [line async for line in f] == ['bbcccaaaaddd']
+    assert [line for line in f] == ['bbcccaaaaddd']
 
 assert fs.delete('tdir') is None
 assert fs.delete('tfile') is None

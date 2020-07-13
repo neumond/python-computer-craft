@@ -95,6 +95,6 @@ chars = {
 }
 
 
-def iter_colors(self):
-    for c in self.chars.values():
+def iter_colors():
+    for c in chars.values():
         yield c

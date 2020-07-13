@@ -22,7 +22,7 @@ __all__ = (
 )
 
 
-def getSides(self) -> List[str]:
+def getSides() -> List[str]:
     return array_string(method('getSides'))
 
 

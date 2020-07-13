@@ -55,7 +55,7 @@ assert m.setPageTitle('Green bottles') is None
 assert m.getPageSize() == (25, 21)
 
 
-async def row(n=1):
+def row(n=1):
     _, r = m.getCursorPos()
     m.setCursorPos(1, r + n)
 

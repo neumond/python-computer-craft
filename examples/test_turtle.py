@@ -221,7 +221,7 @@ def craft1():
 
 def craft2():
     c = peripheral.wrap('right')
-    return await c.craft()
+    return c.craft()
 
 
 step('Put crafting table into slot 1')

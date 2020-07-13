@@ -6,7 +6,7 @@ from .turtle import craft_result
 from ..lua import LuaNum, lua_args, return_lua_call
 from ..rproc import (
     boolean, nil, integer, string, option_integer, option_string,
-    tuple2_integer, array_string, option_string_bool, try_result,
+    tuple2_integer, array_string, option_string_bool, flat_try_result,
 )
 from ..sess import eval_lua, eval_lua_method_factory
 
@@ -137,11 +137,12 @@ class ModemMixin:
         try:
             while True:
                 evt = pullEvent('modem_message')
-                if evt[0] != self._side:
+                assert evt[0] == 'modem_message'
+                if evt[1] != self._side:
                     continue
-                if evt[1] != channel:
+                if evt[2] != channel:
                     continue
-                yield ModemMessage(*evt[2:])
+                yield ModemMessage(*evt[3:])
         finally:
             self.close(channel)
 
@@ -246,7 +247,7 @@ class CCCommandBlock(BasePeripheral):
         return nil(self._method('setCommand', command))
 
     def runCommand(self):
-        return try_result(self._method('runCommand'))
+        return flat_try_result(self._method('runCommand'))
 
 
 class CCWorkbench(BasePeripheral):

@@ -10,6 +10,7 @@ tbl = _lib.get_object_table('term')
 del tbl['function']['redirect']
 del tbl['function']['current']
 del tbl['function']['native']
+del tbl['function']['nativePaletteColor']
 
 # remove British method names to make API lighter
 del tbl['function']['getBackgroundColour']
@@ -94,7 +95,7 @@ _lib.term_step('You must have seen per-letter colored text')
 assert term.setBackgroundColor(colors.white) is None
 assert term.clear() is None
 assert term.setCursorPos(1, 1) is None
-for i, color in enumerate(colors):
+for i, color in enumerate(colors.iter_colors()):
     term.setPaletteColor(color, i / 15, 0, 0)
 assert term.blit(
     ' redtextappears!',

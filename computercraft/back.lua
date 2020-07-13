@@ -4,6 +4,7 @@ local event_sub = {}
 genv.temp = temp
 local url = 'http://127.0.0.1:4343/'
 local tasks = {}
+local filters = {}
 local ycounts = {}
 
 ws = http.websocket(url..'ws/')
@@ -59,6 +60,7 @@ while true do
         elseif msg.action == 'drop' then
             for _, task_id in ipairs(msg.task_ids) do
                 tasks[task_id] = nil
+                filters[task_id] = nil
                 ycounts[task_id] = nil
             end
         elseif msg.action == 'sub' then
@@ -83,21 +85,29 @@ while true do
 
     local del_tasks = {}
     for task_id in pairs(tasks) do
-        local r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}
-        if coroutine.status(tasks[task_id]) == 'dead' then
-            ws.send(textutils.serializeJSON{
-                action='task_result',
-                task_id=task_id,
-                result=r,
-                yields=ycounts[task_id],
-            })
-            del_tasks[task_id] = true
-        else
-            ycounts[task_id] = ycounts[task_id] + 1
+        if filters[task_id] == nil or filters[task_id] == event then
+            local r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}
+            if coroutine.status(tasks[task_id]) == 'dead' then
+                ws.send(textutils.serializeJSON{
+                    action='task_result',
+                    task_id=task_id,
+                    result=r,
+                    yields=ycounts[task_id],
+                })
+                del_tasks[task_id] = true
+            else
+                if r[1] == true then
+                    filters[task_id] = r[2]
+                else
+                    filters[task_id] = nil
+                end
+                ycounts[task_id] = ycounts[task_id] + 1
+            end
         end
     end
     for task_id in pairs(del_tasks) do
         tasks[task_id] = nil
+        filters[task_id] = nil
         ycounts[task_id] = nil
     end
 end
