@@ -54,8 +54,9 @@ def get_current_session():
 
 
 class StdFileProxy:
-    def __init__(self, native):
+    def __init__(self, native, err):
         self._native = native
+        self._err = err
 
     def read(self, size=-1):
         if _is_global_greenlet():
@@ -80,9 +81,14 @@ class StdFileProxy:
         if _is_global_greenlet():
             return self._native.write(s)
         else:
-            return rproc.nil(eval_lua(
-                lua_call('io.write', s)
-            ))
+            if self._err:
+                return rproc.nil(eval_lua(
+                    lua_call('io.stderr:write', s)
+                ))
+            else:
+                return rproc.nil(eval_lua(
+                    lua_call('io.write', s)
+                ))
 
     def fileno(self):
         if _is_global_greenlet():
@@ -129,9 +135,9 @@ def install_import_hook():
 
 
 install_import_hook()
-sys.stdin = StdFileProxy(sys.__stdin__)
-sys.stdout = StdFileProxy(sys.__stdout__)
-sys.stderr = StdFileProxy(sys.__stderr__)
+sys.stdin = StdFileProxy(sys.__stdin__, False)
+sys.stdout = StdFileProxy(sys.__stdout__, False)
+sys.stderr = StdFileProxy(sys.__stderr__, True)
 
 
 def eval_lua(lua_code, immediate=False):

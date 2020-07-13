@@ -69,11 +69,9 @@ while true do
             event_sub[msg.event] = nil
         elseif msg.action == 'close' then
             if msg.error ~= nil then
-                print(msg.error)
+                io.stderr:write(msg.error)
             end
             break
-        else
-            print(msg)
         end
     elseif event_sub[event] == true then
         ws.send(textutils.serializeJSON{
