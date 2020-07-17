@@ -7,7 +7,7 @@ Never use code in this repo if you don't trust your players!
 1. Download and install wheel from github releases
 
     ```sh
-    pip install computercraft-*.whl
+    pip install computercraft
     ```
 
 2. Enable localhost in mod server config
