@@ -4,13 +4,8 @@
 [(read more)](https://nedbatchelder.com/blog/201206/eval_really_is_dangerous.html).
 Never use code in this repo if you don't trust your players!
 
-1. Download and install wheel from github releases
 
-    ```sh
-    pip install computercraft
-    ```
-
-2. Enable localhost in mod server config
+1. Before you start Minecraft, enable localhost in mod server config
 
     In case of singleplayer it's located inside your saves folder.
     In case of multiplayer check your server folder.
@@ -23,13 +18,24 @@ Never use code in this repo if you don't trust your players!
 		action = "allow"  # change here deny to allow
     ```
 
-3. Start python server:
+2. Install & start python language server
+
+    Choose one of the following:
+
+    Docker way:
 
     ```sh
+    docker run -it -p 8080:8080 neumond/python-computer-craft
+    ```
+
+    Install & run manually:
+
+    ```sh
+    pip install computercraft
     python -m computercraft.server
     ```
 
-4. In minecraft, open up any computer and type:
+3. Start Minecraft, open up any computer and type:
 
     ```sh
     wget http://127.0.0.1:8080/ py
