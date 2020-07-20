@@ -1,11 +1,12 @@
 import argparse
 import asyncio
-import json
+import sys
 from os.path import join, dirname, abspath
 
 from aiohttp import web, WSMsgType
 
 from .sess import CCSession
+from . import ser
 
 
 THIS_DIR = dirname(abspath(__file__))
@@ -14,25 +15,26 @@ LUA_FILE = join(THIS_DIR, 'back.lua')
 
 class CCApplication(web.Application):
     @staticmethod
-    async def _json_messages(ws):
+    async def _bin_messages(ws):
         async for msg in ws:
-            # print('ws received', msg)
-            if msg.type != WSMsgType.TEXT:
+            if msg.type != WSMsgType.BINARY:
                 continue
-            # print('ws received', msg.data)
-            yield json.loads(msg.data.replace('\\\n', '\\n'))
+            sys.__stdout__.write('ws received ' + repr(msg.data) + '\n')
+            yield msg.data
 
     async def _launch_program(self, ws):
-        async for msg in self._json_messages(ws):
+        async for msg in self._bin_messages(ws):
+            msg = ser.deserialize(msg)
             if msg['action'] != 'run':
-                await ws.send_json({
+                await ws.send_bytes(ser.serialize({
                     'action': 'close',
                     'error': 'protocol error',
-                })
+                }))
                 return None
 
             def sender(data):
-                asyncio.create_task(ws.send_json(data))
+                sys.__stdout__.write('ws send ' + repr(data) + '\n')
+                asyncio.create_task(ws.send_bytes(data))
 
             sess = CCSession(msg['computer'], sender)
             if msg['args']:
@@ -47,16 +49,17 @@ class CCApplication(web.Application):
 
         sess = await self._launch_program(ws)
         if sess is not None:
-            async for msg in self._json_messages(ws):
+            async for msg in self._bin_messages(ws):
+                msg = ser.deserialize(msg)
                 if msg['action'] == 'event':
                     sess.on_event(msg['event'], msg['params'])
                 elif msg['action'] == 'task_result':
                     sess.on_task_result(msg['task_id'], msg['result'])
                 else:
-                    await ws.send_json({
+                    await ws.send_bytes(ser.serialize({
                         'action': 'close',
                         'error': 'protocol error',
-                    })
+                    }))
                     break
 
         return ws

@@ -18,21 +18,25 @@ class ArbLuaExpr(LuaExpr):
         return self._code
 
 
+_tmap = {
+    '\\': '\\\\',
+    '\a': '\\a',
+    '\b': '\\b',
+    '\f': '\\f',
+    '\n': '\\n',
+    '\r': '\\r',
+    '\t': '\\t',
+    '\v': '\\v',
+    '"': '\\"',
+    "'": "\\'",
+    '[': '\\[',
+    ']': '\\]',
+}
+_tmap = {ord(c): r for c, r in _tmap.items()}
+
+
 def lua_string(v):
-    return '"{}"'.format(
-        v.replace('\\', '\\\\')
-        .replace('\a', '\\a')
-        .replace('\b', '\\b')
-        .replace('\f', '\\f')
-        .replace('\n', '\\n')
-        .replace('\r', '\\r')
-        .replace('\t', '\\t')
-        .replace('\v', '\\v')
-        .replace('"', '\\"')
-        .replace("'", "\\'")
-        .replace('[', '\\[')
-        .replace(']', '\\]')
-    )
+    return '"{}"'.format(v.translate(_tmap))
 
 
 def lua_list(v):

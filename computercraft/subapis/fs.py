@@ -1,12 +1,12 @@
 import builtins
 from contextlib import contextmanager
-from typing import Optional, List, Union
+from typing import Optional, List
 
 from .base import BaseSubAPI
 from ..errors import LuaException
-from ..lua import lua_call
-from ..rproc import boolean, string, integer, nil, array_string, option_string, option_integer, fact_scheme_dict
-from ..sess import eval_lua_method_factory, lua_context_object
+from ..lua import lua_call, lua_args, lua_string
+from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict
+from ..sess import eval_lua, eval_lua_method_factory, lua_context_object
 
 
 attribute = fact_scheme_dict({
@@ -28,17 +28,28 @@ class SeekMixin:
 
 
 class ReadHandle(BaseSubAPI):
-    # TODO: binary handle must return bytes instead string
+    def _decode(self, b):
+        return b.decode('utf-8')
 
-    def read(self, count: int = None) -> Optional[Union[str, int]]:
-        r = self._method('read', count)
-        return option_integer(r) if count is None else option_string(r)
+    def _read(self, name, params, val):
+        code = '''
+local s = {}.{}({})
+if s == nil then return nil end
+s = s:gsub('.', function(c) return string.format('%02X', string.byte(c)) end)
+return s
+'''.lstrip().format(
+            self.get_expr_code(), name, lua_args(*params),
+        )
+        return self._decode(bytes.fromhex(val(eval_lua(code))))
+
+    def read(self, count: int = 1) -> Optional[str]:
+        return self._read('read', (count, ), option_string)
 
     def readLine(self) -> Optional[str]:
-        return option_string(self._method('readLine'))
+        return self._read('readLine', (), option_string)
 
     def readAll(self) -> str:
-        return string(self._method('readAll'))
+        return self._read('readAll', (), string)
 
     def __iter__(self):
         return self
@@ -51,10 +62,25 @@ class ReadHandle(BaseSubAPI):
 
 
 class BinaryReadHandle(ReadHandle, SeekMixin):
-    pass
+    def _decode(self, b):
+        return b
 
 
 class WriteHandle(BaseSubAPI):
+    def _encode(self, s):
+        return s.encode('utf-8')
+
+    def _write(self, name, text, val):
+        code = '''
+local s = {}
+s = s:gsub('..', function(cc) return string.char(tonumber(cc, 16)) end)
+return {}.{}(s)
+'''.lstrip().format(
+            lua_string(self._encode(text).hex()),
+            self.get_expr_code(), name,
+        )
+        return val(eval_lua(code))
+
     def write(self, text: str):
         return nil(self._method('write', text))
 
@@ -66,7 +92,8 @@ class WriteHandle(BaseSubAPI):
 
 
 class BinaryWriteHandle(WriteHandle, SeekMixin):
-    pass
+    def _encode(self, s):
+        return s
 
 
 method = eval_lua_method_factory('fs.')
@@ -161,7 +188,7 @@ def open(path: str, mode: str):
             ...
     '''
     with lua_context_object(
-        lua_call('fs.open', path, mode),
+        lua_call('fs.open', path, mode.replace('b', '') + 'b'),
         '{e}.close()',
     ) as var:
         if 'b' in mode:

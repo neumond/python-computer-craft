@@ -11,47 +11,115 @@ ws = http.websocket(url..'ws/')
 if ws == false then
     error('unable to connect to server '..url..'ws/')
 end
-ws.send(textutils.serializeJSON{
+
+local serialize
+do
+    local function s_rec(v, tracking)
+        local t = type(v)
+        if v == nil then
+            return 'N'
+        elseif v == false then
+            return 'F'
+        elseif v == true then
+            return 'T'
+        elseif t == 'number' then
+            return '\[' .. tostring(v) .. '\]'
+        elseif t == 'string' then
+            return string.format('<%u>', #v) .. v
+        elseif t == 'table' then
+            if tracking[v] ~= nil then
+                error('Cannot serialize table with recursive entries', 0)
+            end
+            tracking[v] = true
+            local r = '{'
+            for k, x in pairs(v) do
+                r = r .. ':' .. s_rec(k, tracking) .. s_rec(x, tracking)
+            end
+            return r .. '}'
+        else
+            error('Cannot serialize type ' .. t, 0)
+        end
+        local tp = type(t)
+    end
+    serialize = function(v) return s_rec(v, {}) end
+end
+
+local deserialize
+do
+    local function d_rec(s, idx)
+        local tok = s:sub(idx, idx)
+        idx = idx + 1
+        if tok == 'N' then
+            return nil, idx
+        elseif tok == 'F' then
+            return false, idx
+        elseif tok == 'T' then
+            return true, idx
+        elseif tok == '\[' then
+            local newidx = s:find('\]', idx, true)
+            return tonumber(s:sub(idx, newidx - 1)), newidx + 1
+        elseif tok == '<' then
+            local newidx = s:find('>', idx, true)
+            local slen = tonumber(s:sub(idx, newidx - 1))
+            if slen == 0 then
+                return '', newidx + 1
+            end
+            return s:sub(newidx + 1, newidx + slen), newidx + slen + 1
+        elseif tok == '{' then
+            local r = {}
+            while true do
+                tok = s:sub(idx, idx)
+                idx = idx + 1
+                if tok == '}' then break end
+                local key, value
+                key, idx = d_rec(s, idx)
+                value, idx = d_rec(s, idx)
+                r[key] = value
+            end
+            return r, idx
+        else
+            error('Unknown token ' .. tok, 0)
+        end
+    end
+    deserialize = function(s)
+        local r = d_rec(s, 1)
+        return r
+    end
+end
+
+function ws_send(data)
+    ws.send(serialize(data), true)
+end
+
+ws_send{
     action='run',
     computer=os.getComputerID(),
     args={...},
-})
-
-function nullify_array(a, size)
-    local r = {}
-    for k=1,size do
-        if a[k] == nil then
-            r[k] = textutils.json_null
-        else
-            r[k] = a[k]
-        end
-    end
-    return r
-end
+}
 
 while true do
     local event, p1, p2, p3, p4, p5 = os.pullEvent()
 
     if event == 'websocket_message' then
-        msg = textutils.unserializeJSON(p2)
+        msg = deserialize(p2)
         if msg.action == 'task' then
             local fn, err = loadstring(msg.code)
             if fn == nil then
-                ws.send(textutils.serializeJSON{
+                ws_send{
                     action='task_result',
                     task_id=msg.task_id,
                     result={false, err},
                     yields=0,
-                })
+                }
             else
                 setfenv(fn, genv)
                 if msg.immediate then
-                    ws.send(textutils.serializeJSON{
+                    ws_send{
                         action='task_result',
                         task_id=msg.task_id,
                         result={fn()},
                         yields=0,
-                    })
+                    }
                 else
                     tasks[msg.task_id] = coroutine.create(fn)
                     ycounts[msg.task_id] = 0
@@ -74,11 +142,11 @@ while true do
             break
         end
     elseif event_sub[event] == true then
-        ws.send(textutils.serializeJSON{
+        ws_send{
             action='event',
             event=event,
-            params=nullify_array({p1, p2, p3, p4, p5}, 5),
-        })
+            params={p1, p2, p3, p4, p5},
+        }
     end
 
     local del_tasks = {}
@@ -86,12 +154,12 @@ while true do
         if filters[task_id] == nil or filters[task_id] == event then
             local r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}
             if coroutine.status(tasks[task_id]) == 'dead' then
-                ws.send(textutils.serializeJSON{
+                ws_send{
                     action='task_result',
                     task_id=task_id,
                     result=r,
                     yields=ycounts[task_id],
-                })
+                }
                 del_tasks[task_id] = true
             else
                 if r[1] == true then

@@ -15,7 +15,7 @@ from types import ModuleType
 from greenlet import greenlet, getcurrent as get_current_greenlet
 
 from .lua import lua_string, lua_call, return_lua_call
-from . import rproc
+from . import rproc, ser
 
 
 __all__ = (
@@ -141,10 +141,11 @@ sys.stderr = StdFileProxy(sys.__stderr__, True)
 
 
 def eval_lua(lua_code, immediate=False):
-    result = get_current_session()._server_greenlet.switch({
+    request = ser.serialize({
         'code': lua_code,
         'immediate': immediate,
     })
+    result = get_current_session()._server_greenlet.switch(request)
     # debug('{} → {}'.format(lua_code, repr(result)))
     if not immediate:
         result = rproc.coro(result)
@@ -204,7 +205,7 @@ class CCGreenlet:
         if error is not None:
             if error is True:
                 error = {}
-            self._sess._sender({'action': 'close', **error})
+            self._sess._sender(ser.serialize({'action': 'close', **error}))
         if self._parent is not None:
             self._parent._children.discard(self._task_id)
 
@@ -225,16 +226,14 @@ class CCGreenlet:
             return
 
         # lua_eval call or simply idle
-        if isinstance(task, dict):
+        if isinstance(task, bytes):
             x = self
             while x._g.dead:
                 x = x._parent
-            tid = x._task_id
-            self._sess._sender({
-                'action': 'task',
-                'task_id': tid,
-                **task,
-            })
+            assert task[-1] == 125  # }
+            tid = ser.serialize(x._task_id)
+            task = task[:-1] + b':<6>action<4>task:<7>task_id' + tid + b'}'
+            self._sess._sender(task)
 
         if self._g.dead:
             if self._parent is None:
@@ -303,8 +302,8 @@ class CCSession:
         self._server_greenlet = get_current_greenlet()
         self._program_greenlet = None
         self._evr = CCEventRouter(
-            lambda event: self._sender({'action': 'sub', 'event': event}),
-            lambda event: self._sender({'action': 'unsub', 'event': event}),
+            lambda event: self._sender(ser.serialize({'action': 'sub', 'event': event})),
+            lambda event: self._sender(ser.serialize({'action': 'unsub', 'event': event})),
             lambda task_id: self._greenlets[task_id].defer_switch('event'),
         )
 
@@ -332,10 +331,10 @@ class CCSession:
         for task_id in task_ids:
             all_tids.extend(collect(task_id))
 
-        self._sender({
+        self._sender(ser.serialize({
             'action': 'drop',
             'task_ids': all_tids,
-        })
+        }))
 
     def _run_sandboxed_greenlet(self, fn):
         self._program_greenlet = CCGreenlet(fn, sess=self)
