@@ -96,6 +96,7 @@ ws_send{
     action='run',
     computer=os.getComputerID(),
     args={...},
+    version=1,
 }
 
 while true do

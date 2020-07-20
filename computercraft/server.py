@@ -11,6 +11,7 @@ from . import ser
 
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
+LUA_FILE_VERSION = 1
 
 
 class CCApplication(web.Application):
@@ -28,7 +29,15 @@ class CCApplication(web.Application):
             if msg[b'action'] != b'run':
                 await ws.send_bytes(ser.serialize({
                     'action': 'close',
-                    'error': 'protocol error',
+                    'error': 'protocol error\n',
+                }))
+                return None
+            if msg.get(b'version') != LUA_FILE_VERSION:
+                await ws.send_bytes(ser.serialize({
+                    'action': 'close',
+                    'error': 'protocol version mismatch (expected {}, got {}), redownload py\n'.format(
+                        LUA_FILE_VERSION, msg.get(b'version'),
+                    ),
                 }))
                 return None
 
