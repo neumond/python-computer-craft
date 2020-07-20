@@ -73,22 +73,22 @@ class StdFileProxy:
                 raise RuntimeError(
                     "Computercraft environment doesn't support "
                     "stdin readline method with parameter")
-            return rproc.string(eval_lua(
+            return eval_lua(
                 return_lua_call('io.read')
-            )) + '\n'
+            ).take_string() + '\n'
 
     def write(self, s):
         if _is_global_greenlet():
             return self._native.write(s)
         else:
             if self._err:
-                return rproc.nil(eval_lua(
+                return eval_lua(
                     lua_call('io.stderr:write', s)
-                ))
+                ).take_none()
             else:
-                return rproc.nil(eval_lua(
+                return eval_lua(
                     lua_call('io.write', s)
-                ))
+                ).take_none()
 
     def fileno(self):
         if _is_global_greenlet():
@@ -147,9 +147,10 @@ def eval_lua(lua_code, immediate=False):
     })
     result = get_current_session()._server_greenlet.switch(request)
     # debug('{} → {}'.format(lua_code, repr(result)))
+    rp = rproc.ResultProc(result)
     if not immediate:
-        result = rproc.coro(result)
-    return result
+        rp.check_bool_error()
+    return rp
 
 
 @contextmanager
@@ -342,7 +343,7 @@ class CCSession:
 
     def run_program(self, program):
         def _run_program():
-            p, code = eval_lua('''
+            rp = eval_lua('''
 local p = fs.combine(shell.dir(), {})
 if not fs.exists(p) then return nil end
 if fs.isDir(p) then return nil end
@@ -351,6 +352,8 @@ local code = f.readAll()
 f.close()
 return p, code
 '''.lstrip().format(lua_string(program)))
+            p = rp.take_string()
+            code = rp.take_string()
             cc = compile(code, p, 'exec')
             exec(cc, {'__file__': p})
 

@@ -1,10 +1,8 @@
 from typing import List, Dict, Optional
 
-from ..rproc import nil, string, boolean, integer, array_string, fact_mono_dict, option_string
 from ..sess import eval_lua_method_factory
 
 
-map_string_string = fact_mono_dict(string, string)
 method = eval_lua_method_factory('shell.')
 
 
@@ -31,75 +29,76 @@ __all__ = (
 
 
 def exit():
-    return nil(method('exit'))
+    return method('exit').take_none()
 
 
 def dir() -> str:
-    return string(method('dir'))
+    return method('dir').take_string()
 
 
 def setDir(path: str):
-    return nil(method('setDir', path))
+    return method('setDir', path).take_none()
 
 
 def path() -> str:
-    return string(method('path'))
+    return method('path').take_string()
 
 
 def setPath(path: str):
-    return nil(method('setPath', path))
+    return method('setPath', path).take_none()
 
 
 def resolve(localPath: str) -> str:
-    return string(method('resolve', localPath))
+    return method('resolve', localPath).take_string()
 
 
 def resolveProgram(name: str) -> Optional[str]:
-    return option_string(method('resolveProgram', name))
+    return method('resolveProgram', name).take_option_string()
 
 
 def aliases() -> Dict[str, str]:
-    return map_string_string(method('aliases'))
+    d = method('aliases').take_dict()
+    return {k.decode('latin1'): v.decode('latin1') for k, v in d.items()}
 
 
 def setAlias(alias: str, program: str):
-    return nil(method('setAlias', alias, program))
+    return method('setAlias', alias, program).take_none()
 
 
 def clearAlias(alias: str):
-    return nil(method('clearAlias', alias))
+    return method('clearAlias', alias).take_none()
 
 
 def programs(showHidden: bool = None) -> List[str]:
-    return array_string(method('programs', showHidden))
+    return method('programs', showHidden).take_list_of_strings()
 
 
 def getRunningProgram() -> str:
-    return string(method('getRunningProgram'))
+    return method('getRunningProgram').take_string()
 
 
 def run(command: str, *args: str) -> bool:
-    return boolean(method('run', command, *args))
+    return method('run', command, *args).take_bool()
 
 
 def execute(command: str, *args: str) -> bool:
-    return boolean(method('execute', command, *args))
+    return method('execute', command, *args).take_bool()
 
 
 def openTab(command: str, *args: str) -> int:
-    return integer(method('openTab', command, *args))
+    return method('openTab', command, *args).take_int()
 
 
 def switchTab(tabID: int):
-    return nil(method('switchTab', tabID))
+    return method('switchTab', tabID).take_none()
 
 
 def complete(prefix: str) -> List[str]:
-    return array_string(method('complete', prefix))
+    return method('complete', prefix).take_list_of_strings()
 
 
 def completeProgram(prefix: str) -> List[str]:
-    return array_string(method('completeProgram', prefix))
+    return method('completeProgram', prefix).take_list_of_strings()
 
 # TODO: ?
 # these functions won't be implemented

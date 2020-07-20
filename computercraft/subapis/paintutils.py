@@ -1,10 +1,8 @@
 from typing import List
 
-from ..rproc import nil, integer, fact_array
 from ..sess import eval_lua_method_factory
 
 
-array_2d_integer = fact_array(fact_array(integer))
 method = eval_lua_method_factory('paintutils.')
 
 
@@ -20,28 +18,28 @@ __all__ = (
 
 
 def parseImage(data: str) -> List[List[int]]:
-    return array_2d_integer(method('parseImage', data))
+    return method('parseImage', data).take_2d_int()
 
 
 def loadImage(path: str) -> List[List[int]]:
-    return array_2d_integer(method('loadImage', path))
+    return method('loadImage', path).take_2d_int()
 
 
 def drawPixel(x: int, y: int, color: int = None):
-    return nil(method('drawPixel', x, y, color))
+    return method('drawPixel', x, y, color).take_none()
 
 
 def drawLine(startX: int, startY: int, endX: int, endY: int, color: int = None):
-    return nil(method('drawLine', startX, startY, endX, endY, color))
+    return method('drawLine', startX, startY, endX, endY, color).take_none()
 
 
 def drawBox(startX: int, startY: int, endX: int, endY: int, color: int = None):
-    return nil(method('drawBox', startX, startY, endX, endY, color))
+    return method('drawBox', startX, startY, endX, endY, color).take_none()
 
 
 def drawFilledBox(startX: int, startY: int, endX: int, endY: int, color: int = None):
-    return nil(method('drawFilledBox', startX, startY, endX, endY, color))
+    return method('drawFilledBox', startX, startY, endX, endY, color).take_none()
 
 
 def drawImage(image: List[List[int]], xPos: int, yPos: int):
-    return nil(method('drawImage', image, xPos, yPos))
+    return method('drawImage', image, xPos, yPos).take_none()

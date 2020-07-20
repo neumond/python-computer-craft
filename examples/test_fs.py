@@ -151,50 +151,32 @@ assert fs.complete('ap', 'tdir', includeFiles=False) == []
 
 assert fs.getSize('tdir/banana') == 9
 with fs.open('tdir/banana', 'r') as f:
-    assert _lib.get_object_table(f.get_expr_code()) == {'function': {
-        'close': True,
-        'read': True,
-        'readLine': True,
-        'readAll': True,
-    }}
     assert f.read(4) == 'text'
     assert f.readLine() == 'line'
     assert f.read(1) is None
     assert f.readLine() is None
-    assert f.readAll() == ''
-    assert f.readAll() == ''
+    assert f.readAll() is None
+    assert f.readAll() is None
 assert fs.getSize('tdir/banana') == 9
 with fs.open('tdir/banana', 'a') as f:
-    assert _lib.get_object_table(f.get_expr_code()) == {'function': {
-        'close': True,
-        'write': True,
-        'writeLine': True,
-        'flush': True,
-    }}
     assert f.write('x') is None
 assert fs.getSize('tdir/banana') == 10
 with fs.open('tdir/banana', 'w') as f:
     pass
 assert fs.getSize('tdir/banana') == 0  # truncate
 with fs.open('tdir/banana', 'w') as f:
-    assert _lib.get_object_table(f.get_expr_code()) == {'function': {
-        'close': True,
-        'write': True,
-        'writeLine': True,
-        'flush': True,
-    }}
     assert f.write('Bro') is None
     assert f.writeLine('wn fox jumps') is None
-    assert fs.getSize('tdir/banana') == 0  # changes are not on a disk
+    # assert fs.getSize('tdir/banana') == 0  # changes are not on a disk
     assert f.flush() is None
     assert fs.getSize('tdir/banana') == len('Brown fox jumps\n')
     assert f.write('ov') is None
     assert f.write('er ') is None
     assert f.write('a lazy') is None
-    assert f.writeLine(' dog.') is None
+    assert f.writeLine(' дог.') is None
 assert fs.getSize('tdir/banana') > 9
 with fs.open('tdir/banana', 'r') as f:
-    assert f.readAll() == 'Brown fox jumps\nover a lazy dog.'  # no newline?
+    assert f.readAll() == 'Brown fox jumps\nover a lazy дог.\n'
 with assert_raises(LuaException):
     with fs.open('tdir/banana', 'rw') as f:
         pass
@@ -202,22 +184,19 @@ with assert_raises(LuaException):
 assert fs.exists('tdir/banana') is True
 
 with fs.open('tdir/binfile', 'wb') as f:
-    assert f.write('a' * 9) is None
+    assert f.write(b'a' * 9) is None
     assert f.seek() == 9
     assert f.seek('set', 0) == 0
-    assert f.write('b' * 3) is None
+    assert f.write(b'b' * 3) is None
     assert f.seek('cur', -1) == 2
-    assert f.write('c' * 3) is None
+    assert f.write(b'c' * 3) is None
     assert f.seek('end') == 9
-    assert f.write('d' * 3) is None
+    assert f.write(b'd' * 3) is None
     with assert_raises(LuaException):
         f.seek('set', -10)
 
 with fs.open('tdir/binfile', 'rb') as f:
-    assert f.readAll() == 'bbcccaaaaddd'
-
-with fs.open('tdir/binfile', 'rb') as f:
-    assert isinstance(f.read(), int)
+    assert f.readAll() == b'bbcccaaaaddd'
 
 with fs.open('tdir/binfile', 'r') as f:
     assert [line for line in f] == ['bbcccaaaaddd']

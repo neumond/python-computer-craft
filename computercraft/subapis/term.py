@@ -4,7 +4,6 @@ from typing import Tuple
 from .base import BaseSubAPI
 from .mixins import TermMixin, TermTarget
 from ..lua import lua_call
-from ..rproc import tuple3_number
 from ..sess import eval_lua_method_factory, lua_context_object
 
 
@@ -61,7 +60,8 @@ setPaletteColor = tapi.setPaletteColor
 
 
 def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
-    return tuple3_number(method('nativePaletteColor', colorID))
+    rp = method('nativePaletteColor', colorID)
+    return tuple(rp.take_number() for _ in range(3))
 
 
 @contextmanager

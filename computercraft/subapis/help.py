@@ -1,6 +1,5 @@
 from typing import Optional, List
 
-from ..rproc import string, nil, array_string, option_string
 from ..sess import eval_lua_method_factory
 
 
@@ -17,20 +16,20 @@ __all__ = (
 
 
 def path() -> str:
-    return string(method('path'))
+    return method('path').take_string()
 
 
 def setPath(path: str):
-    return nil(method('setPath', path))
+    return method('setPath', path).take_none()
 
 
 def lookup(topic: str) -> Optional[str]:
-    return option_string(method('lookup', topic))
+    return method('lookup', topic).take_option_string()
 
 
 def topics() -> List[str]:
-    return array_string(method('topics'))
+    return method('topics').take_list_of_strings()
 
 
 def completeTopic(topicPrefix: str) -> List[str]:
-    return array_string(method('completeTopic', topicPrefix))
+    return method('completeTopic', topicPrefix).take_list_of_strings()

@@ -1,6 +1,5 @@
 from typing import Tuple
 
-from ..rproc import boolean, integer, tuple3_number
 from ..sess import eval_lua_method_factory
 
 
@@ -55,23 +54,24 @@ black = 0x8000
 # combine, subtract and test are mostly for redstone.setBundledOutput
 
 def combine(*colors: int) -> int:
-    return integer(method('combine', *colors))
+    return method('combine', *colors).take_int()
 
 
 def subtract(color_set: int, *colors: int) -> int:
-    return integer(method('subtract', color_set, *colors))
+    return method('subtract', color_set, *colors).take_int()
 
 
 def test(colors: int, color: int) -> bool:
-    return boolean(method('test', colors, color))
+    return method('test', colors, color).take_bool()
 
 
 def packRGB(r: float, g: float, b: float) -> int:
-    return integer(method('packRGB', r, g, b))
+    return method('packRGB', r, g, b).take_int()
 
 
 def unpackRGB(rgb: int) -> Tuple[float, float, float]:
-    return tuple3_number(method('unpackRGB', rgb))
+    rp = method('unpackRGB', rgb)
+    return tuple(rp.take_number() for _ in range(3))
 
 
 # use these chars for term.blit

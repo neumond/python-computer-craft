@@ -58,6 +58,8 @@ def lua_value(v):
         return 'true'
     if isinstance(v, str):
         return lua_string(v)
+    if isinstance(v, bytes):
+        return lua_string(v.decode('latin1'))
     if isinstance(v, (int, float)):
         return str(v)
     if isinstance(v, list):

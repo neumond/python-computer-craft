@@ -39,7 +39,7 @@ def step(text):
 
 
 def get_object_table(objname):
-    r = eval_lua(f"""
+    rp = eval_lua(f"""
 local r = {{}}
 for k in pairs({objname}) do
     local t = type({objname}[k])
@@ -51,8 +51,12 @@ for k in pairs({objname}) do
     end
 end
 return r""", immediate=True)
-    assert len(r) == 1
-    return r[0]
+    d = rp.take_dict()
+    return {
+        k1.decode('latin1'): {
+            k2.decode('latin1'): v for k2, v in t.items()
+        } for k1, t in d.items()
+    }
 
 
 def get_class_table(cls):

@@ -2,12 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, Any, Union
 
 from .mixins import TermMixin, TermTarget
-from .turtle import craft_result
 from ..lua import LuaNum, lua_args, return_lua_call
-from ..rproc import (
-    boolean, nil, integer, string, option_integer, option_string,
-    tuple2_integer, array_string, option_string_bool, flat_try_result,
-)
 from ..sess import eval_lua, eval_lua_method_factory
 
 
@@ -28,65 +23,65 @@ class BasePeripheral:
 
 class CCDrive(BasePeripheral):
     def isDiskPresent(self) -> bool:
-        return boolean(self._method('isDiskPresent'))
+        return self._method('isDiskPresent').take_bool()
 
     def getDiskLabel(self) -> Optional[str]:
-        return option_string(self._method('getDiskLabel'))
+        return self._method('getDiskLabel').take_option_string()
 
     def setDiskLabel(self, label: str):
-        return nil(self._method('setDiskLabel', label))
+        return self._method('setDiskLabel', label).take_none()
 
     def hasData(self) -> bool:
-        return boolean(self._method('hasData'))
+        return self._method('hasData').take_bool()
 
     def getMountPath(self) -> Optional[str]:
-        return option_string(self._method('getMountPath'))
+        return self._method('getMountPath').take_option_string()
 
     def hasAudio(self) -> bool:
-        return boolean(self._method('hasAudio'))
+        return self._method('hasAudio').take_bool()
 
     def getAudioTitle(self) -> Optional[Union[bool, str]]:
-        return option_string_bool(self._method('getAudioTitle'))
+        return self._method('getAudioTitle').take_option_string_bool()
 
     def playAudio(self):
-        return nil(self._method('playAudio'))
+        return self._method('playAudio').take_none()
 
     def stopAudio(self):
-        return nil(self._method('stopAudio'))
+        return self._method('stopAudio').take_none()
 
     def ejectDisk(self):
-        return nil(self._method('ejectDisk'))
+        return self._method('ejectDisk').take_none()
 
     def getDiskID(self) -> Optional[int]:
-        return option_integer(self._method('getDiskID'))
+        return self._method('getDiskID').take_option_int()
 
 
 class CCMonitor(BasePeripheral, TermMixin):
     def getTextScale(self) -> int:
-        return integer(self._method('getTextScale'))
+        return self._method('getTextScale').take_int()
 
     def setTextScale(self, scale: int):
-        return nil(self._method('setTextScale', scale))
+        return self._method('setTextScale', scale).take_none()
 
 
 class ComputerMixin:
     def turnOn(self):
-        return nil(self._method('turnOn'))
+        return self._method('turnOn').take_none()
 
     def shutdown(self):
-        return nil(self._method('shutdown'))
+        return self._method('shutdown').take_none()
 
     def reboot(self):
-        return nil(self._method('reboot'))
+        return self._method('reboot').take_none()
 
     def getID(self) -> int:
-        return integer(self._method('getID'))
+        return self._method('getID').take_int()
 
     def getLabel(self) -> Optional[str]:
-        return option_string(self._method('getLabel'))
+        return self._method('getLabel').take_option_string()
 
     def isOn(self) -> bool:
-        return boolean(self._method('isOn'))
+        return self._method('isOn').take_bool()
 
 
 class CCComputer(BasePeripheral, ComputerMixin):
@@ -106,22 +101,22 @@ class ModemMessage:
 
 class ModemMixin:
     def isOpen(self, channel: int) -> bool:
-        return boolean(self._method('isOpen', channel))
+        return self._method('isOpen', channel).take_bool()
 
     def open(self, channel: int):
-        return nil(self._method('open', channel))
+        return self._method('open', channel).take_none()
 
     def close(self, channel: int):
-        return nil(self._method('close', channel))
+        return self._method('close', channel).take_none()
 
     def closeAll(self):
-        return nil(self._method('closeAll'))
+        return self._method('closeAll').take_none()
 
     def transmit(self, channel: int, replyChannel: int, message: Any):
-        return nil(self._method('transmit', channel, replyChannel, message))
+        return self._method('transmit', channel, replyChannel, message).take_none()
 
     def isWireless(self) -> bool:
-        return boolean(self._method('isWireless'))
+        return self._method('isWireless').take_bool()
 
     @property
     def _side(self):
@@ -151,16 +146,16 @@ class CCWirelessModem(BasePeripheral, ModemMixin):
 
 class CCWiredModem(BasePeripheral, ModemMixin):
     def getNameLocal(self) -> Optional[str]:
-        return option_string(self._method('getNameLocal'))
+        return self._method('getNameLocal').take_option_string()
 
     def getNamesRemote(self) -> List[str]:
-        return array_string(self._method('getNamesRemote'))
+        return self._method('getNamesRemote').take_list_of_strings()
 
     def getTypeRemote(self, peripheralName: str) -> Optional[str]:
-        return option_string(self._method('getTypeRemote', peripheralName))
+        return self._method('getTypeRemote', peripheralName).take_option_string()
 
     def isPresentRemote(self, peripheralName: str) -> bool:
-        return boolean(self._method('isPresentRemote', peripheralName))
+        return self._method('isPresentRemote', peripheralName).take_bool()
 
     def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
         # use instead getMethodsRemote and callRemote
@@ -180,31 +175,33 @@ class CCWiredModem(BasePeripheral, ModemMixin):
 
 class CCPrinter(BasePeripheral):
     def newPage(self) -> bool:
-        return boolean(self._method('newPage'))
+        return self._method('newPage').take_bool()
 
     def endPage(self) -> bool:
-        return boolean(self._method('endPage'))
+        return self._method('endPage').take_bool()
 
     def write(self, text: str):
-        return nil(self._method('write', text))
+        return self._method('write', text).take_none()
 
     def setCursorPos(self, x: int, y: int):
-        return nil(self._method('setCursorPos', x, y))
+        return self._method('setCursorPos', x, y).take_none()
 
     def getCursorPos(self) -> Tuple[int, int]:
-        return tuple2_integer(self._method('getCursorPos'))
+        rp = self._method('getCursorPos')
+        return tuple(rp.take_int() for _ in range(2))
 
     def getPageSize(self) -> Tuple[int, int]:
-        return tuple2_integer(self._method('getPageSize'))
+        rp = self._method('getPageSize')
+        return tuple(rp.take_int() for _ in range(2))
 
     def setPageTitle(self, title: str):
-        return nil(self._method('setPageTitle', title))
+        return self._method('setPageTitle', title).take_none()
 
     def getPaperLevel(self) -> int:
-        return integer(self._method('getPaperLevel'))
+        return self._method('getPaperLevel').take_int()
 
     def getInkLevel(self) -> int:
-        return integer(self._method('getInkLevel'))
+        return self._method('getInkLevel').take_int()
 
 
 class CCSpeaker(BasePeripheral):
@@ -229,28 +226,28 @@ class CCSpeaker(BasePeripheral):
 
         # volume 0..3
         # pitch 0..24
-        return boolean(self._method('playNote', instrument, volume, pitch))
+        return self._method('playNote', instrument, volume, pitch).take_bool()
 
-    def playSound(self, sound: str, volume: int = 1, pitch: int = 1):
+    def playSound(self, sound: str, volume: int = 1, pitch: int = 1) -> bool:
         # volume 0..3
         # pitch 0..2
-        return boolean(self._method('playSound', sound, volume, pitch))
+        return self._method('playSound', sound, volume, pitch).take_bool()
 
 
 class CCCommandBlock(BasePeripheral):
     def getCommand(self) -> str:
-        return string(self._method('getCommand'))
+        return self._method('getCommand').take_string()
 
     def setCommand(self, command: str):
-        return nil(self._method('setCommand', command))
+        return self._method('setCommand', command).take_none()
 
     def runCommand(self):
-        return flat_try_result(self._method('runCommand'))
+        return self._method('runCommand').check_bool_error()
 
 
 class CCWorkbench(BasePeripheral):
     def craft(self, quantity: int = 64) -> bool:
-        return craft_result(self._method('craft', quantity))
+        return self._method('craft', quantity).bool_error_exclude('No matching recipes')
 
 
 TYPE_MAP = {
@@ -278,15 +275,15 @@ __all__ = (
 
 
 def isPresent(side: str) -> bool:
-    return boolean(method('isPresent', side))
+    return method('isPresent', side).take_bool()
 
 
 def getType(side: str) -> Optional[str]:
-    return option_string(method('getType', side))
+    return method('getType', side).take_option_string()
 
 
 def getNames() -> List[str]:
-    return array_string(method('getNames'))
+    return method('getNames').take_list_of_strings()
 
 
 # use instead getMethods and call
@@ -298,7 +295,7 @@ def wrap(side: str) -> Optional[BasePeripheral]:
     m = 'peripheral.call'
 
     if ptype == 'modem':
-        if boolean(method('call', side, 'isWireless')):
+        if method('call', side, 'isWireless').take_bool():
             return CCWirelessModem(m, side)
         else:
             return CCWiredModem(m, side)

@@ -1,41 +1,26 @@
 from typing import Optional
 
 from ..errors import LuaException
-from ..rproc import integer, boolean, fact_option, any_dict, flat_try_result
 from ..sess import eval_lua_method_factory
 
 
 method = eval_lua_method_factory('turtle.')
-option_any_dict = fact_option(any_dict)
 
 
-def inspect_result(r):
-    assert isinstance(r, list)
-    assert len(r) == 2
-    success, data = r
-    assert isinstance(success, bool)
+def inspect_result(rp):
+    success = rp.take_bool()
     if not success:
-        if data == 'No block to inspect':
+        msg = rp.take_string()
+        if msg == 'No block to inspect':
             return None
-        raise LuaException(data)
+        raise LuaException(msg)
     else:
-        return any_dict(data)
+        return rp.take_dict()
 
 
 def boolean_with_error_exclusion(exclude_msg):
-    def proc(r):
-        if r is True:
-            return True
-        assert isinstance(r, list)
-        assert len(r) == 2
-        success, msg = r
-        assert isinstance(success, bool)
-        if not success:
-            if msg == exclude_msg:
-                return False
-            raise LuaException(msg)
-        else:
-            return True
+    def proc(rp):
+        return rp.bool_error_exclude(exclude_msg)
     return proc
 
 
@@ -49,8 +34,8 @@ attack_result = boolean_with_error_exclusion('Nothing to attack here')
 craft_result = boolean_with_error_exclusion('No matching recipes')
 
 
-def always_true(r):
-    assert boolean(r) is True
+def always_true(rp):
+    assert rp.take_bool() is True
     # return value is useless
     return None
 
@@ -135,19 +120,22 @@ def select(slotNum: int):
 
 
 def getSelectedSlot() -> int:
-    return integer(method('getSelectedSlot'))
+    return method('getSelectedSlot').take_int()
 
 
 def getItemCount(slotNum: int = None) -> int:
-    return integer(method('getItemCount', slotNum))
+    return method('getItemCount', slotNum).take_int()
 
 
 def getItemSpace(slotNum: int = None) -> int:
-    return integer(method('getItemSpace', slotNum))
+    return method('getItemSpace', slotNum).take_int()
 
 
-def getItemDetail(slotNum: int = None) -> dict:
-    return option_any_dict(method('getItemDetail', slotNum))
+def getItemDetail(slotNum: int = None) -> Optional[dict]:
+    rp = method('getItemDetail', slotNum)
+    if rp.peek() is None:
+        return None
+    return rp.take_dict()
 
 
 def equipLeft():
@@ -195,15 +183,15 @@ def placeDown() -> bool:
 
 
 def detect() -> bool:
-    return boolean(method('detect'))
+    return method('detect').take_bool()
 
 
 def detectUp() -> bool:
-    return boolean(method('detectUp'))
+    return method('detectUp').take_bool()
 
 
 def detectDown() -> bool:
-    return boolean(method('detectDown'))
+    return method('detectDown').take_bool()
 
 
 def inspect() -> Optional[dict]:
@@ -219,19 +207,19 @@ def inspectDown() -> Optional[dict]:
 
 
 def compare() -> bool:
-    return boolean(method('compare'))
+    return method('compare').take_bool()
 
 
 def compareUp() -> bool:
-    return boolean(method('compareUp'))
+    return method('compareUp').take_bool()
 
 
 def compareDown() -> bool:
-    return boolean(method('compareDown'))
+    return method('compareDown').take_bool()
 
 
 def compareTo(slot: int) -> bool:
-    return boolean(method('compareTo', slot))
+    return method('compareTo', slot).take_bool()
 
 
 def drop(count: int = None) -> bool:
@@ -259,15 +247,15 @@ def suckDown(amount: int = None) -> bool:
 
 
 def refuel(quantity: int = None):
-    return flat_try_result(method('refuel', quantity))
+    return method('refuel', quantity).check_bool_error()
 
 
 def getFuelLevel() -> int:
-    return integer(method('getFuelLevel'))
+    return method('getFuelLevel').take_int()
 
 
 def getFuelLimit() -> int:
-    return integer(method('getFuelLimit'))
+    return method('getFuelLimit').take_int()
 
 
 def transferTo(slot: int, quantity: int = None) -> bool:

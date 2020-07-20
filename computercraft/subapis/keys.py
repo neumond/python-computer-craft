@@ -1,7 +1,6 @@
 from typing import Optional
 
 from ..lua import lua_string
-from ..rproc import option_integer, option_string
 from ..sess import eval_lua, eval_lua_method_factory
 
 
@@ -17,12 +16,12 @@ __all__ = (
 def getCode(name: str) -> Optional[int]:
     # replaces properties
     # keys.space → keys.getCode('space')
-    return option_integer(eval_lua('''
+    return eval_lua('''
 if type(keys[{key}]) == 'number' then
     return keys[{key}]
 end
-return nil'''.format(key=lua_string(name))))
+return nil'''.format(key=lua_string(name))).take_option_int()
 
 
 def getName(code: int) -> Optional[str]:
-    return option_string(method('getName', code))
+    return method('getName', code).take_option_string()

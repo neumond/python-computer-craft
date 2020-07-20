@@ -1,7 +1,6 @@
 from typing import List, Union
 
 from ..lua import LuaNum
-from ..rproc import nil, string, integer
 from ..sess import eval_lua_method_factory
 
 
@@ -20,27 +19,27 @@ __all__ = (
 
 
 def slowWrite(text: str, rate: LuaNum = None):
-    return nil(method('slowWrite', text, rate))
+    return method('slowWrite', text, rate).take_none()
 
 
 def slowPrint(text: str, rate: LuaNum = None):
-    return nil(method('slowPrint', text, rate))
+    return method('slowPrint', text, rate).take_none()
 
 
 def formatTime(time: LuaNum, twentyFourHour: bool = None) -> str:
-    return string(method('formatTime', time, twentyFourHour))
+    return method('formatTime', time, twentyFourHour).take_string()
 
 
 def tabulate(*rows_and_colors: Union[list, int]):
-    return nil(method('tabulate', *rows_and_colors))
+    return method('tabulate', *rows_and_colors).take_none()
 
 
 def pagedTabulate(*rows_and_colors: Union[list, int]):
-    return nil(method('pagedTabulate', *rows_and_colors))
+    return method('pagedTabulate', *rows_and_colors).take_none()
 
 
 def pagedPrint(text: str, freeLines: int = None) -> int:
-    return integer(method('pagedPrint', text, freeLines))
+    return method('pagedPrint', text, freeLines).take_int()
 
 
 def complete(partial: str, possible: List[str]) -> List[str]:

@@ -1,16 +1,9 @@
 from typing import Any, List, Optional, Tuple, Union
 
 from ..lua import LuaNum
-from ..rproc import nil, integer, option_string, boolean, array_integer, option_integer, fact_option, fact_tuple
 from ..sess import eval_lua_method_factory
 
 
-recv_result = fact_option(fact_tuple(
-    integer,
-    lambda v: v,
-    option_string,
-    tail_nils=1,
-))
 method = eval_lua_method_factory('rednet.')
 
 
@@ -34,46 +27,47 @@ CHANNEL_BROADCAST = 65535
 
 
 def open(side: str):
-    return nil(method('open', side))
+    return method('open', side).take_none()
 
 
 def close(side: str = None):
-    return nil(method('close', side))
+    return method('close', side).take_none()
 
 
 def send(receiverID: int, message: Any, protocol: str = None) -> bool:
-    return boolean(method('send', receiverID, message, protocol))
+    return method('send', receiverID, message, protocol).take_bool()
 
 
 def broadcast(message: Any, protocol: str = None):
-    return nil(method('broadcast', message, protocol))
+    return method('broadcast', message, protocol).take_none()
 
 
 def receive(
     protocolFilter: str = None, timeout: LuaNum = None,
 ) -> Optional[Tuple[int, Any, Optional[str]]]:
-    return recv_result(method('receive', protocolFilter, timeout))
+    rp = method('receive', protocolFilter, timeout)
+    if rp.peek() is None:
+        return None
+    return (rp.take_int(), rp.take(), rp.take_option_string())
 
 
 def isOpen(side: str = None) -> bool:
-    return boolean(method('isOpen', side))
+    return method('isOpen', side).take_bool()
 
 
 def host(protocol: str, hostname: str):
-    return nil(method('host', protocol, hostname))
+    return method('host', protocol, hostname).take_none()
 
 
 def unhost(protocol: str):
-    return nil(method('unhost', protocol))
+    return method('unhost', protocol).take_none()
 
 
 def lookup(protocol: str, hostname: str = None) -> Union[Optional[int], List[int]]:
-    result = method('lookup', protocol, hostname)
+    rp = method('lookup', protocol, hostname)
     if hostname is None:
-        if result is None:
+        if rp.peek() is None:
             return []
-        if isinstance(result, list):
-            return array_integer(result)
-        return [integer(result)]
+        return rp.take_list_of_ints()
     else:
-        return option_integer(result)
+        return rp.take_option_int()

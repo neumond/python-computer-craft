@@ -25,7 +25,7 @@ class CCApplication(web.Application):
     async def _launch_program(self, ws):
         async for msg in self._bin_messages(ws):
             msg = ser.deserialize(msg)
-            if msg['action'] != 'run':
+            if msg[b'action'] != b'run':
                 await ws.send_bytes(ser.serialize({
                     'action': 'close',
                     'error': 'protocol error',
@@ -36,9 +36,9 @@ class CCApplication(web.Application):
                 sys.__stdout__.write('ws send ' + repr(data) + '\n')
                 asyncio.create_task(ws.send_bytes(data))
 
-            sess = CCSession(msg['computer'], sender)
-            if msg['args']:
-                sess.run_program(msg['args'][0])
+            sess = CCSession(msg[b'computer'], sender)
+            if msg[b'args']:
+                sess.run_program(msg[b'args'][1].decode('latin1'))
             else:
                 sess.run_repl()
             return sess
@@ -51,10 +51,10 @@ class CCApplication(web.Application):
         if sess is not None:
             async for msg in self._bin_messages(ws):
                 msg = ser.deserialize(msg)
-                if msg['action'] == 'event':
-                    sess.on_event(msg['event'], msg['params'])
-                elif msg['action'] == 'task_result':
-                    sess.on_task_result(msg['task_id'], msg['result'])
+                if msg[b'action'] == b'event':
+                    sess.on_event(msg[b'event'].decode('latin1'), msg[b'params'])
+                elif msg[b'action'] == b'task_result':
+                    sess.on_task_result(msg[b'task_id'].decode('latin1'), msg[b'result'])
                 else:
                     await ws.send_bytes(ser.serialize({
                         'action': 'close',

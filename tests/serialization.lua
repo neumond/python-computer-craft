@@ -146,3 +146,5 @@ for _, v in ipairs(roundtrip_tables) do
 end
 
 print('ALL OK')
+
+print(serialize({true, false, 'Position is negative'}))

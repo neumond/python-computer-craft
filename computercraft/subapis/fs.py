@@ -1,55 +1,31 @@
-import builtins
 from contextlib import contextmanager
 from typing import Optional, List
 
 from .base import BaseSubAPI
-from ..errors import LuaException
-from ..lua import lua_call, lua_args, lua_string
-from ..rproc import boolean, string, integer, nil, array_string, option_string, fact_scheme_dict
-from ..sess import eval_lua, eval_lua_method_factory, lua_context_object
-
-
-attribute = fact_scheme_dict({
-    'created': integer,
-    'modification': integer,
-    'isDir': boolean,
-    'size': integer,
-}, {})
+from ..lua import lua_call
+from ..sess import eval_lua_method_factory, lua_context_object
 
 
 class SeekMixin:
     def seek(self, whence: str = None, offset: int = None) -> int:
         # whence: set, cur, end
-        r = self._method('seek', whence, offset)
-        if isinstance(r, builtins.list):
-            assert r[0] is False
-            raise LuaException(r[1])
-        return integer(r)
+        rp = self._method('seek', whence, offset)
+        rp.check_nil_error()
+        return rp.take_int()
 
 
-class ReadHandle(BaseSubAPI):
-    def _decode(self, b):
-        return b.decode('utf-8')
-
-    def _read(self, name, params, val):
-        code = '''
-local s = {}.{}({})
-if s == nil then return nil end
-s = s:gsub('.', function(c) return string.format('%02X', string.byte(c)) end)
-return s
-'''.lstrip().format(
-            self.get_expr_code(), name, lua_args(*params),
-        )
-        return self._decode(bytes.fromhex(val(eval_lua(code))))
+class ReadMixin:
+    def _take(self, rp):
+        raise NotImplementedError
 
     def read(self, count: int = 1) -> Optional[str]:
-        return self._read('read', (count, ), option_string)
+        return self._take(self._method('read', count))
 
-    def readLine(self) -> Optional[str]:
-        return self._read('readLine', (), option_string)
+    def readLine(self, withTrailing: bool = False) -> Optional[str]:
+        return self._take(self._method('readLine', withTrailing))
 
-    def readAll(self) -> str:
-        return self._read('readAll', (), string)
+    def readAll(self) -> Optional[str]:
+        return self._take(self._method('readAll'))
 
     def __iter__(self):
         return self
@@ -61,39 +37,38 @@ return s
         return line
 
 
-class BinaryReadHandle(ReadHandle, SeekMixin):
-    def _decode(self, b):
-        return b
-
-
-class WriteHandle(BaseSubAPI):
-    def _encode(self, s):
-        return s.encode('utf-8')
-
-    def _write(self, name, text, val):
-        code = '''
-local s = {}
-s = s:gsub('..', function(cc) return string.char(tonumber(cc, 16)) end)
-return {}.{}(s)
-'''.lstrip().format(
-            lua_string(self._encode(text).hex()),
-            self.get_expr_code(), name,
-        )
-        return val(eval_lua(code))
+class WriteMixin:
+    def _put(self, t):
+        raise NotImplementedError
 
     def write(self, text: str):
-        return nil(self._method('write', text))
-
-    def writeLine(self, text: str):
-        return nil(self._method('writeLine', text))
+        return self._method('write', self._put(text)).take_none()
 
     def flush(self):
-        return nil(self._method('flush'))
+        return self._method('flush').take_none()
 
 
-class BinaryWriteHandle(WriteHandle, SeekMixin):
-    def _encode(self, s):
-        return s
+class ReadHandle(ReadMixin, BaseSubAPI):
+    def _take(self, rp):
+        return rp.take_option_unicode()
+
+
+class BinaryReadHandle(ReadMixin, SeekMixin, BaseSubAPI):
+    def _take(self, rp):
+        return rp.take_option_bytes()
+
+
+class WriteHandle(WriteMixin, BaseSubAPI):
+    def _put(self, t: str) -> bytes:
+        return t.encode('utf-8')
+
+    def writeLine(self, text: str):
+        return self.write(text + '\n')
+
+
+class BinaryWriteHandle(WriteMixin, SeekMixin, BaseSubAPI):
+    def _put(self, b: bytes) -> bytes:
+        return b
 
 
 method = eval_lua_method_factory('fs.')
@@ -124,55 +99,55 @@ __all__ = (
 
 
 def list(path: str) -> List[str]:
-    return array_string(method('list', path))
+    return method('list', path).take_list_of_strings()
 
 
 def exists(path: str) -> bool:
-    return boolean(method('exists', path))
+    return method('exists', path).take_bool()
 
 
 def isDir(path: str) -> bool:
-    return boolean(method('isDir', path))
+    return method('isDir', path).take_bool()
 
 
 def isReadOnly(path: str) -> bool:
-    return boolean(method('isReadOnly', path))
+    return method('isReadOnly', path).take_bool()
 
 
 def getDrive(path: str) -> Optional[str]:
-    return option_string(method('getDrive', path))
+    return method('getDrive', path).take_option_string()
 
 
 def getSize(path: str) -> int:
-    return integer(method('getSize', path))
+    return method('getSize', path).take_int()
 
 
 def getFreeSpace(path: str) -> int:
-    return integer(method('getFreeSpace', path))
+    return method('getFreeSpace', path).take_int()
 
 
 def getCapacity(path: str) -> int:
-    return integer(method('getCapacity', path))
+    return method('getCapacity', path).take_int()
 
 
 def makeDir(path: str):
-    return nil(method('makeDir', path))
+    return method('makeDir', path).take_none()
 
 
 def move(fromPath: str, toPath: str):
-    return nil(method('move', fromPath, toPath))
+    return method('move', fromPath, toPath).take_none()
 
 
 def copy(fromPath: str, toPath: str):
-    return nil(method('copy', fromPath, toPath))
+    return method('copy', fromPath, toPath).take_none()
 
 
 def delete(path: str):
-    return nil(method('delete', path))
+    return method('delete', path).take_none()
 
 
 def combine(basePath: str, localPath: str) -> str:
-    return string(method('combine', basePath, localPath))
+    return method('combine', basePath, localPath).take_string()
 
 
 @contextmanager
@@ -199,27 +174,39 @@ def open(path: str, mode: str):
 
 
 def find(wildcard: str) -> List[str]:
-    return array_string(method('find', wildcard))
+    return method('find', wildcard).take_list_of_strings()
 
 
 def getDir(path: str) -> str:
-    return string(method('getDir', path))
+    return method('getDir', path).take_string()
 
 
 def getName(path: str) -> str:
-    return string(method('getName', path))
+    return method('getName', path).take_string()
 
 
 def isDriveRoot(path: str) -> bool:
-    return boolean(method('isDriveRoot', path))
+    return method('isDriveRoot', path).take_bool()
 
 
 def complete(
     partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
 ) -> List[str]:
-    return array_string(method(
-        'complete', partialName, path, includeFiles, includeDirs))
+    return method(
+        'complete', partialName, path, includeFiles, includeDirs,
+    ).take_list_of_strings()
 
 
 def attributes(path: str) -> dict:
-    return attribute(method('attributes', path))
+    tp = method('attributes', path).take_dict((
+        b'created',
+        b'modification',
+        b'isDir',
+        b'size',
+    ))
+    r = {}
+    r['created'] = tp.take_int()
+    r['modification'] = tp.take_int()
+    r['isDir'] = tp.take_bool()
+    r['size'] = tp.take_int()
+    return r

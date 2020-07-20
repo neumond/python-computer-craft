@@ -1,7 +1,6 @@
 from typing import Optional, List
 
 from ..lua import LuaNum
-from ..rproc import nil, string, option_string, number, integer, boolean
 from ..sess import eval_lua_method_factory, get_current_greenlet
 
 
@@ -31,23 +30,23 @@ __all__ = (
 
 
 def version() -> str:
-    return string(method('version'))
+    return method('version').take_string()
 
 
 def getComputerID() -> int:
-    return integer(method('getComputerID'))
+    return method('getComputerID').take_int()
 
 
 def getComputerLabel() -> Optional[str]:
-    return option_string(method('getComputerLabel'))
+    return method('getComputerLabel').take_option_string()
 
 
 def setComputerLabel(label: Optional[str]):
-    return nil(method('setComputerLabel', label))
+    return method('setComputerLabel', label).take_none()
 
 
 def run(environment: dict, programPath: str, *args: List[str]):
-    return boolean(method('run', environment, programPath, *args))
+    return method('run', environment, programPath, *args).take_bool()
 
 
 def captureEvent(event: str):
@@ -68,12 +67,12 @@ def captureEvent(event: str):
 
 
 def queueEvent(event: str, *params):
-    return nil(method('queueEvent', event, *params))
+    return method('queueEvent', event, *params).take_none()
 
 
 def clock() -> LuaNum:
     # number of game ticks * 0.05, roughly seconds
-    return number(method('clock'))
+    return method('clock').take_number()
 
 
 # regarding ingame parameter below:
@@ -82,42 +81,42 @@ def clock() -> LuaNum:
 
 def time() -> LuaNum:
     # in hours 0..24
-    return number(method('time', 'ingame'))
+    return method('time', 'ingame').take_number()
 
 
 def day() -> int:
-    return integer(method('day', 'ingame'))
+    return method('day', 'ingame').take_int()
 
 
 def epoch() -> int:
-    return integer(method('epoch', 'ingame'))
+    return method('epoch', 'ingame').take_int()
 
 
 def sleep(seconds: LuaNum):
-    return nil(method('sleep', seconds))
+    return method('sleep', seconds).take_none()
 
 
 def startTimer(timeout: LuaNum) -> int:
-    return integer(method('startTimer', timeout))
+    return method('startTimer', timeout).take_int()
 
 
 def cancelTimer(timerID: int):
-    return nil(method('cancelTimer', timerID))
+    return method('cancelTimer', timerID).take_none()
 
 
 def setAlarm(time: LuaNum) -> int:
     # takes time of the day in hours 0..24
     # returns integer alarmID
-    return integer(method('setAlarm', time))
+    return method('setAlarm', time).take_int()
 
 
 def cancelAlarm(alarmID: int):
-    return nil(method('cancelAlarm', alarmID))
+    return method('cancelAlarm', alarmID).take_none()
 
 
 def shutdown():
-    return nil(method('shutdown'))
+    return method('shutdown').take_none()
 
 
 def reboot():
-    return nil(method('reboot'))
+    return method('reboot').take_none()

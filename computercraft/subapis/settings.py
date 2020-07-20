@@ -1,17 +1,8 @@
 from typing import Any, List
 
-from ..rproc import nil, boolean, string, array_string, fact_scheme_dict
 from ..sess import eval_lua_method_factory
 
 
-setting = fact_scheme_dict({
-    'changed': boolean,
-}, {
-    'description': string,
-    'default': lambda v: v,
-    'type': string,
-    'value': lambda v: v,
-})
 method = eval_lua_method_factory('settings.')
 
 
@@ -37,40 +28,57 @@ def define(name: str, description: str = None, default: Any = None, type: str = 
         options['default'] = default
     if type is not None:
         options['type'] = type
-    return nil(method('define', name, options))
+    return method('define', name, options).take_none()
 
 
 def undefine(name: str):
-    return nil(method('undefine', name))
+    return method('undefine', name).take_none()
 
 
 def getDetails(name: str) -> dict:
-    return setting(method('getDetails', name))
+    tp = method('getDetails', name).take_dict((
+        b'changed',
+        b'description',
+        b'default',
+        b'type',
+        b'value',
+    ))
+    r = {}
+    r['changed'] = tp.take_bool()
+    for k, v in [
+        ('description', tp.take_option_string()),
+        ('default', tp.take()),
+        ('type', tp.take_option_string()),
+        ('value', tp.take()),
+    ]:
+        if v is not None:
+            r[k] = v
+    return r
 
 
 def set(name: str, value: Any):
-    return nil(method('set', name, value))
+    return method('set', name, value).take_none()
 
 
 def get(name: str, default: Any = None) -> Any:
-    return method('get', name, default)
+    return method('get', name, default).take()
 
 
 def unset(name: str):
-    return nil(method('unset', name))
+    return method('unset', name).take_none()
 
 
 def clear():
-    return nil(method('clear'))
+    return method('clear').take_none()
 
 
 def getNames() -> List[str]:
-    return array_string(method('getNames'))
+    return method('getNames').take_list_of_strings()
 
 
 def load(path: str = None) -> bool:
-    return boolean(method('load', path))
+    return method('load', path).take_bool()
 
 
 def save(path: str = None) -> bool:
-    return boolean(method('save', path))
+    return method('save', path).take_bool()

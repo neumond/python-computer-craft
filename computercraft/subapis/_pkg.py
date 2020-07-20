@@ -2,7 +2,6 @@ from types import ModuleType
 
 from ..errors import LuaException
 from ..lua import lua_string
-from ..rproc import boolean, option_string
 from ..sess import eval_lua
 
 
@@ -26,7 +25,7 @@ def import_file(path: str, relative_to: str = None):
             lua_string(relative_to),
             path_expr,
         )
-    source = option_string(eval_lua('''
+    source = eval_lua('''
 local p = {}
 if not fs.exists(p) then return nil end
 if fs.isDir(p) then return nil end
@@ -36,7 +35,7 @@ f.close()
 return src
 '''.lstrip().format(
         path_expr,
-    )))
+    )).take_option_string()
     if source is None:
         raise ImportError('File not found: {}'.format(path))
     cc = compile(source, mod.__name__, 'exec')
@@ -45,16 +44,16 @@ return src
 
 
 def is_commands() -> bool:
-    return boolean(eval_lua('return commands ~= nil'))
+    return eval_lua('return commands ~= nil').take_bool()
 
 
 def is_multishell() -> bool:
-    return boolean(eval_lua('return multishell ~= nil'))
+    return eval_lua('return multishell ~= nil').take_bool()
 
 
 def is_turtle() -> bool:
-    return boolean(eval_lua('return turtle ~= nil'))
+    return eval_lua('return turtle ~= nil').take_bool()
 
 
 def is_pocket() -> bool:
-    return boolean(eval_lua('return pocket ~= nil'))
+    return eval_lua('return pocket ~= nil').take_bool()

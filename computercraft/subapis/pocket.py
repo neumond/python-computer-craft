@@ -1,4 +1,3 @@
-from ..rproc import flat_try_result
 from ..sess import eval_lua_method_factory
 
 
@@ -12,8 +11,8 @@ __all__ = (
 
 
 def equipBack():
-    return flat_try_result(method('equipBack'))
+    return method('equipBack').check_bool_error()
 
 
 def unequipBack():
-    return flat_try_result(method('unequipBack'))
+    return method('unequipBack').check_bool_error()

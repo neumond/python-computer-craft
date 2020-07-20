@@ -1,60 +1,62 @@
 from typing import Tuple
 
 from ..lua import LuaExpr
-from ..rproc import boolean, nil, integer, tuple3_number, tuple2_integer
 
 
 class TermMixin:
     def write(self, text: str):
-        return nil(self._method('write', text))
+        return self._method('write', text).take_none()
 
     def blit(self, text: str, textColors: str, backgroundColors: str):
-        return nil(self._method('blit', text, textColors, backgroundColors))
+        return self._method('blit', text, textColors, backgroundColors).take_none()
 
     def clear(self):
-        return nil(self._method('clear'))
+        return self._method('clear').take_none()
 
     def clearLine(self):
-        return nil(self._method('clearLine'))
+        return self._method('clearLine').take_none()
 
     def getCursorPos(self) -> Tuple[int, int]:
-        return tuple2_integer(self._method('getCursorPos'))
+        rp = self._method('getCursorPos')
+        return tuple(rp.take_int() for _ in range(2))
 
     def setCursorPos(self, x: int, y: int):
-        return nil(self._method('setCursorPos', x, y))
+        return self._method('setCursorPos', x, y).take_none()
 
     def getCursorBlink(self) -> bool:
-        return boolean(self._method('getCursorBlink'))
+        return self._method('getCursorBlink').take_bool()
 
     def setCursorBlink(self, value: bool):
-        return nil(self._method('setCursorBlink', value))
+        return self._method('setCursorBlink', value).take_none()
 
     def isColor(self) -> bool:
-        return boolean(self._method('isColor'))
+        return self._method('isColor').take_bool()
 
     def getSize(self) -> Tuple[int, int]:
-        return tuple2_integer(self._method('getSize'))
+        rp = self._method('getSize')
+        return tuple(rp.take_int() for _ in range(2))
 
     def scroll(self, lines: int):
-        return nil(self._method('scroll', lines))
+        return self._method('scroll', lines).take_none()
 
     def setTextColor(self, colorID: int):
-        return nil(self._method('setTextColor', colorID))
+        return self._method('setTextColor', colorID).take_none()
 
     def getTextColor(self) -> int:
-        return integer(self._method('getTextColor'))
+        return self._method('getTextColor').take_int()
 
     def setBackgroundColor(self, colorID: int):
-        return nil(self._method('setBackgroundColor', colorID))
+        return self._method('setBackgroundColor', colorID).take_none()
 
     def getBackgroundColor(self) -> int:
-        return integer(self._method('getBackgroundColor'))
+        return self._method('getBackgroundColor').take_int()
 
     def getPaletteColor(self, colorID: int) -> Tuple[float, float, float]:
-        return tuple3_number(self._method('getPaletteColor', colorID))
+        rp = self._method('getPaletteColor', colorID)
+        return tuple(rp.take_number() for _ in range(3))
 
     def setPaletteColor(self, colorID: int, r: float, g: float, b: float):
-        return nil(self._method('setPaletteColor', colorID, r, g, b))
+        return self._method('setPaletteColor', colorID, r, g, b).take_none()
 
 
 class TermTarget(LuaExpr):

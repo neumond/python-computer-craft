@@ -21,6 +21,8 @@ def serialize(v: Any) -> bytes:
         return b'T'
     elif isinstance(v, (int, float)):
         return '[{}]'.format(v).encode(_ENC)
+    elif isinstance(v, bytes):
+        return '<{}>'.format(len(v)) + v
     elif isinstance(v, str):
         v = v.encode(_ENC)
         return '<{}>'.format(len(v)).encode(_ENC) + v
@@ -56,7 +58,7 @@ def _deserialize(b: bytes, _idx: int) -> Tuple[Any, int]:
     elif tok == 60:  # <
         newidx = b.index(b'>', _idx)
         ln = int(b[_idx:newidx].decode(_ENC))
-        return b[newidx + 1:newidx + 1 + ln].decode(_ENC), newidx + 1 + ln
+        return b[newidx + 1:newidx + 1 + ln], newidx + 1 + ln
     elif tok == 123:  # {
         r = {}
         while True:
@@ -67,12 +69,6 @@ def _deserialize(b: bytes, _idx: int) -> Tuple[Any, int]:
             key, _idx = _deserialize(b, _idx)
             value, _idx = _deserialize(b, _idx)
             r[key] = value
-        if r:
-            for i in range(1, len(r) + 1):
-                if i not in r:
-                    break
-            else:
-                r = [r[i + 1] for i in range(len(r))]
         return r, _idx
     else:
         raise ValueError

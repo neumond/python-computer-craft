@@ -1,6 +1,5 @@
 from typing import Optional, Union
 
-from ..rproc import boolean, nil, option_integer, option_string, option_string_bool
 from ..sess import eval_lua_method_factory
 
 
@@ -23,44 +22,44 @@ __all__ = (
 
 
 def isPresent(side: str) -> bool:
-    return boolean(method('isPresent', side))
+    return method('isPresent', side).take_bool()
 
 
 def hasData(side: str) -> bool:
-    return boolean(method('hasData', side))
+    return method('hasData', side).take_bool()
 
 
 def getMountPath(side: str) -> Optional[str]:
-    return option_string(method('getMountPath', side))
+    return method('getMountPath', side).take_option_string()
 
 
 def setLabel(side: str, label: str):
-    return nil(method('setLabel', side, label))
+    return method('setLabel', side, label).take_none()
 
 
 def getLabel(side: str) -> Optional[str]:
-    return option_string(method('getLabel', side))
+    return method('getLabel', side).take_option_string()
 
 
 def getID(side: str) -> Optional[int]:
-    return option_integer(method('getID', side))
+    return method('getID', side).take_option_int()
 
 
 def hasAudio(side: str) -> bool:
-    return boolean(method('hasAudio', side))
+    return method('hasAudio', side).take_bool()
 
 
 def getAudioTitle(side: str) -> Optional[Union[bool, str]]:
-    return option_string_bool(method('getAudioTitle', side))
+    return method('getAudioTitle', side).take_option_string_bool()
 
 
 def playAudio(side: str):
-    return nil(method('playAudio', side))
+    return method('playAudio', side).take_none()
 
 
 def stopAudio(side: str):
-    return nil(method('stopAudio', side))
+    return method('stopAudio', side).take_none()
 
 
 def eject(side: str):
-    return nil(method('eject', side))
+    return method('eject', side).take_none()

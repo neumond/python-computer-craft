@@ -1,6 +1,5 @@
 from typing import Optional
 
-from ..rproc import integer, nil, boolean, option_string
 from ..sess import eval_lua_method_factory
 
 
@@ -19,28 +18,28 @@ __all__ = (
 
 
 def getCurrent() -> int:
-    return integer(method('getCurrent'))
+    return method('getCurrent').take_int()
 
 
 def getCount() -> int:
-    return integer(method('getCount'))
+    return method('getCount').take_int()
 
 
 def launch(environment: dict, programPath: str, *args: str) -> int:
-    return integer(method('launch', environment, programPath, *args))
+    return method('launch', environment, programPath, *args).take_int()
 
 
 def setTitle(tabID: int, title: str):
-    return nil(method('setTitle', tabID, title))
+    return method('setTitle', tabID, title).take_none()
 
 
 def getTitle(tabID: int) -> Optional[str]:
-    return option_string(method('getTitle', tabID))
+    return method('getTitle', tabID).take_option_string()
 
 
 def setFocus(tabID: int) -> bool:
-    return boolean(method('setFocus', tabID))
+    return method('setFocus', tabID).take_bool()
 
 
 def getFocus() -> int:
-    return integer(method('getFocus'))
+    return method('getFocus').take_int()

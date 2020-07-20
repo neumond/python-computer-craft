@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from typing import Tuple
 
 from ..lua import lua_call
-from ..rproc import nil, tuple2_integer, tuple3_string
 from ..sess import eval_lua_method_factory, lua_context_object
 from .base import BaseSubAPI
 from .mixins import TermMixin, TermTarget
@@ -10,22 +9,24 @@ from .mixins import TermMixin, TermTarget
 
 class CCWindow(BaseSubAPI, TermMixin):
     def setVisible(self, visibility: bool):
-        return nil(self._method('setVisible', visibility))
+        return self._method('setVisible', visibility).take_none()
 
     def redraw(self):
-        return nil(self._method('redraw'))
+        return self._method('redraw').take_none()
 
     def restoreCursor(self):
-        return nil(self._method('restoreCursor'))
+        return self._method('restoreCursor').take_none()
 
     def getPosition(self) -> Tuple[int, int]:
-        return tuple2_integer(self._method('getPosition'))
+        rp = self._method('getPosition')
+        return tuple(rp.take_int() for _ in range(2))
 
     def reposition(self, x: int, y: int, width: int = None, height: int = None, parent: TermTarget = None):
-        return nil(self._method('reposition', x, y, width, height, parent))
+        return self._method('reposition', x, y, width, height, parent).take_none()
 
     def getLine(self, y: int) -> Tuple[str, str, str]:
-        return tuple3_string(self._method('getLine', y))
+        rp = self._method('getLine', y)
+        return tuple(rp.take_string() for _ in range(3))
 
     def get_term_target(self) -> TermTarget:
         return TermTarget(self.get_expr_code())

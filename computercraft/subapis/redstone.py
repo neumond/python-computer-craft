@@ -1,6 +1,5 @@
 from typing import List
 
-from ..rproc import boolean, nil, integer, array_string
 from ..sess import eval_lua_method_factory
 
 
@@ -23,46 +22,46 @@ __all__ = (
 
 
 def getSides() -> List[str]:
-    return array_string(method('getSides'))
+    return method('getSides').take_list_of_strings()
 
 
 def getInput(side: str) -> bool:
-    return boolean(method('getInput', side))
+    return method('getInput', side).take_bool()
 
 
 def setOutput(side: str, value: bool):
-    return nil(method('setOutput', side, value))
+    return method('setOutput', side, value).take_none()
 
 
 def getOutput(side: str) -> bool:
-    return boolean(method('getOutput', side))
+    return method('getOutput', side).take_bool()
 
 
 def getAnalogInput(side: str) -> int:
-    return integer(method('getAnalogInput', side))
+    return method('getAnalogInput', side).take_int()
 
 
 def setAnalogOutput(side: str, strength: int):
-    return nil(method('setAnalogOutput', side, strength))
+    return method('setAnalogOutput', side, strength).take_none()
 
 
 def getAnalogOutput(side: str) -> int:
-    return integer(method('getAnalogOutput', side))
+    return method('getAnalogOutput', side).take_int()
 
 
 # bundled cables are not available in vanilla
 
 def getBundledInput(side: str) -> int:
-    return integer(method('getBundledInput', side))
+    return method('getBundledInput', side).take_int()
 
 
 def setBundledOutput(side: str, colors: int):
-    return nil(method('setBundledOutput', side, colors))
+    return method('setBundledOutput', side, colors).take_none()
 
 
 def getBundledOutput(side: str) -> int:
-    return integer(method('getBundledOutput', side))
+    return method('getBundledOutput', side).take_int()
 
 
 def testBundledInput(side: str, color: int) -> bool:
-    return boolean(method('testBundledInput', side, color))
+    return method('testBundledInput', side, color).take_bool()

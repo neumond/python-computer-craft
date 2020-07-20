@@ -6,6 +6,7 @@ local url = 'http://127.0.0.1:4343/'
 local tasks = {}
 local filters = {}
 local ycounts = {}
+local coparams = {}
 
 ws = http.websocket(url..'ws/')
 if ws == false then
@@ -117,12 +118,13 @@ while true do
                     ws_send{
                         action='task_result',
                         task_id=msg.task_id,
-                        result={fn()},
+                        result={fn(table.unpack(msg.params or {}))},
                         yields=0,
                     }
                 else
                     tasks[msg.task_id] = coroutine.create(fn)
                     ycounts[msg.task_id] = 0
+                    coparams[msg.task_id] = msg.params or {}
                 end
             end
         elseif msg.action == 'drop' then
@@ -130,6 +132,7 @@ while true do
                 tasks[task_id] = nil
                 filters[task_id] = nil
                 ycounts[task_id] = nil
+                coparams[task_id] = nil
             end
         elseif msg.action == 'sub' then
             event_sub[msg.event] = true
@@ -152,7 +155,13 @@ while true do
     local del_tasks = {}
     for task_id in pairs(tasks) do
         if filters[task_id] == nil or filters[task_id] == event then
-            local r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}
+            local r
+            if coparams[task_id] ~= nil then
+                r = {coroutine.resume(tasks[task_id], table.unpack(coparams[task_id]))}
+                coparams[task_id] = nil
+            else
+                r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}
+            end
             if coroutine.status(tasks[task_id]) == 'dead' then
                 ws_send{
                     action='task_result',
@@ -175,6 +184,7 @@ while true do
         tasks[task_id] = nil
         filters[task_id] = nil
         ycounts[task_id] = nil
+        coparams[task_id] = nil
     end
 end
 
