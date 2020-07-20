@@ -162,6 +162,7 @@ while true do
             else
                 r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}
             end
+            ycounts[task_id] = ycounts[task_id] + 1
             if coroutine.status(tasks[task_id]) == 'dead' then
                 ws_send{
                     action='task_result',
@@ -176,7 +177,6 @@ while true do
                 else
                     filters[task_id] = nil
                 end
-                ycounts[task_id] = ycounts[task_id] + 1
             end
         end
     end

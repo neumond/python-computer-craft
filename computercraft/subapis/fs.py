@@ -2,7 +2,6 @@ from contextlib import contextmanager
 from typing import Optional, List
 
 from .base import BaseSubAPI
-from ..lua import lua_call
 from ..sess import eval_lua_method_factory, lua_context_object
 
 
@@ -163,7 +162,8 @@ def open(path: str, mode: str):
             ...
     '''
     with lua_context_object(
-        lua_call('fs.open', path, mode.replace('b', '') + 'b'),
+        'fs.open(...)',
+        (path, mode.replace('b', '') + 'b'),
         '{e}.close()',
     ) as var:
         if 'b' in mode:

@@ -14,7 +14,7 @@ from types import ModuleType
 
 from greenlet import greenlet, getcurrent as get_current_greenlet
 
-from .lua import lua_string, lua_call, return_lua_call
+from .lua import lua_string
 from . import rproc, ser
 
 
@@ -73,22 +73,16 @@ class StdFileProxy:
                 raise RuntimeError(
                     "Computercraft environment doesn't support "
                     "stdin readline method with parameter")
-            return eval_lua(
-                return_lua_call('io.read')
-            ).take_string() + '\n'
+            return eval_lua('return io.read()').take_string() + '\n'
 
     def write(self, s):
         if _is_global_greenlet():
             return self._native.write(s)
         else:
             if self._err:
-                return eval_lua(
-                    lua_call('io.stderr:write', s)
-                ).take_none()
+                return eval_lua('io.stderr:write(...)', s).take_none()
             else:
-                return eval_lua(
-                    lua_call('io.write', s)
-                ).take_none()
+                return eval_lua('io.write(...)', s).take_none()
 
     def fileno(self):
         if _is_global_greenlet():
@@ -140,9 +134,10 @@ sys.stdout = StdFileProxy(sys.__stdout__, False)
 sys.stderr = StdFileProxy(sys.__stderr__, True)
 
 
-def eval_lua(lua_code, immediate=False):
+def eval_lua(lua_code, *params, immediate=False):
     request = ser.serialize({
         'code': lua_code,
+        'params': params,
         'immediate': immediate,
     })
     result = get_current_session()._server_greenlet.switch(request)
@@ -154,11 +149,11 @@ def eval_lua(lua_code, immediate=False):
 
 
 @contextmanager
-def lua_context_object(create_expr: str, finalizer_template: str = ''):
+def lua_context_object(create_expr: str, create_params: tuple, finalizer_template: str = ''):
     sess = get_current_session()
     fid = sess.create_task_id()
     var = 'temp[{}]'.format(lua_string(fid))
-    eval_lua('{} = {}'.format(var, create_expr))
+    eval_lua('{} = {}'.format(var, create_expr), *create_params)
     try:
         yield var
     finally:
@@ -169,7 +164,8 @@ def lua_context_object(create_expr: str, finalizer_template: str = ''):
 
 def eval_lua_method_factory(obj):
     def method(name, *params):
-        return eval_lua(return_lua_call(obj + name, *params))
+        code = 'return ' + obj + name + '(...)'
+        return eval_lua(code, *params)
     return method
 
 
@@ -344,14 +340,14 @@ class CCSession:
     def run_program(self, program):
         def _run_program():
             rp = eval_lua('''
-local p = fs.combine(shell.dir(), {})
+local p = fs.combine(shell.dir(), ...)
 if not fs.exists(p) then return nil end
 if fs.isDir(p) then return nil end
 local f = fs.open(p, 'r')
 local code = f.readAll()
 f.close()
 return p, code
-'''.lstrip().format(lua_string(program)))
+'''.lstrip(), program)
             p = rp.take_string()
             code = rp.take_string()
             cc = compile(code, p, 'exec')

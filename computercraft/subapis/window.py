@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from typing import Tuple
 
-from ..lua import lua_call
 from ..sess import eval_lua_method_factory, lua_context_object
 from .base import BaseSubAPI
 from .mixins import TermMixin, TermTarget
@@ -45,6 +44,7 @@ def create(
     parentTerm: TermTarget, x: int, y: int, width: int, height: int, visible: bool = None,
 ) -> CCWindow:
     with lua_context_object(
-        lua_call('window.create', parentTerm, x, y, width, height, visible),
+        'window.create(...)',
+        (parentTerm, x, y, width, height, visible),
     ) as var:
         yield CCWindow(var)

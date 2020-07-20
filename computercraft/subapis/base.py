@@ -1,4 +1,4 @@
-from ..lua import LuaExpr, lua_args
+from ..lua import LuaExpr
 from ..sess import eval_lua
 
 
@@ -10,6 +10,5 @@ class BaseSubAPI(LuaExpr):
         return self._lua_expr
 
     def _method(self, name, *params):
-        return eval_lua('return {}.{}({})'.format(
-            self.get_expr_code(), name, lua_args(*params),
-        ))
+        code = 'return {}.{}(...)'.format(self.get_expr_code(), name)
+        return eval_lua(code, *params)

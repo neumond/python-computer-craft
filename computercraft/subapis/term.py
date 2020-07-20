@@ -3,7 +3,6 @@ from typing import Tuple
 
 from .base import BaseSubAPI
 from .mixins import TermMixin, TermTarget
-from ..lua import lua_call
 from ..sess import eval_lua_method_factory, lua_context_object
 
 
@@ -67,8 +66,9 @@ def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
 @contextmanager
 def redirect(target: TermTarget):
     with lua_context_object(
-        lua_call('term.redirect', target),
-        'term.redirect({e})'
+        'term.redirect(' + target.get_expr_code() + ')',
+        (),
+        'term.redirect({e})',
     ):
         yield
 

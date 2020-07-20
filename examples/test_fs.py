@@ -173,7 +173,7 @@ with fs.open('tdir/banana', 'w') as f:
     assert f.write('ov') is None
     assert f.write('er ') is None
     assert f.write('a lazy') is None
-    assert f.writeLine(' дог.') is None
+    assert f.writeLine(' дог.') is None  # supports unicode!
 assert fs.getSize('tdir/banana') > 9
 with fs.open('tdir/banana', 'r') as f:
     assert f.readAll() == 'Brown fox jumps\nover a lazy дог.\n'

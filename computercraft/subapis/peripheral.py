@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, Any, Union
 
 from .mixins import TermMixin, TermTarget
-from ..lua import LuaNum, lua_args, return_lua_call
+from ..lua import LuaNum, lua_string
 from ..sess import eval_lua, eval_lua_method_factory
 
 
@@ -15,10 +15,8 @@ class BasePeripheral:
         self._prepend_params = prepend_params
 
     def _method(self, name, *params):
-        return eval_lua(return_lua_call(
-            self._lua_method_expr,
-            *self._prepend_params, name, *params,
-        ))
+        code = 'return ' + self._lua_method_expr + '(...)'
+        return eval_lua(code, *self._prepend_params, name, *params)
 
 
 class CCDrive(BasePeripheral):
@@ -305,5 +303,5 @@ def wrap(side: str) -> Optional[BasePeripheral]:
 
 def get_term_target(side: str) -> TermTarget:
     return TermTarget('peripheral.wrap({})'.format(
-        lua_args(side),
+        lua_string(side),
     ))
