@@ -347,6 +347,9 @@ local code = f.readAll()
 f.close()
 return p, code
 '''.lstrip(), program)
+            if rp.peek() is None:
+                print('Program not found', file=sys.stderr)
+                return
             p = rp.take_string()
             code = rp.take_string()
             cc = compile(code, p, 'exec')
