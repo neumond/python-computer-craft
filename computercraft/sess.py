@@ -9,6 +9,7 @@ from importlib import import_module
 from importlib.abc import MetaPathFinder, Loader
 from importlib.machinery import ModuleSpec
 from itertools import count
+from platform import python_version
 from traceback import format_exc
 from types import ModuleType
 
@@ -355,6 +356,8 @@ return p, code
 
     def run_repl(self):
         def _repl():
-            InteractiveConsole(locals={}).interact()
+            InteractiveConsole(locals={}).interact(
+                banner='Python {}'.format(python_version()),
+            )
 
         self._run_sandboxed_greenlet(_repl)
