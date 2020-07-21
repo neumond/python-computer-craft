@@ -14,7 +14,7 @@ THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
 LUA_FILE_VERSION = 2
 PROTO_ERROR = b'C' + ser.serialize(b'protocol error')
-DEBUG_PROTO = True
+DEBUG_PROTO = False
 
 
 class CCApplication(web.Application):
