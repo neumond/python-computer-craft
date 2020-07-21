@@ -66,8 +66,9 @@ def unhost(protocol: str):
 def lookup(protocol: str, hostname: str = None) -> Union[Optional[int], List[int]]:
     rp = method('lookup', protocol, hostname)
     if hostname is None:
-        if rp.peek() is None:
-            return []
-        return rp.take_list_of_ints()
+        r = []
+        while rp.peek() is not None:
+            r.append(rp.take_int())
+        return r
     else:
         return rp.take_option_int()

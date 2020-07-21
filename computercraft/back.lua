@@ -100,6 +100,11 @@ function ws_send(action, ...)
     ws.send(m, true)
 end
 
+function safe_unpack(a)
+    -- nil-safe
+    return table.unpack(a, 1, table.maxn(a))
+end
+
 ws_send('0', proto_version, os.getComputerID(), arg)
 
 while true do
@@ -124,7 +129,7 @@ while true do
             else
                 setfenv(fn, genv)
                 if action == 'I' then
-                    ws_send('T', task_id, serialize{fn(table.unpack(params))}, 0)
+                    ws_send('T', task_id, serialize{fn(safe_unpack(params))}, 0)
                 else
                     tasks[task_id] = coroutine.create(fn)
                     ycounts[task_id] = 0
@@ -162,7 +167,7 @@ while true do
         if filters[task_id] == nil or filters[task_id] == event then
             local r
             if coparams[task_id] ~= nil then
-                r = {coroutine.resume(tasks[task_id], table.unpack(coparams[task_id]))}
+                r = {coroutine.resume(tasks[task_id], safe_unpack(coparams[task_id]))}
                 coparams[task_id] = nil
             else
                 r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}

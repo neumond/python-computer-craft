@@ -24,9 +24,9 @@ messages = []
 def _send():
     for msg in [
         1,
-        'hi',
-        {'data': 5},
-        'stop',
+        b'hi',
+        {b'data': 5},
+        b'stop',
     ]:
         os.sleep(1)
         m.transmit(remote_channel, local_channel, msg)
@@ -46,7 +46,7 @@ def _recv():
 assert m.closeAll() is None
 parallel.waitForAll(_recv, _send)
 
-assert messages == [1, 'hi', {'data': 5}]
+assert messages == [1, b'hi', {b'data': 5}]
 assert m.isOpen(local_channel) is False
 assert m.closeAll() is None
 assert isinstance(m.isWireless(), bool)

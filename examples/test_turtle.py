@@ -31,12 +31,12 @@ assert turtle.getItemCount() == 3
 assert turtle.getItemCount(1) == 3
 
 assert turtle.getItemDetail() == {
-    'count': 3,
-    'name': 'minecraft:coal',
+    b'count': 3,  # TODO: binary output
+    b'name': b'minecraft:coal',
 }
 assert turtle.getItemDetail(1) == {
-    'count': 3,
-    'name': 'minecraft:coal',
+    b'count': 3,
+    b'name': b'minecraft:coal',
 }
 
 assert turtle.getItemSpace() == 61
@@ -80,7 +80,7 @@ for c in [
     turtle.inspectDown()
 ]:
     assert isinstance(c, dict)
-    assert c['name'] == 'minecraft:cobblestone'
+    assert c[b'name'] == b'minecraft:cobblestone'
 
 assert turtle.select(1) is None
 assert turtle.getItemCount() == 0
@@ -98,8 +98,8 @@ if (
 
 assert turtle.select(1) is None
 if turtle.getItemDetail(1) != {
-    'count': 1,
-    'name': 'minecraft:diamond_pickaxe',
+    b'count': 1,
+    b'name': b'minecraft:diamond_pickaxe',
 }:
     step('Put fresh diamond pickaxe at slot 1')
 
@@ -241,8 +241,8 @@ for craft_fn in craft1, craft2:
     assert craft_fn() is True
     assert craft_fn() is False
     assert turtle.getItemDetail() == {
-        'count': 1,
-        'name': 'minecraft:furnace',
+        b'count': 1,
+        b'name': b'minecraft:furnace',
     }
 
 print('Test finished successfully')

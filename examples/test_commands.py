@@ -15,21 +15,22 @@ assert len(xyz) == 3
 for c in xyz:
     assert isinstance(c, int)
 
+# TODO: decode bytes?
 expected_binfo = {
-    'state': {
-        'state': AnyInstanceOf(str),
-        'facing': AnyInstanceOf(str),
+    b'state': {
+        b'state': AnyInstanceOf(bytes),
+        b'facing': AnyInstanceOf(bytes),
     },
-    'name': 'computercraft:computer_command',
-    'nbt': {
-        'x': xyz[0],
-        'y': xyz[1],
-        'z': xyz[2],
-        'ComputerId': AnyInstanceOf(int),
-        'id': 'computercraft:computer_command',
-        'On': 1,
+    b'name': b'computercraft:computer_command',
+    b'nbt': {
+        b'x': xyz[0],
+        b'y': xyz[1],
+        b'z': xyz[2],
+        b'ComputerId': AnyInstanceOf(int),
+        b'id': b'computercraft:computer_command',
+        b'On': 1,
     },
-    'tags': {},
+    b'tags': {},
 }
 
 assert commands.getBlockInfo(*xyz) == expected_binfo

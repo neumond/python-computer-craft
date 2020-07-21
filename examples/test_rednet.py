@@ -12,6 +12,8 @@ side = 'back'
 
 step(f'Attach modem to {side} side of computer')
 
+assert rednet.close() is None
+
 assert rednet.isOpen(side) is False
 assert rednet.isOpen() is False
 
@@ -51,7 +53,7 @@ def _send():
 
 
 def _recv():
-    assert rednet.receive(timeout=1) == (cid, 'message', None)
+    assert rednet.receive(timeout=1) == (cid, b'message', None)
 
 
 parallel.waitForAll(_send, _recv)

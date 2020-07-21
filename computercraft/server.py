@@ -7,6 +7,7 @@ from aiohttp import web, WSMsgType
 
 from .sess import CCSession
 from . import ser
+from .rproc import lua_table_to_list
 
 
 THIS_DIR = dirname(abspath(__file__))
@@ -74,7 +75,7 @@ class CCApplication(web.Application):
                 if action == b'E':
                     sess.on_event(
                         next(msg).decode('latin1'),
-                        next(msg),
+                        lua_table_to_list(next(msg)),
                     )
                 elif action == b'T':
                     sess.on_task_result(

@@ -63,10 +63,10 @@ assert settings.undefine('test.c') is None
 assert settings.undefine('test.d') is None
 
 assert 'test.c' in settings.getNames()
-assert settings.get('test.c') == 'hello'
+assert settings.get('test.c') == b'hello'
 assert settings.getDetails('test.c') == {
     'changed': True,
-    'value': 'hello',
+    'value': b'hello',
 }
 
 assert settings.unset('test.c') is None
@@ -79,7 +79,7 @@ assert settings.getDetails('test.c') == {
 assert {'test.a', 'test.b', 'test.c', 'test.d'} & set(settings.getNames()) == set()
 
 assert settings.set('test.e', [9, 'text', False]) is None
-assert settings.get('test.e') == [9, 'text', False]
+assert settings.get('test.e') == {1: 9, 2: b'text', 3: False}  # TODO: fix this?
 assert settings.clear() is None
 assert settings.get('test.e') is None
 

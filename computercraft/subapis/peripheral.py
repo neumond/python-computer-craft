@@ -129,7 +129,7 @@ class ModemMixin:
         self.open(channel)
         try:
             for evt in captureEvent('modem_message'):
-                if evt[0] != self._side:
+                if evt[0].decode('latin1') != self._side:
                     continue
                 if evt[1] != channel:
                     continue

@@ -126,11 +126,6 @@ class ResultProc:
         assert all(map(lambda v: isinstance(v, bytes), x))
         return [v.decode('latin1') for v in x]
 
-    def take_list_of_ints(self):
-        x = self.take_list()
-        assert all(map(lambda v: isinstance(v, int), x))
-        return x
-
     def take_2d_int(self):
         x = self.take_list()
         x = [lua_table_to_list(item) for item in x]

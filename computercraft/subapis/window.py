@@ -44,7 +44,7 @@ def create(
     parentTerm: TermTarget, x: int, y: int, width: int, height: int, visible: bool = None,
 ) -> CCWindow:
     with lua_context_object(
-        'window.create(...)',
-        (parentTerm, x, y, width, height, visible),
+        'window.create({}, ...)'.format(parentTerm.get_expr_code()),
+        (x, y, width, height, visible),
     ) as var:
         yield CCWindow(var)

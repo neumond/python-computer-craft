@@ -16,6 +16,11 @@ del tbl['function']['unloadAPI']
 # remove complex date formatting function in favor of python stdlib
 del tbl['function']['date']
 
+# event capturing is completely different
+del tbl['function']['pullEvent']
+del tbl['function']['pullEventRaw']
+tbl['function']['captureEvent'] = True
+
 assert _lib.get_class_table(os) == tbl
 
 
