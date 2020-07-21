@@ -11,7 +11,9 @@ from . import ser
 
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
-LUA_FILE_VERSION = 1
+LUA_FILE_VERSION = 2
+PROTO_ERROR = b'C' + ser.serialize('protocol error')
+DEBUG_PROTO = True
 
 
 class CCApplication(web.Application):
@@ -20,34 +22,42 @@ class CCApplication(web.Application):
         async for msg in ws:
             if msg.type != WSMsgType.BINARY:
                 continue
-            sys.__stdout__.write('ws received ' + repr(msg.data) + '\n')
+            if DEBUG_PROTO:
+                sys.__stdout__.write('ws received ' + repr(msg.data) + '\n')
             yield msg.data
+
+    @staticmethod
+    async def _send(ws, data):
+        if DEBUG_PROTO:
+            sys.__stdout__.write('ws send ' + repr(data) + '\n')
+        await ws.send_bytes(data)
 
     async def _launch_program(self, ws):
         async for msg in self._bin_messages(ws):
-            msg = ser.deserialize(msg)
-            if msg[b'action'] != b'run':
-                await ws.send_bytes(ser.serialize({
-                    'action': 'close',
-                    'error': 'protocol error\n',
-                }))
+            msg = ser.dcmditer(msg)
+
+            action = next(msg)
+            if action != b'0':
+                await self._send(ws, PROTO_ERROR)
                 return None
-            if msg.get(b'version') != LUA_FILE_VERSION:
-                await ws.send_bytes(ser.serialize({
-                    'action': 'close',
-                    'error': 'protocol version mismatch (expected {}, got {}), redownload py\n'.format(
-                        LUA_FILE_VERSION, msg.get(b'version'),
-                    ),
-                }))
+
+            version = next(msg)
+            if version != LUA_FILE_VERSION:
+                await self._send(ws, b'C' + ser.serialize(
+                    'protocol version mismatch (expected {}, got {}), redownload py'.format(
+                        LUA_FILE_VERSION, version,
+                    )))
                 return None
+
+            computer_id = next(msg)
+            args = next(msg)
 
             def sender(data):
-                sys.__stdout__.write('ws send ' + repr(data) + '\n')
-                asyncio.create_task(ws.send_bytes(data))
+                asyncio.create_task(self._send(ws, data))
 
-            sess = CCSession(msg[b'computer'], sender)
-            if msg[b'args']:
-                sess.run_program(msg[b'args'][1].decode('latin1'))
+            sess = CCSession(computer_id, sender)
+            if args.get(1):
+                sess.run_program(args[1].decode('latin1'))
             else:
                 sess.run_repl()
             return sess
@@ -59,16 +69,20 @@ class CCApplication(web.Application):
         sess = await self._launch_program(ws)
         if sess is not None:
             async for msg in self._bin_messages(ws):
-                msg = ser.deserialize(msg)
-                if msg[b'action'] == b'event':
-                    sess.on_event(msg[b'event'].decode('latin1'), msg[b'params'])
-                elif msg[b'action'] == b'task_result':
-                    sess.on_task_result(msg[b'task_id'].decode('latin1'), msg[b'result'])
+                msg = ser.dcmditer(msg)
+                action = next(msg)
+                if action == b'E':
+                    sess.on_event(
+                        next(msg).decode('latin1'),
+                        next(msg),
+                    )
+                elif action == b'T':
+                    sess.on_task_result(
+                        next(msg).decode('latin1'),
+                        next(msg),
+                    )
                 else:
-                    await ws.send_bytes(ser.serialize({
-                        'action': 'close',
-                        'error': 'protocol error',
-                    }))
+                    await self._send(ws, PROTO_ERROR)
                     break
 
         return ws

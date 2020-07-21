@@ -75,3 +75,11 @@ def _deserialize(b: bytes, _idx: int) -> Tuple[Any, int]:
 
 def deserialize(b: bytes) -> Any:
     return _deserialize(b, 0)[0]
+
+
+def dcmditer(b: bytes):
+    yield b[0:1]
+    idx = 1
+    while idx < len(b):
+        chunk, idx = _deserialize(b, idx)
+        yield chunk

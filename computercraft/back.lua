@@ -3,12 +3,13 @@ local temp = {}
 local event_sub = {}
 genv.temp = temp
 local url = 'http://127.0.0.1:4343/'
+local proto_version = 2
 local tasks = {}
 local filters = {}
 local ycounts = {}
 local coparams = {}
 
-ws = http.websocket(url..'ws/')
+local ws = http.websocket(url..'ws/')
 if ws == false then
     error('unable to connect to server '..url..'ws/')
 end
@@ -45,112 +46,115 @@ do
     serialize = function(v) return s_rec(v, {}) end
 end
 
-local deserialize
-do
-    local function d_rec(s, idx)
-        local tok = s:sub(idx, idx)
-        idx = idx + 1
-        if tok == 'N' then
-            return nil, idx
-        elseif tok == 'F' then
-            return false, idx
-        elseif tok == 'T' then
-            return true, idx
-        elseif tok == '\[' then
-            local newidx = s:find('\]', idx, true)
-            return tonumber(s:sub(idx, newidx - 1)), newidx + 1
-        elseif tok == '<' then
-            local newidx = s:find('>', idx, true)
-            local slen = tonumber(s:sub(idx, newidx - 1))
-            if slen == 0 then
-                return '', newidx + 1
-            end
-            return s:sub(newidx + 1, newidx + slen), newidx + slen + 1
-        elseif tok == '{' then
-            local r = {}
-            while true do
-                tok = s:sub(idx, idx)
-                idx = idx + 1
-                if tok == '}' then break end
-                local key, value
-                key, idx = d_rec(s, idx)
-                value, idx = d_rec(s, idx)
-                r[key] = value
-            end
-            return r, idx
-        else
-            error('Unknown token ' .. tok, 0)
+function deserialize(s, idx)
+    if idx == nil then idx = 1 end
+    local tok = s:sub(idx, idx)
+    idx = idx + 1
+    if tok == '' then
+        error('Unexpected end of message', 0)
+    elseif tok == 'N' then
+        return nil, idx
+    elseif tok == 'F' then
+        return false, idx
+    elseif tok == 'T' then
+        return true, idx
+    elseif tok == '\[' then
+        local newidx = s:find('\]', idx, true)
+        return tonumber(s:sub(idx, newidx - 1)), newidx + 1
+    elseif tok == '<' then
+        local newidx = s:find('>', idx, true)
+        local slen = tonumber(s:sub(idx, newidx - 1))
+        if slen == 0 then
+            return '', newidx + 1
         end
-    end
-    deserialize = function(s)
-        local r = d_rec(s, 1)
-        return r
+        return s:sub(newidx + 1, newidx + slen), newidx + slen + 1
+    elseif tok == '{' then
+        local r = {}
+        while true do
+            tok = s:sub(idx, idx)
+            idx = idx + 1
+            if tok == '}' then break end
+            local key, value
+            key, idx = deserialize(s, idx)
+            value, idx = deserialize(s, idx)
+            r[key] = value
+        end
+        return r, idx
+    else
+        error('Unknown token ' .. tok, 0)
     end
 end
 
-function ws_send(data)
-    ws.send(serialize(data), true)
+function drop_task(task_id)
+    tasks[task_id] = nil
+    filters[task_id] = nil
+    ycounts[task_id] = nil
+    coparams[task_id] = nil
 end
 
-ws_send{
-    action='run',
-    computer=os.getComputerID(),
-    args={...},
-    version=1,
-}
+function ws_send(action, ...)
+    local m = action
+    for _, v in ipairs(arg) do
+        m = m .. serialize(v)
+    end
+    ws.send(m, true)
+end
+
+ws_send('0', proto_version, os.getComputerID(), arg)
 
 while true do
     local event, p1, p2, p3, p4, p5 = os.pullEvent()
 
     if event == 'websocket_message' then
-        msg = deserialize(p2)
-        if msg.action == 'task' then
-            local fn, err = loadstring(msg.code)
+        local msg = p2
+        local action = msg:sub(1, 1)
+        local idx = 2
+
+        if action == 'T' or action == 'I' then  -- new task
+            -- task_id, code, params
+            local task_id, code, params
+            task_id, idx = deserialize(msg, idx)
+            code, idx = deserialize(msg, idx)
+            params, idx = deserialize(msg, idx)
+
+            local fn, err = loadstring(code)
             if fn == nil then
-                ws_send{
-                    action='task_result',
-                    task_id=msg.task_id,
-                    result={false, err},
-                    yields=0,
-                }
+                -- couldn't compile
+                ws_send('T', task_id, serialize{false, err}, 0)
             else
                 setfenv(fn, genv)
-                if msg.immediate then
-                    ws_send{
-                        action='task_result',
-                        task_id=msg.task_id,
-                        result={fn(table.unpack(msg.params or {}))},
-                        yields=0,
-                    }
+                if action == 'I' then
+                    ws_send('T', task_id, serialize{fn(table.unpack(params))}, 0)
                 else
-                    tasks[msg.task_id] = coroutine.create(fn)
-                    ycounts[msg.task_id] = 0
-                    coparams[msg.task_id] = msg.params or {}
+                    tasks[task_id] = coroutine.create(fn)
+                    ycounts[task_id] = 0
+                    coparams[task_id] = params
                 end
             end
-        elseif msg.action == 'drop' then
-            for _, task_id in ipairs(msg.task_ids) do
-                tasks[task_id] = nil
-                filters[task_id] = nil
-                ycounts[task_id] = nil
-                coparams[task_id] = nil
+        elseif action == 'D' then  -- drop tasks
+            while idx <= #msg do
+                local task_id
+                task_id, idx = deserialize(msg, idx)
+                drop_task(task_id)
             end
-        elseif msg.action == 'sub' then
-            event_sub[msg.event] = true
-        elseif msg.action == 'unsub' then
-            event_sub[msg.event] = nil
-        elseif msg.action == 'close' then
-            if msg.error ~= nil then
-                io.stderr:write(msg.error)
+        elseif action == 'S' or action == 'U' then  -- (un)subscribe to event
+            local event
+            event, idx = deserialize(msg, idx)
+            if action == 'S' then
+                event_sub[event] = true
+            else
+                event_sub[event] = nil
+            end
+        elseif action == 'C' then  -- close session
+            local err
+            err, idx = deserialize(msg, idx)
+            if err ~= nil then
+                io.stderr:write(err .. '\n')
             end
             break
         end
     elseif event_sub[event] == true then
-        ws_send{
-            action='event',
-            event=event,
-            params={p1, p2, p3, p4, p5},
-        }
+        ws_send('E', event, {p1, p2, p3, p4, p5})
     end
 
     local del_tasks = {}
@@ -165,12 +169,7 @@ while true do
             end
             ycounts[task_id] = ycounts[task_id] + 1
             if coroutine.status(tasks[task_id]) == 'dead' then
-                ws_send{
-                    action='task_result',
-                    task_id=task_id,
-                    result=r,
-                    yields=ycounts[task_id],
-                }
+                ws_send('T', task_id, serialize(r), ycounts[task_id])
                 del_tasks[task_id] = true
             else
                 if r[1] == true then
@@ -181,12 +180,7 @@ while true do
             end
         end
     end
-    for task_id in pairs(del_tasks) do
-        tasks[task_id] = nil
-        filters[task_id] = nil
-        ycounts[task_id] = nil
-        coparams[task_id] = nil
-    end
+    for task_id in pairs(del_tasks) do drop_task(task_id) end
 end
 
 ws.close()
