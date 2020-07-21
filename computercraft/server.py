@@ -51,14 +51,14 @@ class CCApplication(web.Application):
                 return None
 
             computer_id = next(msg)
-            args = next(msg)
+            args = lua_table_to_list(next(msg), low_index=0)
 
             def sender(data):
                 asyncio.create_task(self._send(ws, data))
 
             sess = CCSession(computer_id, sender)
-            if args.get(1):
-                sess.run_program(args[1])
+            if len(args) >= 2:
+                sess.run_program(args[1], [ser.decode(x) for x in args[2:]])
             else:
                 sess.run_repl()
             return sess

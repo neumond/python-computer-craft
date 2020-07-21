@@ -336,7 +336,7 @@ class CCSession:
         self._program_greenlet = CCGreenlet(fn, sess=self)
         self._program_greenlet.switch()
 
-    def run_program(self, program):
+    def run_program(self, program, args):
         def _run_program():
             rp = eval_lua('''
 local p = fs.combine(shell.dir(), ...)
@@ -353,7 +353,7 @@ return p, code
             p = rp.take_string()
             code = rp.take_string()
             cc = compile(code, p, 'exec')
-            exec(cc, {'__file__': p})
+            exec(cc, {'__file__': p, 'args': args})
 
         self._run_sandboxed_greenlet(_run_program)
 

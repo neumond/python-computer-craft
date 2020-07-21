@@ -1,16 +1,18 @@
+from . import ser
 from .errors import LuaException
 
 
-def lua_table_to_list(x, length: int = None):
+def lua_table_to_list(x, length: int = None, low_index: int = 1):
     if not x:
         return [] if length is None else [None] * length
     assert all(map(lambda k: isinstance(k, int), x.keys()))
-    assert min(x.keys()) >= 1
+    assert min(x.keys()) >= low_index
+    dlen = max(x.keys()) - low_index + 1
     if length is not None:
-        assert max(x.keys()) <= length
+        assert dlen <= length
     else:
-        length = max(x.keys())
-    return [x.get(i + 1) for i in range(length)]
+        length = dlen
+    return [x.get(i + low_index) for i in range(length)]
 
 
 class ResultProc:
@@ -124,7 +126,7 @@ class ResultProc:
     def take_list_of_strings(self, length: int = None):
         x = self.take_list(length)
         assert all(map(lambda v: isinstance(v, bytes), x))
-        return [v.decode('latin1') for v in x]
+        return [ser.decode(v) for v in x]
 
     def take_2d_int(self):
         x = self.take_list()
