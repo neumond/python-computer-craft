@@ -46,42 +46,52 @@ do
     serialize = function(v) return s_rec(v, {}) end
 end
 
-function deserialize(s, idx)
+function create_stream(s, idx)
     if idx == nil then idx = 1 end
-    local tok = s:sub(idx, idx)
-    idx = idx + 1
-    if tok == '' then
-        error('Unexpected end of message', 0)
-    elseif tok == 'N' then
-        return nil, idx
+    return {
+        getidx=function() return idx end,
+        isend=function() return idx > #s end,
+        fixed=function(n)
+            local r = s:sub(idx, idx + n - 1)
+            if #r ~= n then error('Unexpected end of stream') end
+            idx = idx + n
+            return r
+        end,
+        tostop=function(sym)
+            local newidx = s:find(sym, idx, true)
+            if newidx == nil then error('Unexpected end of stream') end
+            local r = s:sub(idx, newidx - 1)
+            idx = newidx + 1
+            return r
+        end,
+    }
+end
+
+function deserialize(stream)
+    local tok = stream.fixed(1)
+    if tok == 'N' then
+        return nil
     elseif tok == 'F' then
-        return false, idx
+        return false
     elseif tok == 'T' then
-        return true, idx
+        return true
     elseif tok == '\[' then
-        local newidx = s:find('\]', idx, true)
-        return tonumber(s:sub(idx, newidx - 1)), newidx + 1
+        return tonumber(stream.tostop('\]'))
     elseif tok == '<' then
-        local newidx = s:find('>', idx, true)
-        local slen = tonumber(s:sub(idx, newidx - 1))
-        if slen == 0 then
-            return '', newidx + 1
-        end
-        return s:sub(newidx + 1, newidx + slen), newidx + slen + 1
+        local slen = tonumber(stream.tostop('>'))
+        return stream.fixed(slen)
     elseif tok == '{' then
         local r = {}
         while true do
-            tok = s:sub(idx, idx)
-            idx = idx + 1
-            if tok == '}' then break end
-            local key, value
-            key, idx = deserialize(s, idx)
-            value, idx = deserialize(s, idx)
-            r[key] = value
+            tok = stream.fixed(1)
+            if tok == ':' then
+                local key = deserialize(stream)
+                r[key] = deserialize(stream)
+            else break end
         end
-        return r, idx
+        return r
     else
-        error('Unknown token ' .. tok, 0)
+        error('Unknown token ' .. tok)
     end
 end
 
@@ -111,16 +121,13 @@ while true do
     local event, p1, p2, p3, p4, p5 = os.pullEvent()
 
     if event == 'websocket_message' then
-        local msg = p2
-        local action = msg:sub(1, 1)
-        local idx = 2
+        local msg = create_stream(p2)
+        local action = msg.fixed(1)
 
         if action == 'T' or action == 'I' then  -- new task
-            -- task_id, code, params
-            local task_id, code, params
-            task_id, idx = deserialize(msg, idx)
-            code, idx = deserialize(msg, idx)
-            params, idx = deserialize(msg, idx)
+            local task_id = deserialize(msg)
+            local code = deserialize(msg)
+            local params = deserialize(msg)
 
             local fn, err = loadstring(code)
             if fn == nil then
@@ -137,22 +144,18 @@ while true do
                 end
             end
         elseif action == 'D' then  -- drop tasks
-            while idx <= #msg do
-                local task_id
-                task_id, idx = deserialize(msg, idx)
-                drop_task(task_id)
+            while not msg.isend() do
+                drop_task(deserialize(msg))
             end
         elseif action == 'S' or action == 'U' then  -- (un)subscribe to event
-            local event
-            event, idx = deserialize(msg, idx)
+            local event = deserialize(msg)
             if action == 'S' then
                 event_sub[event] = true
             else
                 event_sub[event] = nil
             end
         elseif action == 'C' then  -- close session
-            local err
-            err, idx = deserialize(msg, idx)
+            local err = deserialize(msg)
             if err ~= nil then
                 io.stderr:write(err .. '\n')
             end
