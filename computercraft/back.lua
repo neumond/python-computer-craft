@@ -11,7 +11,7 @@ local coparams = {}
 
 local ws = http.websocket(url..'ws/')
 if ws == false then
-    error('unable to connect to server '..url..'ws/')
+    error('Unable to connect to server '..url..'ws/')
 end
 
 local serialize
@@ -161,6 +161,8 @@ while true do
             end
             break
         end
+    elseif event == 'websocket_closed' then
+        error('Connection with server has been closed')
     elseif event_sub[event] == true then
         ws_send('E', event, {p1, p2, p3, p4, p5})
     end
