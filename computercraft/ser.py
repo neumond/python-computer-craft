@@ -12,6 +12,24 @@ _ENC = 'latin1'
 assert [bytes([i]) for i in range(256)] == [chr(i).encode(_ENC) for i in range(256)]
 
 
+def encode(s: str) -> bytes:
+    return s.encode(_ENC)
+
+
+def nil_encode(s):
+    if s is None:
+        return None
+    return encode(s)
+
+
+def dirty_encode(s: str) -> bytes:
+    return s.encode(_ENC, errors='replace')
+
+
+def decode(b):
+    return b.decode(_ENC)
+
+
 def serialize(v: Any) -> bytes:
     if v is None:
         return b'N'
@@ -24,7 +42,7 @@ def serialize(v: Any) -> bytes:
     elif isinstance(v, bytes):
         return '<{}>'.format(len(v)).encode(_ENC) + v
     elif isinstance(v, str):
-        return '<{}>'.format(len(v)).encode(_ENC) + v.encode(_ENC)
+        raise ValueError('Strings are not allowed for serialization')
     elif isinstance(v, (list, tuple)):
         items = []
         for k, x in enumerate(v, start=1):
@@ -36,7 +54,7 @@ def serialize(v: Any) -> bytes:
             items.append(b':' + serialize(k) + serialize(x))
         return b'{' + b''.join(items) + b'}'
     else:
-        raise ValueError
+        raise ValueError('Value can\'t be serialized: {}'.format(repr(v)))
 
 
 def _deserialize(b: bytes, _idx: int) -> Tuple[Any, int]:

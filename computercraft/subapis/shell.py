@@ -1,5 +1,6 @@
 from typing import List, Dict, Optional
 
+from .. import ser
 from ..sess import eval_lua_method_factory
 
 
@@ -37,7 +38,7 @@ def dir() -> str:
 
 
 def setDir(path: str):
-    return method('setDir', path).take_none()
+    return method('setDir', ser.encode(path)).take_none()
 
 
 def path() -> str:
@@ -45,28 +46,28 @@ def path() -> str:
 
 
 def setPath(path: str):
-    return method('setPath', path).take_none()
+    return method('setPath', ser.encode(path)).take_none()
 
 
 def resolve(localPath: str) -> str:
-    return method('resolve', localPath).take_string()
+    return method('resolve', ser.encode(localPath)).take_string()
 
 
 def resolveProgram(name: str) -> Optional[str]:
-    return method('resolveProgram', name).take_option_string()
+    return method('resolveProgram', ser.encode(name)).take_option_string()
 
 
 def aliases() -> Dict[str, str]:
     d = method('aliases').take_dict()
-    return {k.decode('latin1'): v.decode('latin1') for k, v in d.items()}
+    return {ser.decode(k): ser.decode(v) for k, v in d.items()}
 
 
 def setAlias(alias: str, program: str):
-    return method('setAlias', alias, program).take_none()
+    return method('setAlias', ser.encode(alias), ser.encode(program)).take_none()
 
 
 def clearAlias(alias: str):
-    return method('clearAlias', alias).take_none()
+    return method('clearAlias', ser.encode(alias)).take_none()
 
 
 def programs(showHidden: bool = None) -> List[str]:
@@ -78,15 +79,18 @@ def getRunningProgram() -> str:
 
 
 def run(command: str, *args: str) -> bool:
-    return method('run', command, *args).take_bool()
+    args = tuple(ser.encode(a) for a in args)
+    return method('run', ser.encode(command), *args).take_bool()
 
 
 def execute(command: str, *args: str) -> bool:
-    return method('execute', command, *args).take_bool()
+    args = tuple(ser.encode(a) for a in args)
+    return method('execute', ser.encode(command), *args).take_bool()
 
 
 def openTab(command: str, *args: str) -> int:
-    return method('openTab', command, *args).take_int()
+    args = tuple(ser.encode(a) for a in args)
+    return method('openTab', ser.encode(command), *args).take_int()
 
 
 def switchTab(tabID: int):
@@ -94,11 +98,11 @@ def switchTab(tabID: int):
 
 
 def complete(prefix: str) -> List[str]:
-    return method('complete', prefix).take_list_of_strings()
+    return method('complete', ser.encode(prefix)).take_list_of_strings()
 
 
 def completeProgram(prefix: str) -> List[str]:
-    return method('completeProgram', prefix).take_list_of_strings()
+    return method('completeProgram', ser.encode(prefix)).take_list_of_strings()
 
 # TODO: ?
 # these functions won't be implemented

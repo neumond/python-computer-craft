@@ -13,7 +13,7 @@ from .rproc import lua_table_to_list
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
 LUA_FILE_VERSION = 2
-PROTO_ERROR = b'C' + ser.serialize('protocol error')
+PROTO_ERROR = b'C' + ser.serialize(b'protocol error')
 DEBUG_PROTO = True
 
 
@@ -58,7 +58,7 @@ class CCApplication(web.Application):
 
             sess = CCSession(computer_id, sender)
             if args.get(1):
-                sess.run_program(args[1].decode('latin1'))
+                sess.run_program(args[1])
             else:
                 sess.run_repl()
             return sess
@@ -74,12 +74,12 @@ class CCApplication(web.Application):
                 action = next(msg)
                 if action == b'E':
                     sess.on_event(
-                        next(msg).decode('latin1'),
+                        next(msg),
                         lua_table_to_list(next(msg)),
                     )
                 elif action == b'T':
                     sess.on_task_result(
-                        next(msg).decode('latin1'),
+                        next(msg),
                         next(msg),
                     )
                 else:

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, List, Tuple, Any, Union
 
 from .mixins import TermMixin, TermTarget
+from .. import ser
 from ..lua import LuaNum, lua_string
 from ..sess import eval_lua, eval_lua_method_factory
 
@@ -16,7 +17,7 @@ class BasePeripheral:
 
     def _method(self, name, *params):
         code = 'return ' + self._lua_method_expr + '(...)'
-        return eval_lua(code, *self._prepend_params, name, *params)
+        return eval_lua(code, *self._prepend_params, ser.encode(name), *params)
 
 
 class CCDrive(BasePeripheral):
@@ -26,8 +27,8 @@ class CCDrive(BasePeripheral):
     def getDiskLabel(self) -> Optional[str]:
         return self._method('getDiskLabel').take_option_string()
 
-    def setDiskLabel(self, label: str):
-        return self._method('setDiskLabel', label).take_none()
+    def setDiskLabel(self, label: Optional[str]):
+        return self._method('setDiskLabel', ser.nil_encode(label)).take_none()
 
     def hasData(self) -> bool:
         return self._method('hasData').take_bool()
@@ -129,7 +130,7 @@ class ModemMixin:
         self.open(channel)
         try:
             for evt in captureEvent('modem_message'):
-                if evt[0].decode('latin1') != self._side:
+                if evt[0] != self._side:
                     continue
                 if evt[1] != channel:
                     continue
@@ -150,10 +151,10 @@ class CCWiredModem(BasePeripheral, ModemMixin):
         return self._method('getNamesRemote').take_list_of_strings()
 
     def getTypeRemote(self, peripheralName: str) -> Optional[str]:
-        return self._method('getTypeRemote', peripheralName).take_option_string()
+        return self._method('getTypeRemote', ser.encode(peripheralName)).take_option_string()
 
     def isPresentRemote(self, peripheralName: str) -> bool:
-        return self._method('isPresentRemote', peripheralName).take_bool()
+        return self._method('isPresentRemote', ser.encode(peripheralName)).take_bool()
 
     def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
         # use instead getMethodsRemote and callRemote
@@ -165,7 +166,7 @@ class CCWiredModem(BasePeripheral, ModemMixin):
 
         return TYPE_MAP[ptype](
             self._lua_method_expr, *self._prepend_params,
-            'callRemote', peripheralName,
+            b'callRemote', ser.encode(peripheralName),
         )
 
     # NOTE: for TermTarget use peripheral.get_term_target(peripheralName)
@@ -179,7 +180,7 @@ class CCPrinter(BasePeripheral):
         return self._method('endPage').take_bool()
 
     def write(self, text: str):
-        return self._method('write', text).take_none()
+        return self._method('write', ser.dirty_encode(text)).take_none()
 
     def setCursorPos(self, x: int, y: int):
         return self._method('setCursorPos', x, y).take_none()
@@ -193,7 +194,7 @@ class CCPrinter(BasePeripheral):
         return tuple(rp.take_int() for _ in range(2))
 
     def setPageTitle(self, title: str):
-        return self._method('setPageTitle', title).take_none()
+        return self._method('setPageTitle', ser.encode(title)).take_none()
 
     def getPaperLevel(self) -> int:
         return self._method('getPaperLevel').take_int()
@@ -224,12 +225,12 @@ class CCSpeaker(BasePeripheral):
 
         # volume 0..3
         # pitch 0..24
-        return self._method('playNote', instrument, volume, pitch).take_bool()
+        return self._method('playNote', ser.encode(instrument), volume, pitch).take_bool()
 
     def playSound(self, sound: str, volume: int = 1, pitch: int = 1) -> bool:
         # volume 0..3
         # pitch 0..2
-        return self._method('playSound', sound, volume, pitch).take_bool()
+        return self._method('playSound', ser.encode(sound), volume, pitch).take_bool()
 
 
 class CCCommandBlock(BasePeripheral):
@@ -237,7 +238,7 @@ class CCCommandBlock(BasePeripheral):
         return self._method('getCommand').take_string()
 
     def setCommand(self, command: str):
-        return self._method('setCommand', command).take_none()
+        return self._method('setCommand', ser.encode(command)).take_none()
 
     def runCommand(self):
         return self._method('runCommand').check_bool_error()
@@ -273,11 +274,11 @@ __all__ = (
 
 
 def isPresent(side: str) -> bool:
-    return method('isPresent', side).take_bool()
+    return method('isPresent', ser.encode(side)).take_bool()
 
 
 def getType(side: str) -> Optional[str]:
-    return method('getType', side).take_option_string()
+    return method('getType', ser.encode(side)).take_option_string()
 
 
 def getNames() -> List[str]:
@@ -292,8 +293,9 @@ def wrap(side: str) -> Optional[BasePeripheral]:
 
     m = 'peripheral.call'
 
+    side = ser.encode(side)
     if ptype == 'modem':
-        if method('call', side, 'isWireless').take_bool():
+        if method('call', side, b'isWireless').take_bool():
             return CCWirelessModem(m, side)
         else:
             return CCWiredModem(m, side)

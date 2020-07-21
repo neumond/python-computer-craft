@@ -27,7 +27,7 @@ with window.create(
     os.sleep(1)
 
     win.redraw()
-    assert win.getLine(1) == ('*****', '44444', 'eeeee')
+    assert win.getLine(1) == ('*****', b'44444', b'eeeee')
 
     # draws immediately
     win.reposition(21, 5)

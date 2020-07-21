@@ -1,5 +1,6 @@
 from typing import Optional
 
+from .. import ser
 from ..errors import LuaException
 from ..sess import eval_lua_method_factory
 
@@ -171,15 +172,15 @@ def digDown() -> bool:
 
 
 def place(signText: str = None) -> bool:
-    return place_result(method('place', signText))
+    return place_result(method('place', ser.nil_encode(signText)))
 
 
-def placeUp() -> bool:
-    return place_result(method('placeUp'))
+def placeUp(signText: str = None) -> bool:
+    return place_result(method('placeUp', ser.nil_encode(signText)))
 
 
-def placeDown() -> bool:
-    return place_result(method('placeDown'))
+def placeDown(signText: str = None) -> bool:
+    return place_result(method('placeDown', ser.nil_encode(signText)))
 
 
 def detect() -> bool:

@@ -1,5 +1,6 @@
-from typing import Optional, List
+from typing import Optional
 
+from .. import ser
 from ..lua import LuaNum
 from ..sess import eval_lua_method_factory, get_current_greenlet
 
@@ -42,14 +43,16 @@ def getComputerLabel() -> Optional[str]:
 
 
 def setComputerLabel(label: Optional[str]):
-    return method('setComputerLabel', label).take_none()
+    return method('setComputerLabel', ser.nil_encode(label)).take_none()
 
 
-def run(environment: dict, programPath: str, *args: List[str]):
-    return method('run', environment, programPath, *args).take_bool()
+def run(environment: dict, programPath: str, *args: str):
+    args = tuple(ser.encode(a) for a in args)
+    return method('run', environment, ser.encode(programPath), *args).take_bool()
 
 
 def captureEvent(event: str):
+    event = ser.encode(event)
     glet = get_current_greenlet().cc_greenlet
     sess = glet._sess
     evr = sess._evr
@@ -67,7 +70,7 @@ def captureEvent(event: str):
 
 
 def queueEvent(event: str, *params):
-    return method('queueEvent', event, *params).take_none()
+    return method('queueEvent', ser.encode(event), *params).take_none()
 
 
 def clock() -> LuaNum:
@@ -81,15 +84,15 @@ def clock() -> LuaNum:
 
 def time() -> LuaNum:
     # in hours 0..24
-    return method('time', 'ingame').take_number()
+    return method('time', b'ingame').take_number()
 
 
 def day() -> int:
-    return method('day', 'ingame').take_int()
+    return method('day', b'ingame').take_int()
 
 
 def epoch() -> int:
-    return method('epoch', 'ingame').take_int()
+    return method('epoch', b'ingame').take_int()
 
 
 def sleep(seconds: LuaNum):

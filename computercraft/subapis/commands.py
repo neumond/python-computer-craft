@@ -1,5 +1,6 @@
 from typing import Tuple, List, Optional
 
+from .. import ser
 from ..sess import eval_lua_method_factory
 
 
@@ -16,7 +17,7 @@ __all__ = (
 
 
 def exec(command: str) -> Tuple[bool, List[str], Optional[int]]:
-    rp = method('exec', command)
+    rp = method('exec', ser.encode(command))
     success = rp.take_bool()
     log = rp.take_list_of_strings()
     n = rp.take_option_int()

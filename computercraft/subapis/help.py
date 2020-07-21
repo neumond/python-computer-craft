@@ -1,5 +1,6 @@
 from typing import Optional, List
 
+from .. import ser
 from ..sess import eval_lua_method_factory
 
 
@@ -20,11 +21,11 @@ def path() -> str:
 
 
 def setPath(path: str):
-    return method('setPath', path).take_none()
+    return method('setPath', ser.encode(path)).take_none()
 
 
 def lookup(topic: str) -> Optional[str]:
-    return method('lookup', topic).take_option_string()
+    return method('lookup', ser.encode(topic)).take_option_string()
 
 
 def topics() -> List[str]:
@@ -32,4 +33,4 @@ def topics() -> List[str]:
 
 
 def completeTopic(topicPrefix: str) -> List[str]:
-    return method('completeTopic', topicPrefix).take_list_of_strings()
+    return method('completeTopic', ser.encode(topicPrefix)).take_list_of_strings()

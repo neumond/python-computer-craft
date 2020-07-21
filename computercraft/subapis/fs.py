@@ -2,13 +2,14 @@ from contextlib import contextmanager
 from typing import Optional, List
 
 from .base import BaseSubAPI
+from .. import ser
 from ..sess import eval_lua_method_factory, lua_context_object
 
 
 class SeekMixin:
     def seek(self, whence: str = None, offset: int = None) -> int:
         # whence: set, cur, end
-        rp = self._method('seek', whence, offset)
+        rp = self._method('seek', ser.nil_encode(whence), offset)
         rp.check_nil_error()
         return rp.take_int()
 
@@ -98,55 +99,55 @@ __all__ = (
 
 
 def list(path: str) -> List[str]:
-    return method('list', path).take_list_of_strings()
+    return method('list', ser.encode(path)).take_list_of_strings()
 
 
 def exists(path: str) -> bool:
-    return method('exists', path).take_bool()
+    return method('exists', ser.encode(path)).take_bool()
 
 
 def isDir(path: str) -> bool:
-    return method('isDir', path).take_bool()
+    return method('isDir', ser.encode(path)).take_bool()
 
 
 def isReadOnly(path: str) -> bool:
-    return method('isReadOnly', path).take_bool()
+    return method('isReadOnly', ser.encode(path)).take_bool()
 
 
 def getDrive(path: str) -> Optional[str]:
-    return method('getDrive', path).take_option_string()
+    return method('getDrive', ser.encode(path)).take_option_string()
 
 
 def getSize(path: str) -> int:
-    return method('getSize', path).take_int()
+    return method('getSize', ser.encode(path)).take_int()
 
 
 def getFreeSpace(path: str) -> int:
-    return method('getFreeSpace', path).take_int()
+    return method('getFreeSpace', ser.encode(path)).take_int()
 
 
 def getCapacity(path: str) -> int:
-    return method('getCapacity', path).take_int()
+    return method('getCapacity', ser.encode(path)).take_int()
 
 
 def makeDir(path: str):
-    return method('makeDir', path).take_none()
+    return method('makeDir', ser.encode(path)).take_none()
 
 
 def move(fromPath: str, toPath: str):
-    return method('move', fromPath, toPath).take_none()
+    return method('move', ser.encode(fromPath), ser.encode(toPath)).take_none()
 
 
 def copy(fromPath: str, toPath: str):
-    return method('copy', fromPath, toPath).take_none()
+    return method('copy', ser.encode(fromPath), ser.encode(toPath)).take_none()
 
 
 def delete(path: str):
-    return method('delete', path).take_none()
+    return method('delete', ser.encode(path)).take_none()
 
 
 def combine(basePath: str, localPath: str) -> str:
-    return method('combine', basePath, localPath).take_string()
+    return method('combine', ser.encode(basePath), ser.encode(localPath)).take_string()
 
 
 @contextmanager
@@ -163,7 +164,7 @@ def open(path: str, mode: str):
     '''
     with lua_context_object(
         'fs.open(...)',
-        (path, mode.replace('b', '') + 'b'),
+        (ser.encode(path), ser.encode(mode.replace('b', '') + 'b')),
         '{e}.close()',
     ) as var:
         if 'b' in mode:
@@ -174,31 +175,31 @@ def open(path: str, mode: str):
 
 
 def find(wildcard: str) -> List[str]:
-    return method('find', wildcard).take_list_of_strings()
+    return method('find', ser.encode(wildcard)).take_list_of_strings()
 
 
 def getDir(path: str) -> str:
-    return method('getDir', path).take_string()
+    return method('getDir', ser.encode(path)).take_string()
 
 
 def getName(path: str) -> str:
-    return method('getName', path).take_string()
+    return method('getName', ser.encode(path)).take_string()
 
 
 def isDriveRoot(path: str) -> bool:
-    return method('isDriveRoot', path).take_bool()
+    return method('isDriveRoot', ser.encode(path)).take_bool()
 
 
 def complete(
     partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
 ) -> List[str]:
     return method(
-        'complete', partialName, path, includeFiles, includeDirs,
+        'complete', ser.encode(partialName), ser.encode(path), includeFiles, includeDirs,
     ).take_list_of_strings()
 
 
 def attributes(path: str) -> dict:
-    tp = method('attributes', path).take_dict((
+    tp = method('attributes', ser.encode(path)).take_dict((
         b'created',
         b'modification',
         b'isDir',

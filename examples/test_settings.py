@@ -48,12 +48,12 @@ assert settings.get('test.a') == 11
 assert settings.set('test.a', 12) is None
 assert settings.get('test.a') == 12
 with assert_raises(LuaException):
-    settings.set('test.a', 'text')
+    settings.set('test.a', b'text')
 assert settings.get('test.a') == 12
 assert settings.unset('test.a') is None
 assert settings.get('test.a') == 11
 
-assert settings.set('test.c', 'hello') is None
+assert settings.set('test.c', b'hello') is None
 
 assert {'test.a', 'test.b', 'test.c', 'test.d'}.issubset(set(settings.getNames()))
 
@@ -78,8 +78,8 @@ assert settings.getDetails('test.c') == {
 
 assert {'test.a', 'test.b', 'test.c', 'test.d'} & set(settings.getNames()) == set()
 
-assert settings.set('test.e', [9, 'text', False]) is None
-assert settings.get('test.e') == {1: 9, 2: b'text', 3: False}  # TODO: fix this?
+assert settings.set('test.e', [9, b'text', False]) is None
+assert settings.get('test.e') == {1: 9, 2: b'text', 3: False}
 assert settings.clear() is None
 assert settings.get('test.e') is None
 

@@ -145,7 +145,7 @@ assert fs.complete('ap', 'tdir') == ['ple']
 assert fs.complete('c', 'tdir') == ['herry']
 assert fs.complete('td', '') == ['ir/', 'ir']
 assert fs.complete('td', '', includeDirs=True) == ['ir/', 'ir']
-assert fs.complete('td', '', includeDirs=False) == ['ir/', 'ir']  # wtf?
+assert fs.complete('td', '', includeDirs=False) == ['ir/']  # wtf?
 assert fs.complete('ap', 'tdir', includeFiles=True) == ['ple']
 assert fs.complete('ap', 'tdir', includeFiles=False) == []
 

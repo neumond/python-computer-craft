@@ -23,9 +23,9 @@ class CCWindow(BaseSubAPI, TermMixin):
     def reposition(self, x: int, y: int, width: int = None, height: int = None, parent: TermTarget = None):
         return self._method('reposition', x, y, width, height, parent).take_none()
 
-    def getLine(self, y: int) -> Tuple[str, str, str]:
+    def getLine(self, y: int) -> Tuple[str, bytes, bytes]:
         rp = self._method('getLine', y)
-        return tuple(rp.take_string() for _ in range(3))
+        return rp.take_string(), rp.take_bytes(), rp.take_bytes()
 
     def get_term_target(self) -> TermTarget:
         return TermTarget(self.get_expr_code())

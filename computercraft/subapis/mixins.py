@@ -1,14 +1,15 @@
 from typing import Tuple
 
+from .. import ser
 from ..lua import LuaExpr
 
 
 class TermMixin:
     def write(self, text: str):
-        return self._method('write', text).take_none()
+        return self._method('write', ser.dirty_encode(text)).take_none()
 
-    def blit(self, text: str, textColors: str, backgroundColors: str):
-        return self._method('blit', text, textColors, backgroundColors).take_none()
+    def blit(self, text: str, textColors: bytes, backgroundColors: bytes):
+        return self._method('blit', ser.dirty_encode(text), textColors, backgroundColors).take_none()
 
     def clear(self):
         return self._method('clear').take_none()

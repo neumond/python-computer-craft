@@ -33,7 +33,7 @@ with fs.open('img.nfp', 'w') as f:
 int_pixels = paintutils.loadImage('img.nfp')
 assert len(int_pixels) > 0
 assert len(int_pixels[0]) > 0
-assert paintutils.parseImage(pixels) == int_pixels
+assert paintutils.parseImage(pixels.encode('ascii')) == int_pixels
 
 assert paintutils.drawImage(int_pixels, 1, 1) is None
 

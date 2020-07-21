@@ -1,5 +1,6 @@
 from typing import Any, List
 
+from .. import ser
 from ..sess import eval_lua_method_factory
 
 
@@ -23,20 +24,20 @@ __all__ = (
 def define(name: str, description: str = None, default: Any = None, type: str = None):
     options = {}
     if description is not None:
-        options['description'] = description
+        options[b'description'] = ser.encode(description)
     if default is not None:
-        options['default'] = default
+        options[b'default'] = default
     if type is not None:
-        options['type'] = type
-    return method('define', name, options).take_none()
+        options[b'type'] = ser.encode(type)
+    return method('define', ser.encode(name), options).take_none()
 
 
 def undefine(name: str):
-    return method('undefine', name).take_none()
+    return method('undefine', ser.encode(name)).take_none()
 
 
 def getDetails(name: str) -> dict:
-    tp = method('getDetails', name).take_dict((
+    tp = method('getDetails', ser.encode(name)).take_dict((
         b'changed',
         b'description',
         b'default',
@@ -57,15 +58,15 @@ def getDetails(name: str) -> dict:
 
 
 def set(name: str, value: Any):
-    return method('set', name, value).take_none()
+    return method('set', ser.encode(name), value).take_none()
 
 
 def get(name: str, default: Any = None) -> Any:
-    return method('get', name, default).take()
+    return method('get', ser.encode(name), default).take()
 
 
 def unset(name: str):
-    return method('unset', name).take_none()
+    return method('unset', ser.encode(name)).take_none()
 
 
 def clear():
@@ -77,8 +78,8 @@ def getNames() -> List[str]:
 
 
 def load(path: str = None) -> bool:
-    return method('load', path).take_bool()
+    return method('load', ser.nil_encode(path)).take_bool()
 
 
 def save(path: str = None) -> bool:
-    return method('save', path).take_bool()
+    return method('save', ser.nil_encode(path)).take_bool()

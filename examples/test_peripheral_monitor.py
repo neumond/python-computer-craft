@@ -90,14 +90,14 @@ assert m.clear() is None
 assert m.setCursorPos(1, 1) is None
 assert m.blit(
     'rainbow',
-    'e14d3ba',
-    'fffffff',
+    b'e14d3ba',
+    b'fffffff',
 ) is None
 assert m.setCursorPos(1, 2) is None
 assert m.blit(
     'rainbow',
-    '0000000',
-    'e14d3ba',
+    b'0000000',
+    b'e14d3ba',
 ) is None
 
 _lib.step('You must have seen per-letter colored text')
@@ -122,20 +122,20 @@ for i, color in enumerate(colors.iter_colors()):
 assert m.setCursorPos(1, 1) is None
 assert m.blit(
     ' redtex',
-    '0123456',
-    '0000000',
+    b'0123456',
+    b'0000000',
 ) is None
 assert m.setCursorPos(1, 2) is None
 assert m.blit(
     'tappear',
-    '789abcd',
-    '0000000',
+    b'789abcd',
+    b'0000000',
 ) is None
 assert m.setCursorPos(1, 3) is None
 assert m.blit(
     's!',
-    'ef',
-    '00',
+    b'ef',
+    b'00',
 ) is None
 
 _lib.step('You must have seen different shades of red made using palettes')

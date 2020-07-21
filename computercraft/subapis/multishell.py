@@ -1,5 +1,6 @@
 from typing import Optional
 
+from .. import ser
 from ..sess import eval_lua_method_factory
 
 
@@ -26,11 +27,12 @@ def getCount() -> int:
 
 
 def launch(environment: dict, programPath: str, *args: str) -> int:
-    return method('launch', environment, programPath, *args).take_int()
+    args = tuple(ser.encode(a) for a in args)
+    return method('launch', environment, ser.encode(programPath), *args).take_int()
 
 
 def setTitle(tabID: int, title: str):
-    return method('setTitle', tabID, title).take_none()
+    return method('setTitle', tabID, ser.encode(title)).take_none()
 
 
 def getTitle(tabID: int) -> Optional[str]:

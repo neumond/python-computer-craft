@@ -1,6 +1,6 @@
 from typing import Optional
 
-from ..lua import lua_string
+from .. import ser
 from ..sess import eval_lua, eval_lua_method_factory
 
 
@@ -17,10 +17,11 @@ def getCode(name: str) -> Optional[int]:
     # replaces properties
     # keys.space → keys.getCode('space')
     return eval_lua('''
-if type(keys[{key}]) == 'number' then
-    return keys[{key}]
+local k = ...
+if type(keys[k]) == 'number' then
+    return keys[k]
 end
-return nil'''.format(key=lua_string(name))).take_option_int()
+return nil''', ser.encode(name)).take_option_int()
 
 
 def getName(code: int) -> Optional[str]:

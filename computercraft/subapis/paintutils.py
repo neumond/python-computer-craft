@@ -1,5 +1,6 @@
 from typing import List
 
+from .. import ser
 from ..sess import eval_lua_method_factory
 
 
@@ -17,12 +18,12 @@ __all__ = (
 )
 
 
-def parseImage(data: str) -> List[List[int]]:
+def parseImage(data: bytes) -> List[List[int]]:
     return method('parseImage', data).take_2d_int()
 
 
 def loadImage(path: str) -> List[List[int]]:
-    return method('loadImage', path).take_2d_int()
+    return method('loadImage', ser.encode(path)).take_2d_int()
 
 
 def drawPixel(x: int, y: int, color: int = None):

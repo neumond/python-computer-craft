@@ -85,8 +85,8 @@ assert term.clear() is None
 assert term.setCursorPos(1, 1) is None
 assert term.blit(
     'rainbowrainbow',
-    'e14d3ba0000000',
-    'fffffffe14d3ba',
+    b'e14d3ba0000000',
+    b'fffffffe14d3ba',
 ) is None
 os.sleep(3)
 
@@ -99,8 +99,8 @@ for i, color in enumerate(colors.iter_colors()):
     term.setPaletteColor(color, i / 15, 0, 0)
 assert term.blit(
     ' redtextappears!',
-    '0123456789abcdef',
-    '0000000000000000',
+    b'0123456789abcdef',
+    b'0000000000000000',
 ) is None
 os.sleep(3)
 

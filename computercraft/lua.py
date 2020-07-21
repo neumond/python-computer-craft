@@ -1,5 +1,7 @@
 from typing import Union
 
+from . import ser
+
 
 LuaTable = Union[list, dict]
 LuaNum = Union[int, float]
@@ -28,4 +30,6 @@ _tmap = {ord(c): r for c, r in _tmap.items()}
 
 
 def lua_string(v):
+    if isinstance(v, bytes):
+        v = ser.decode(v)
     return '"{}"'.format(v.translate(_tmap))

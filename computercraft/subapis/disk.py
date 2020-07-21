@@ -1,5 +1,6 @@
 from typing import Optional, Union
 
+from .. import ser
 from ..sess import eval_lua_method_factory
 
 
@@ -22,44 +23,44 @@ __all__ = (
 
 
 def isPresent(side: str) -> bool:
-    return method('isPresent', side).take_bool()
+    return method('isPresent', ser.encode(side)).take_bool()
 
 
 def hasData(side: str) -> bool:
-    return method('hasData', side).take_bool()
+    return method('hasData', ser.encode(side)).take_bool()
 
 
 def getMountPath(side: str) -> Optional[str]:
-    return method('getMountPath', side).take_option_string()
+    return method('getMountPath', ser.encode(side)).take_option_string()
 
 
-def setLabel(side: str, label: str):
-    return method('setLabel', side, label).take_none()
+def setLabel(side: str, label: Optional[str]):
+    return method('setLabel', ser.encode(side), ser.nil_encode(label)).take_none()
 
 
 def getLabel(side: str) -> Optional[str]:
-    return method('getLabel', side).take_option_string()
+    return method('getLabel', ser.encode(side)).take_option_string()
 
 
 def getID(side: str) -> Optional[int]:
-    return method('getID', side).take_option_int()
+    return method('getID', ser.encode(side)).take_option_int()
 
 
 def hasAudio(side: str) -> bool:
-    return method('hasAudio', side).take_bool()
+    return method('hasAudio', ser.encode(side)).take_bool()
 
 
 def getAudioTitle(side: str) -> Optional[Union[bool, str]]:
-    return method('getAudioTitle', side).take_option_string_bool()
+    return method('getAudioTitle', ser.encode(side)).take_option_string_bool()
 
 
 def playAudio(side: str):
-    return method('playAudio', side).take_none()
+    return method('playAudio', ser.encode(side)).take_none()
 
 
 def stopAudio(side: str):
-    return method('stopAudio', side).take_none()
+    return method('stopAudio', ser.encode(side)).take_none()
 
 
 def eject(side: str):
-    return method('eject', side).take_none()
+    return method('eject', ser.encode(side)).take_none()

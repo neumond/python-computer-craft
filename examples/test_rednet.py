@@ -42,14 +42,14 @@ assert rednet.lookup('nonexistent') == []
 
 assert rednet.unhost('helloproto') is None
 
-assert rednet.send(cid + 100, 'message', 'anyproto') is True
-assert rednet.broadcast('message', 'anyproto') is None
+assert rednet.send(cid + 100, b'message', 'anyproto') is True
+assert rednet.broadcast(b'message', 'anyproto') is None
 
 assert rednet.receive(timeout=1) is None
 
 
 def _send():
-    assert rednet.send(cid, 'message') is True
+    assert rednet.send(cid, b'message') is True
 
 
 def _recv():

@@ -39,7 +39,7 @@ def base36(n):
     while n:
         r += DIGITS[n % 36]
         n //= 36
-    return r[::-1]
+    return ser.encode(r[::-1])
 
 
 def _is_global_greenlet():
@@ -79,6 +79,7 @@ class StdFileProxy:
         if _is_global_greenlet():
             return self._native.write(s)
         else:
+            s = ser.dirty_encode(s)
             if self._err:
                 return eval_lua('io.stderr:write(...)', s).take_none()
             else:
@@ -135,6 +136,8 @@ sys.stderr = StdFileProxy(sys.__stderr__, True)
 
 
 def eval_lua(lua_code, *params, immediate=False):
+    if isinstance(lua_code, str):
+        lua_code = ser.encode(lua_code)
     request = (
         (b'I' if immediate else b'T')
         + ser.serialize(lua_code)
@@ -200,8 +203,10 @@ class CCGreenlet:
         self.detach_children()
         if error is not None:
             if error is True:
-                error = {}
-            self._sess._sender(b'C' + ser.serialize(error.get('error')))
+                error = None
+            else:
+                error = ser.dirty_encode(error)
+            self._sess._sender(b'C' + ser.serialize(error))
         if self._parent is not None:
             self._parent._children.discard(self._task_id)
 
@@ -218,7 +223,7 @@ class CCGreenlet:
             self._on_death(True)
             return
         except Exception:
-            self._on_death({'error': format_exc(limit=None, chain=False)})
+            self._on_death(format_exc(limit=None, chain=False))
             return
 
         # lua_eval call or simply idle
