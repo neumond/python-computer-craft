@@ -87,15 +87,6 @@ class ResultProc:
             self.forward()
             raise LuaException(self.take_string())
 
-    def bool_error_exclude(self, exc_msg):
-        success = self.take_bool()
-        if success:
-            return True
-        msg = self.take_string()
-        if msg == exc_msg:
-            return False
-        raise LuaException(msg)
-
     def take_option_int(self):
         if self.peek() is None:
             return self.take_none()

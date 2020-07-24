@@ -19,28 +19,6 @@ def inspect_result(rp):
         return rp.take_dict()
 
 
-def boolean_with_error_exclusion(exclude_msg):
-    def proc(rp):
-        return rp.bool_error_exclude(exclude_msg)
-    return proc
-
-
-dig_result = boolean_with_error_exclusion('Nothing to dig here')
-move_result = boolean_with_error_exclusion('Movement obstructed')
-place_result = boolean_with_error_exclusion('Cannot place block here')
-suck_result = boolean_with_error_exclusion('No items to take')
-drop_result = boolean_with_error_exclusion('No items to drop')
-transfer_result = boolean_with_error_exclusion('No space for items')
-attack_result = boolean_with_error_exclusion('Nothing to attack here')
-craft_result = boolean_with_error_exclusion('No matching recipes')
-
-
-def always_true(rp):
-    assert rp.take_bool() is True
-    # return value is useless
-    return None
-
-
 __all__ = (
     'craft',
     'forward',
@@ -88,36 +66,36 @@ __all__ = (
 )
 
 
-def craft(quantity: int = 64) -> bool:
-    return craft_result(method('craft', quantity))
+def craft(quantity: int = 64):
+    return method('craft', quantity).check_bool_error()
 
 
-def forward() -> bool:
-    return move_result(method('forward'))
+def forward():
+    return method('forward').check_bool_error()
 
 
-def back() -> bool:
-    return move_result(method('back'))
+def back():
+    return method('back').check_bool_error()
 
 
-def up() -> bool:
-    return move_result(method('up'))
+def up():
+    return method('up').check_bool_error()
 
 
-def down() -> bool:
-    return move_result(method('down'))
+def down():
+    return method('down').check_bool_error()
 
 
 def turnLeft():
-    return always_true(method('turnLeft'))
+    return method('turnLeft').check_bool_error()
 
 
 def turnRight():
-    return always_true(method('turnRight'))
+    return method('turnRight').check_bool_error()
 
 
 def select(slotNum: int):
-    return always_true(method('select', slotNum))
+    return method('select', slotNum).check_bool_error()
 
 
 def getSelectedSlot() -> int:
@@ -140,47 +118,47 @@ def getItemDetail(slotNum: int = None) -> Optional[dict]:
 
 
 def equipLeft():
-    return always_true(method('equipLeft'))
+    return method('equipLeft').check_bool_error()
 
 
 def equipRight():
-    return always_true(method('equipRight'))
+    return method('equipRight').check_bool_error()
 
 
-def attack() -> bool:
-    return attack_result(method('attack'))
+def attack():
+    return method('attack').check_bool_error()
 
 
-def attackUp() -> bool:
-    return attack_result(method('attackUp'))
+def attackUp():
+    return method('attackUp').check_bool_error()
 
 
-def attackDown() -> bool:
-    return attack_result(method('attackDown'))
+def attackDown():
+    return method('attackDown').check_bool_error()
 
 
-def dig() -> bool:
-    return dig_result(method('dig'))
+def dig():
+    return method('dig').check_bool_error()
 
 
-def digUp() -> bool:
-    return dig_result(method('digUp'))
+def digUp():
+    return method('digUp').check_bool_error()
 
 
-def digDown() -> bool:
-    return dig_result(method('digDown'))
+def digDown():
+    return method('digDown').check_bool_error()
 
 
-def place(signText: str = None) -> bool:
-    return place_result(method('place', ser.nil_encode(signText)))
+def place(signText: str = None):
+    return method('place', ser.nil_encode(signText)).check_bool_error()
 
 
-def placeUp(signText: str = None) -> bool:
-    return place_result(method('placeUp', ser.nil_encode(signText)))
+def placeUp(signText: str = None):
+    return method('placeUp', ser.nil_encode(signText)).check_bool_error()
 
 
-def placeDown(signText: str = None) -> bool:
-    return place_result(method('placeDown', ser.nil_encode(signText)))
+def placeDown(signText: str = None):
+    return method('placeDown', ser.nil_encode(signText)).check_bool_error()
 
 
 def detect() -> bool:
@@ -223,28 +201,28 @@ def compareTo(slot: int) -> bool:
     return method('compareTo', slot).take_bool()
 
 
-def drop(count: int = None) -> bool:
-    return drop_result(method('drop', count))
+def drop(count: int = None):
+    return method('drop', count).check_bool_error()
 
 
-def dropUp(count: int = None) -> bool:
-    return drop_result(method('dropUp', count))
+def dropUp(count: int = None):
+    return method('dropUp', count).check_bool_error()
 
 
-def dropDown(count: int = None) -> bool:
-    return drop_result(method('dropDown', count))
+def dropDown(count: int = None):
+    return method('dropDown', count).check_bool_error()
 
 
-def suck(amount: int = None) -> bool:
-    return suck_result(method('suck', amount))
+def suck(amount: int = None):
+    return method('suck', amount).check_bool_error()
 
 
-def suckUp(amount: int = None) -> bool:
-    return suck_result(method('suckUp', amount))
+def suckUp(amount: int = None):
+    return method('suckUp', amount).check_bool_error()
 
 
-def suckDown(amount: int = None) -> bool:
-    return suck_result(method('suckDown', amount))
+def suckDown(amount: int = None):
+    return method('suckDown', amount).check_bool_error()
 
 
 def refuel(quantity: int = None):
@@ -259,5 +237,5 @@ def getFuelLimit() -> int:
     return method('getFuelLimit').take_int()
 
 
-def transferTo(slot: int, quantity: int = None) -> bool:
-    return transfer_result(method('transferTo', slot, quantity))
+def transferTo(slot: int, quantity: int = None):
+    return method('transferTo', slot, quantity).check_bool_error()

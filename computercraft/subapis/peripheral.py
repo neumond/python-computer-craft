@@ -245,8 +245,8 @@ class CCCommandBlock(BasePeripheral):
 
 
 class CCWorkbench(BasePeripheral):
-    def craft(self, quantity: int = 64) -> bool:
-        return self._method('craft', quantity).bool_error_exclude('No matching recipes')
+    def craft(self, quantity: int = 64):
+        return self._method('craft', quantity).check_bool_error()
 
 
 TYPE_MAP = {
