@@ -45,6 +45,13 @@ Never use code in this repo if you don't trust your players!
     Now you have python REPL in computercraft!
     To quit REPL type `exit()` and press enter.
 
+    To run any program:
+
+    ```sh
+    py program.py  # relative to current dir
+    py /path/to/program.py
+    ```
+
 `py` is short Lua program that interacts with the server.
 `cc` module contains almost everything *as is* in ComputerCraft documentation:
 
@@ -114,4 +121,4 @@ p = import_file('/disk/program.py')  # absolute
 m = import_file('lib.py', __file__)  # relative to current file
 ```
 
-More examples can be found in repository.
+More examples can be found in this repository.
