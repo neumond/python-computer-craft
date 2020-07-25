@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List, Tuple, Any, Union
+from typing import Dict, Optional, List, Tuple, Any, Union
 
 from .mixins import TermMixin, TermTarget
 from .. import ser
@@ -249,6 +249,23 @@ class CCWorkbench(BasePeripheral):
         return self._method('craft', quantity).check_bool_error()
 
 
+class CCInventory(BasePeripheral):
+    def getItemDetail(self, slot: int) -> Optional[dict]:
+        return self._method('getItemDetail', slot).take()
+
+    def list(self) -> Dict[int, dict]:
+        return self._method('list').take_dict()
+
+    def pullItems(self, fromName: str, fromSlot: int, limit: int = None, toSlot: int = None) -> int:
+        return self._method('pullItems', ser.encode(fromName), fromSlot, limit, toSlot).take_int()
+
+    def pushItems(self, toName: str, fromSlot: int, limit: int = None, toSlot: int = None) -> int:
+        return self._method('pushItems', ser.encode(toName), fromSlot, limit, toSlot).take_int()
+
+    def size(self) -> int:
+        return self._method('size').take_int()
+
+
 TYPE_MAP = {
     'drive': CCDrive,
     'monitor': CCMonitor,
@@ -259,6 +276,20 @@ TYPE_MAP = {
     'command': CCCommandBlock,
     'workbench': CCWorkbench,
 }
+
+for k in [
+    'chest',
+    'furnace',
+    'barrel',
+    'hopper',
+    'dropper',
+    'dispenser',
+    'blast_furnace',
+    'smoker',
+    'shulker_box',
+    'brewing_stand',
+]:
+    TYPE_MAP['minecraft:' + k] = CCInventory
 
 
 method = eval_lua_method_factory('peripheral.')
