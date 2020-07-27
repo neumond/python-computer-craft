@@ -1,5 +1,7 @@
 from typing import Any, Tuple
 
+from . import lua
+
 
 __all__ = (
     'serialize',
@@ -53,6 +55,9 @@ def serialize(v: Any) -> bytes:
         for k, x in v.items():
             items.append(b':' + serialize(k) + serialize(x))
         return b'{' + b''.join(items) + b'}'
+    elif isinstance(v, lua.LuaExpr):
+        e = 'return ' + v.get_expr_code()
+        return 'E{}>'.format(len(e)).encode(_ENC) + e.encode(_ENC)
     else:
         raise ValueError('Value can\'t be serialized: {}'.format(repr(v)))
 

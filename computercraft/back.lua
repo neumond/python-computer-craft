@@ -3,7 +3,7 @@ local temp = {}
 local event_sub = {}
 genv.temp = temp
 local url = 'http://127.0.0.1:4343/'
-local proto_version = 2
+local proto_version = 3
 local tasks = {}
 local filters = {}
 local ycounts = {}
@@ -80,6 +80,12 @@ function deserialize(stream)
     elseif tok == '<' then
         local slen = tonumber(stream.tostop('>'))
         return stream.fixed(slen)
+    elseif tok == 'E' then
+        -- same as string (<), but intended for evaluation
+        local slen = tonumber(stream.tostop('>'))
+        local fn = assert(loadstring(stream.fixed(slen)))
+        setfenv(fn, genv)
+        return fn()
     elseif tok == '{' then
         local r = {}
         while true do

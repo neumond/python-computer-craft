@@ -66,8 +66,8 @@ def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
 @contextmanager
 def redirect(target: TermTarget):
     with lua_context_object(
-        'term.redirect(' + target.get_expr_code() + ')',
-        (),
+        'term.redirect(...)',
+        (target, ),
         'term.redirect({e})',
     ):
         yield

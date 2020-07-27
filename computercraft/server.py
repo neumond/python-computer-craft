@@ -12,7 +12,7 @@ from .rproc import lua_table_to_list
 
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
-LUA_FILE_VERSION = 2
+LUA_FILE_VERSION = 3
 PROTO_ERROR = b'C' + ser.serialize(b'protocol error')
 DEBUG_PROTO = False
 
@@ -44,10 +44,10 @@ class CCApplication(web.Application):
 
             version = next(msg)
             if version != LUA_FILE_VERSION:
-                await self._send(ws, b'C' + ser.serialize(
+                await self._send(ws, b'C' + ser.serialize(ser.encode(
                     'protocol version mismatch (expected {}, got {}), redownload py'.format(
                         LUA_FILE_VERSION, version,
-                    )))
+                    ))))
                 return None
 
             computer_id = next(msg)
