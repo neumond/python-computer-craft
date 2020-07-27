@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, List, Tuple, Any, Union
+from typing import Dict, Optional, List, Tuple, Type, Any, Union
 
 from .mixins import TermMixin, TermTarget
 from .. import ser
@@ -266,40 +266,20 @@ class CCInventory(BasePeripheral):
         return self._method('size').take_int()
 
 
-TYPE_MAP = {
-    'drive': CCDrive,
-    'monitor': CCMonitor,
-    'computer': CCComputer,
-    'turtle': CCTurtle,
-    'printer': CCPrinter,
-    'speaker': CCSpeaker,
-    'command': CCCommandBlock,
-    'workbench': CCWorkbench,
-}
-
-for k in [
-    'chest',
-    'furnace',
-    'barrel',
-    'hopper',
-    'dropper',
-    'dispenser',
-    'blast_furnace',
-    'smoker',
-    'shulker_box',
-    'brewing_stand',
-]:
-    TYPE_MAP['minecraft:' + k] = CCInventory
+TYPE_MAP = {}
 
 
 method = eval_lua_method_factory('peripheral.')
 
 
 __all__ = (
+    'BasePeripheral',  # exposed for subclassing & registerType
+    'CCInventory',  # exposed for registerType for 3rdparty mod inventory-like entities
     'isPresent',
     'getType',
     'getNames',
     'wrap',
+    'registerType',
     'get_term_target',
 )
 
@@ -334,7 +314,34 @@ def wrap(side: str) -> Optional[BasePeripheral]:
         return TYPE_MAP[ptype](m, side)
 
 
+def registerType(ptype: str, pcls: Type[BasePeripheral]):
+    TYPE_MAP[ptype] = pcls
+
+
 def get_term_target(side: str) -> TermTarget:
     return TermTarget('peripheral.wrap({})'.format(
         lua_string(side),
     ))
+
+
+registerType('drive', CCDrive)
+registerType('monitor', CCMonitor)
+registerType('computer', CCComputer)
+registerType('turtle', CCTurtle)
+registerType('printer', CCPrinter)
+registerType('speaker', CCSpeaker)
+registerType('command', CCCommandBlock)
+registerType('workbench', CCWorkbench)
+for k in [
+    'chest',
+    'furnace',
+    'barrel',
+    'hopper',
+    'dropper',
+    'dispenser',
+    'blast_furnace',
+    'smoker',
+    'shulker_box',
+    'brewing_stand',
+]:
+    registerType('minecraft:' + k, CCInventory)
