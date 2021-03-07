@@ -66,36 +66,36 @@ __all__ = (
 )
 
 
-def craft(quantity: int = 64):
-    return method('craft', quantity).check_bool_error()
+def craft(quantity: int = 64) -> bool:
+    return method('craft', quantity).take_bool()
 
 
-def forward():
-    return method('forward').check_bool_error()
+def forward() -> bool:
+    return method('forward').take_bool()
 
 
-def back():
-    return method('back').check_bool_error()
+def back() -> bool:
+    return method('back').take_bool()
 
 
-def up():
-    return method('up').check_bool_error()
+def up() -> bool:
+    return method('up').take_bool()
 
 
-def down():
-    return method('down').check_bool_error()
+def down() -> bool:
+    return method('down').take_bool()
 
 
-def turnLeft():
-    return method('turnLeft').check_bool_error()
+def turnLeft() -> bool:
+    return method('turnLeft').take_bool()
 
 
-def turnRight():
-    return method('turnRight').check_bool_error()
+def turnRight() -> bool:
+    return method('turnRight').take_bool()
 
 
-def select(slotNum: int):
-    return method('select', slotNum).check_bool_error()
+def select(slotNum: int) -> bool:
+    return method('select', slotNum).take_bool()
 
 
 def getSelectedSlot() -> int:
@@ -117,48 +117,48 @@ def getItemDetail(slotNum: int = None) -> Optional[dict]:
     return rp.take_dict()
 
 
-def equipLeft():
-    return method('equipLeft').check_bool_error()
+def equipLeft() -> bool:
+    return method('equipLeft').take_bool()
 
 
-def equipRight():
-    return method('equipRight').check_bool_error()
+def equipRight() -> bool:
+    return method('equipRight').take_bool()
 
 
-def attack():
-    return method('attack').check_bool_error()
+def attack() -> bool:
+    return method('attack').take_bool()
 
 
-def attackUp():
-    return method('attackUp').check_bool_error()
+def attackUp() -> bool:
+    return method('attackUp').take_bool()
 
 
-def attackDown():
-    return method('attackDown').check_bool_error()
+def attackDown() -> bool:
+    return method('attackDown').take_bool()
 
 
-def dig():
-    return method('dig').check_bool_error()
+def dig() -> bool:
+    return method('dig').take_bool()
 
 
-def digUp():
-    return method('digUp').check_bool_error()
+def digUp() -> bool:
+    return method('digUp').take_bool()
 
 
-def digDown():
-    return method('digDown').check_bool_error()
+def digDown() -> bool:
+    return method('digDown').take_bool()
 
 
-def place(signText: str = None):
-    return method('place', ser.nil_encode(signText)).check_bool_error()
+def place(signText: str = None) -> bool:
+    return method('place', ser.nil_encode(signText)).take_bool()
 
 
-def placeUp(signText: str = None):
-    return method('placeUp', ser.nil_encode(signText)).check_bool_error()
+def placeUp(signText: str = None) -> bool:
+    return method('placeUp', ser.nil_encode(signText)).take_bool()
 
 
-def placeDown(signText: str = None):
-    return method('placeDown', ser.nil_encode(signText)).check_bool_error()
+def placeDown(signText: str = None) -> bool:
+    return method('placeDown', ser.nil_encode(signText)).take_bool()
 
 
 def detect() -> bool:
@@ -201,32 +201,32 @@ def compareTo(slot: int) -> bool:
     return method('compareTo', slot).take_bool()
 
 
-def drop(count: int = None):
-    return method('drop', count).check_bool_error()
+def drop(count: int = None) -> bool:
+    return method('drop', count).take_bool()
 
 
-def dropUp(count: int = None):
-    return method('dropUp', count).check_bool_error()
+def dropUp(count: int = None) -> bool:
+    return method('dropUp', count).take_bool()
 
 
-def dropDown(count: int = None):
-    return method('dropDown', count).check_bool_error()
+def dropDown(count: int = None) -> bool:
+    return method('dropDown', count).take_bool()
 
 
-def suck(amount: int = None):
-    return method('suck', amount).check_bool_error()
+def suck(amount: int = None) -> bool:
+    return method('suck', amount).take_bool()
 
 
-def suckUp(amount: int = None):
-    return method('suckUp', amount).check_bool_error()
+def suckUp(amount: int = None) -> bool:
+    return method('suckUp', amount).take_bool()
 
 
-def suckDown(amount: int = None):
-    return method('suckDown', amount).check_bool_error()
+def suckDown(amount: int = None) -> bool:
+    return method('suckDown', amount).take_bool()
 
 
-def refuel(quantity: int = None):
-    return method('refuel', quantity).check_bool_error()
+def refuel(quantity: int = None) -> bool:
+    return method('refuel', quantity).take_bool()
 
 
 def getFuelLevel() -> int:
@@ -237,5 +237,5 @@ def getFuelLimit() -> int:
     return method('getFuelLimit').take_int()
 
 
-def transferTo(slot: int, quantity: int = None):
-    return method('transferTo', slot, quantity).check_bool_error()
+def transferTo(slot: int, quantity: int = None) -> bool:
+    return method('transferTo', slot, quantity).take_bool()
