@@ -1,20 +1,72 @@
-local genv = getfenv()
-local temp = {}
-local event_sub = {}
-genv.temp = temp
-local url = 'http://127.0.0.1:4343/'
-local proto_version = 3
-local tasks = {}
-local filters = {}
-local ycounts = {}
-local coparams = {}
+local _py = {
+    cc_url = '__cc_url__',
+    oc_host = '__oc_host__',
+    oc_port = __oc_port__,
+    proto_version = 4,
+    event_sub = {},
+    tasks = {},
+    filters = {},
+    ycounts = {},
+    coparams = {},
+}
 
-local ws = http.websocket(url..'ws/')
-if ws == false then
-    error('Unable to connect to server '..url..'ws/')
+if type(getfenv) == 'function' then
+    _py.genv = getfenv()
+elseif type(_ENV) == 'table' then
+    _py.genv = _ENV
+elseif type(_G) == 'table' then
+    _py.genv = _G  -- TODO: necessary?
+else
+    error('E001: Can\'t get environment')
+end
+-- TODO: rename temp to _pytemp
+_py.genv.temp = {}
+
+if type(loadstring) == 'function' then
+    -- 5.1: prefer loadstring
+    function _py.loadstring(source)
+        local r, err = loadstring(source)
+        if r ~= nil then setfenv(r, _py.genv) end
+        return r, err
+    end
+else
+    -- 5.2+: load can deal with strings as well
+    function _py.loadstring(source)
+        return load(source, nil, nil, _py.genv)
+    end
 end
 
-local serialize
+if type(require) == 'function' then
+    function _py.try_import(module, fn_name, save_as)
+        local r, m = pcall(function() return require(module) end)
+        if (not r
+            or type(m) ~= 'table'
+            or type(m[fn_name]) ~= 'function') then return false end
+        if save_as == nil then
+            _py._impfn = m[fn_name]
+        else
+            _py[save_as] = m[fn_name]
+        end
+        return true
+    end
+else
+    function _py.try_import() return false end
+end
+
+if type(os) == 'table' and type(os.pullEvent) == 'function' then
+    _py.pullEvent = os.pullEvent  -- computercraft
+elseif _py.try_import('event', 'pull') then
+    _py.pullEvent = _py._impfn  -- opencomputers
+else
+    error('E002: Can\'t detect pullEvent method')
+end
+
+if type(arg) == 'table' then
+    _py.argv = arg  -- TODO: remove?
+else
+    _py.argv = {...}
+end
+
 do
     local function s_rec(v, tracking)
         local t = type(v)
@@ -25,7 +77,7 @@ do
         elseif v == true then
             return 'T'
         elseif t == 'number' then
-            return '\[' .. tostring(v) .. '\]'
+            return '[' .. tostring(v) .. ']'
         elseif t == 'string' then
             return string.format('<%u>', #v) .. v
         elseif t == 'table' then
@@ -41,12 +93,11 @@ do
         else
             error('Cannot serialize type ' .. t, 0)
         end
-        local tp = type(t)
     end
-    serialize = function(v) return s_rec(v, {}) end
+    _py.serialize = function(v) return s_rec(v, {}) end
 end
 
-function create_stream(s, idx)
+function _py.create_stream(s, idx)
     if idx == nil then idx = 1 end
     return {
         getidx=function() return idx end,
@@ -67,7 +118,7 @@ function create_stream(s, idx)
     }
 end
 
-function deserialize(stream)
+function _py.deserialize(stream)
     local tok = stream.fixed(1)
     if tok == 'N' then
         return nil
@@ -75,24 +126,23 @@ function deserialize(stream)
         return false
     elseif tok == 'T' then
         return true
-    elseif tok == '\[' then
-        return tonumber(stream.tostop('\]'))
+    elseif tok == '[' then
+        return tonumber(stream.tostop(']'))
     elseif tok == '<' then
         local slen = tonumber(stream.tostop('>'))
         return stream.fixed(slen)
     elseif tok == 'E' then
         -- same as string (<), but intended for evaluation
         local slen = tonumber(stream.tostop('>'))
-        local fn = assert(loadstring(stream.fixed(slen)))
-        setfenv(fn, genv)
+        local fn = assert(_py.loadstring(stream.fixed(slen)))
         return fn()
     elseif tok == '{' then
         local r = {}
         while true do
             tok = stream.fixed(1)
             if tok == ':' then
-                local key = deserialize(stream)
-                r[key] = deserialize(stream)
+                local key = _py.deserialize(stream)
+                r[key] = _py.deserialize(stream)
             else break end
         end
         return r
@@ -101,102 +151,184 @@ function deserialize(stream)
     end
 end
 
-function drop_task(task_id)
-    tasks[task_id] = nil
-    filters[task_id] = nil
-    ycounts[task_id] = nil
-    coparams[task_id] = nil
+function _py.drop_task(task_id)
+    _py.tasks[task_id] = nil
+    _py.filters[task_id] = nil
+    _py.ycounts[task_id] = nil
+    _py.coparams[task_id] = nil
 end
 
-function ws_send(action, ...)
-    local m = action
-    for _, v in ipairs(arg) do
-        m = m .. serialize(v)
+-- nil-safe
+if type(table.maxn) == 'function' then
+    function _py.safe_unpack(a)
+        return table.unpack(a, 1, table.maxn(a))
     end
-    ws.send(m, true)
-end
-
-function safe_unpack(a)
-    -- nil-safe
-    return table.unpack(a, 1, table.maxn(a))
-end
-
-ws_send('0', proto_version, os.getComputerID(), arg)
-
-while true do
-    local event, p1, p2, p3, p4, p5 = os.pullEvent()
-
-    if event == 'websocket_message' then
-        local msg = create_stream(p2)
-        local action = msg.fixed(1)
-
-        if action == 'T' or action == 'I' then  -- new task
-            local task_id = deserialize(msg)
-            local code = deserialize(msg)
-            local params = deserialize(msg)
-
-            local fn, err = loadstring(code)
-            if fn == nil then
-                -- couldn't compile
-                ws_send('T', task_id, serialize{false, err}, 0)
-            else
-                setfenv(fn, genv)
-                if action == 'I' then
-                    ws_send('T', task_id, serialize{fn(safe_unpack(params))}, 0)
-                else
-                    tasks[task_id] = coroutine.create(fn)
-                    ycounts[task_id] = 0
-                    coparams[task_id] = params
-                end
-            end
-        elseif action == 'D' then  -- drop tasks
-            while not msg.isend() do
-                drop_task(deserialize(msg))
-            end
-        elseif action == 'S' or action == 'U' then  -- (un)subscribe to event
-            local event = deserialize(msg)
-            if action == 'S' then
-                event_sub[event] = true
-            else
-                event_sub[event] = nil
-            end
-        elseif action == 'C' then  -- close session
-            local err = deserialize(msg)
-            if err ~= nil then
-                io.stderr:write(err .. '\n')
-            end
-            break
+else
+    function _py.safe_unpack(a)
+        local maxn = #a
+        -- TODO: better solution?
+        for k in pairs(a) do
+            if type(k) == 'number' and k > maxn then maxn = k end
         end
-    elseif event == 'websocket_closed' then
-        error('Connection with server has been closed')
-    elseif event_sub[event] == true then
-        ws_send('E', event, {p1, p2, p3, p4, p5})
+        return table.unpack(a, 1, maxn)
     end
+end
 
-    local del_tasks = {}
-    for task_id in pairs(tasks) do
-        if filters[task_id] == nil or filters[task_id] == event then
-            local r
-            if coparams[task_id] ~= nil then
-                r = {coroutine.resume(tasks[task_id], safe_unpack(coparams[task_id]))}
-                coparams[task_id] = nil
+if type(http) == 'table' and type(http.websocket) == 'function' then
+    function _py.start_connection()
+        local ws = http.websocket(_py.cc_url)
+        if not ws then
+            error('Unable to connect to server ' .. _py.cc_url)
+        end
+        _py.ws = {
+            send = function(m) return ws.send(m, true) end,
+            close = function() ws.close() end,
+        }
+    end
+elseif _py.try_import('internet', 'socket', 'oc_connect') then
+    function _py.start_connection()
+        local s = _py.oc_connect(_py.oc_host, _py.oc_port)
+        if not s or s.socket.finishConnect() == nil then
+            error('Unable to connect to server ' .. _py.oc_host .. ':' .. _py.oc_port)
+        end
+        local bit32 = require('bit32')
+        local buf = ''
+        _py.ws = {
+            send = function(frame)
+                local z = #frame
+                s.socket.write(string.char(
+                    bit32.band(bit32.rshift(z, 16), 255),
+                    bit32.band(bit32.rshift(z, 8), 255),
+                    bit32.band(z, 255)
+                ))
+                s.socket.write(frame)
+            end,
+            close = function() s.socket.close() end,
+            read_pending = function(frame_callback)
+                local inc = s.socket.read()
+                if inc == nil then
+                    return true, 'Connection with server has been closed'
+                end
+                buf = buf .. inc
+                while #buf >= 3 do
+                    local frame_size = (
+                        bit32.lshift(string.byte(buf, 1), 16)
+                        + bit32.lshift(string.byte(buf, 2), 8)
+                        + string.byte(buf, 3))
+                    if #buf < frame_size + 3 then break end
+                    if frame_callback(string.sub(buf, 4, 3 + frame_size)) then
+                        return true, nil
+                    end
+                    buf = string.sub(buf, 4 + frame_size)
+                end
+                return false
+            end,
+        }
+    end
+else
+    error('E003: Can\'t detect connection method')
+end
+
+function _py.ws_send(action, ...)
+    local m = action
+    for _, v in ipairs({...}) do
+        m = m .. _py.serialize(v)
+    end
+    _py.ws.send(m)
+end
+
+function _py.exec_python_directive(dstring)
+    local msg = _py.create_stream(dstring)
+    local action = msg.fixed(1)
+
+    if action == 'T' or action == 'I' then  -- new task
+        local task_id = _py.deserialize(msg)
+        local code = _py.deserialize(msg)
+        local params = _py.deserialize(msg)
+
+        local fn, err = _py.loadstring(code)
+        if fn == nil then
+            -- couldn't compile
+            _py.ws_send('T', task_id, _py.serialize{false, err}, 0)
+        else
+            if action == 'I' then
+                _py.ws_send('T', task_id, _py.serialize{fn(_py.safe_unpack(params))}, 0)
             else
-                r = {coroutine.resume(tasks[task_id], event, p1, p2, p3, p4, p5)}
+                _py.tasks[task_id] = coroutine.create(fn)
+                _py.ycounts[task_id] = 0
+                _py.coparams[task_id] = params
             end
-            ycounts[task_id] = ycounts[task_id] + 1
-            if coroutine.status(tasks[task_id]) == 'dead' then
-                ws_send('T', task_id, serialize(r), ycounts[task_id])
+        end
+    elseif action == 'D' then  -- drop tasks
+        while not msg.isend() do
+            _py.drop_task(_py.deserialize(msg))
+        end
+    elseif action == 'S' or action == 'U' then  -- (un)subscribe to event
+        local event = _py.deserialize(msg)
+        if action == 'S' then
+            _py.event_sub[event] = true
+        else
+            _py.event_sub[event] = nil
+        end
+    elseif action == 'C' then  -- close session
+        local err = _py.deserialize(msg)
+        if err ~= nil then
+            io.stderr:write(err .. '\n')
+        end
+        return true
+    end
+end
+
+function _py.resume_coros(event, p1, p2, p3, p4, p5)
+    local del_tasks = {}
+    for task_id in pairs(_py.tasks) do
+        if _py.filters[task_id] == nil or _py.filters[task_id] == event then
+            local r
+            if _py.coparams[task_id] ~= nil then
+                r = {coroutine.resume(
+                    _py.tasks[task_id],
+                    _py.safe_unpack(_py.coparams[task_id]))}
+                _py.coparams[task_id] = nil
+            else
+                r = {coroutine.resume(
+                    _py.tasks[task_id],
+                    event, p1, p2, p3, p4, p5)}
+            end
+            _py.ycounts[task_id] = _py.ycounts[task_id] + 1
+            if coroutine.status(_py.tasks[task_id]) == 'dead' then
+                _py.ws_send('T', task_id, _py.serialize(r), _py.ycounts[task_id])
                 del_tasks[task_id] = true
             else
                 if r[1] == true then
-                    filters[task_id] = r[2]
+                    _py.filters[task_id] = r[2]
                 else
-                    filters[task_id] = nil
+                    _py.filters[task_id] = nil
                 end
             end
         end
     end
-    for task_id in pairs(del_tasks) do drop_task(task_id) end
+    for task_id in pairs(del_tasks) do _py.drop_task(task_id) end
 end
 
-ws.close()
+_py.start_connection()
+_py.ws_send('0', _py.proto_version, _py.argv)
+while true do
+    local event, p1, p2, p3, p4, p5 = _py.pullEvent()
+    if event == 'websocket_message' then
+        -- TODO: filter by address
+        if _py.exec_python_directive(p2) then break end
+    elseif event == 'websocket_closed' then
+        -- TODO: filter by address
+        error('Connection with server has been closed')
+    elseif event == 'internet_ready' then
+        -- TODO: filter by address
+        local must_exit, err = _py.ws.read_pending(_py.exec_python_directive)
+        if must_exit then
+            if err == nil then break else error(err) end
+        end
+    elseif _py.event_sub[event] == true then
+        _py.ws_send('E', event, {p1, p2, p3, p4, p5})
+    end
+    _py.resume_coros(event, p1, p2, p3, p4, p5)
+end
+_py.ws.close()

@@ -74,7 +74,14 @@ class StdFileProxy:
                 raise RuntimeError(
                     "Computercraft environment doesn't support "
                     "stdin readline method with parameter")
-            return eval_lua('return io.read()').take_string() + '\n'
+            r = eval_lua('return io.read()')
+            if r.peek() is None:
+                return ''  # press ctrl+D in OC
+            if r.peek() is False:
+                r.take()   # press ctrl+C in OC
+                eval_lua('io.stderr:write(...)', r.take_bytes(), immediate=True)
+                return ''
+            return r.take_string() + '\n'
 
     def write(self, s):
         if _is_global_greenlet():
@@ -292,9 +299,7 @@ class CCEventRouter:
 
 
 class CCSession:
-    def __init__(self, computer_id, sender):
-        # computer_id is unique identifier of a CCSession
-        self._computer_id = computer_id
+    def __init__(self, sender):
         self._tid_allocator = map(base36, count(start=1))
         self._sender = sender
         self._greenlets = {}
@@ -361,6 +366,7 @@ return p, code
         def _repl():
             InteractiveConsole(locals={}).interact(
                 banner='Python {}'.format(python_version()),
+                exitmsg='',
             )
 
         self._run_sandboxed_greenlet(_repl)
