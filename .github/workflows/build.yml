@@ -1,0 +1,28 @@
+name: Computercraft
+
+on: [push]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - python: "3.11.3"
+          - python: "3.10.11"
+          - python: "3.9.16"
+          - python: "3.8.16"
+          - python: "3.7.16"
+
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Test with pytest
+        run: |
+          pytest -vv
