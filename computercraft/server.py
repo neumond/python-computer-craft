@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import sys
 from os.path import join, dirname, abspath
 
 from aiohttp import web, WSMsgType
@@ -13,22 +12,13 @@ THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
 PROTO_VERSION = 4
 PROTO_ERROR = b'C' + ser.serialize(b'protocol error')
-DEBUG_PROTO = True
 
 
 async def _bin_messages(ws):
     async for msg in ws:
         if msg.type != WSMsgType.BINARY:
             continue
-        if DEBUG_PROTO:
-            sys.__stdout__.write('ws received ' + repr(msg.data) + '\n')
         yield msg.data
-
-
-async def _send(ws, data):
-    if DEBUG_PROTO:
-        sys.__stdout__.write('ws send ' + repr(data) + '\n')
-    await ws.send_bytes(data)
 
 
 def protocol(send, sess_cls=sess.CCSession):
@@ -97,31 +87,21 @@ class CCApplication(web.Application):
         return ws
 
     async def tcp(self, reader, writer):
-        if DEBUG_PROTO:
-            print('TCP connection')
         squeue = []
 
         def send(m):
-            if DEBUG_PROTO:
-                print('SEND', m)
             squeue.append(m)
 
-        pgen = self['protocol_factory'](send)
-        # pgen = protocol(squeue.append)
+        pgen = self['protocol_factory'](squeue.append)
         next(pgen)
         mustquit = False
         while True:
-            if DEBUG_PROTO:
-                print('Waiting for frame')
             try:
                 frame_size = int.from_bytes(
                     await reader.readexactly(3), 'big')
                 frame = await reader.readexactly(frame_size)
             except asyncio.IncompleteReadError:
                 break
-
-            if DEBUG_PROTO:
-                print('TCP frame', frame)
 
             try:
                 pgen.send(frame)
@@ -137,8 +117,6 @@ class CCApplication(web.Application):
             if mustquit:
                 break
 
-        if DEBUG_PROTO:
-            print('TCP close')
         writer.close()
         await writer.wait_closed()
 
