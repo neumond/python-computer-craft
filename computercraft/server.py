@@ -5,8 +5,7 @@ from os.path import join, dirname, abspath
 
 from aiohttp import web, WSMsgType
 
-from .sess import CCSession
-from . import ser
+from . import ser, sess
 from .rproc import lua_table_to_list
 
 
@@ -14,7 +13,7 @@ THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
 PROTO_VERSION = 4
 PROTO_ERROR = b'C' + ser.serialize(b'protocol error')
-DEBUG_PROTO = False
+DEBUG_PROTO = True
 
 
 async def _bin_messages(ws):
@@ -32,7 +31,7 @@ async def _send(ws, data):
     await ws.send_bytes(data)
 
 
-def protocol(send, sess_cls=CCSession):
+def protocol(send, sess_cls=sess.CCSession):
     # handle first frame
     msg = yield
     msg = ser.dcmditer(msg)
@@ -77,7 +76,7 @@ class CCApplication(web.Application):
         await ws.prepare(request)
 
         squeue = []
-        pgen = protocol(squeue.append)
+        pgen = self['protocol_factory'](squeue.append)
         next(pgen)
         mustquit = False
         async for msg in _bin_messages(ws):
@@ -107,7 +106,7 @@ class CCApplication(web.Application):
                 print('SEND', m)
             squeue.append(m)
 
-        pgen = protocol(send)
+        pgen = self['protocol_factory'](send)
         # pgen = protocol(squeue.append)
         next(pgen)
         mustquit = False
@@ -165,7 +164,7 @@ class CCApplication(web.Application):
         self.router.add_get('/ws/', self.ws)
 
 
-def main():
+def create_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument(
@@ -174,11 +173,18 @@ def main():
     parser.add_argument(
         '--oc-port', type=int, default=8001,
         help='Raw TCP port for opencomputers')
-    args = parser.parse_args()
+    parser.add_argument(
+        '--capture', type=str, default=None,
+        help='Capture test data into a file')
+    return parser
 
+
+def main():
+    args = create_parser().parse_args()
     app = CCApplication()
     app['port'] = args.port
     app['oc_port'] = args.oc_port
+    app['protocol_factory'] = protocol
     app.setup_routes()
 
     async def tcp_server(app):
@@ -186,9 +192,38 @@ def main():
         async with server:
             yield
 
-    app.cleanup_ctx.append(tcp_server)
+    async def capture(app):
+        with open(args.capture, 'wb') as f:
+            def protocol_factory(send, sess_cls=sess.CCSession):
+                def write_frame(t, m):
+                    ln = str(len(m)).encode('ascii')
+                    f.write(t + ln + b':' + m + b'\n')
 
-    web.run_app(app, host=args.host, port=args.port)
+                def send_wrap(m):
+                    write_frame(b'S', m)
+                    return send(m)
+
+                p = protocol(send_wrap, sess_cls=sess_cls)
+
+                def pgen():
+                    next(p)
+                    while True:
+                        m = yield
+                        write_frame(b'R', m)
+                        p.send(m)
+
+                return pgen()
+
+            app['protocol_factory'] = protocol_factory
+            yield
+
+    app.cleanup_ctx.append(tcp_server)
+    if args.capture is not None:
+        sess.python_version = lambda: '<VERSION>'
+        app.cleanup_ctx.append(capture)
+
+    with sess.patch_std_files():
+        web.run_app(app, host=args.host, port=args.port)
 
 
 if __name__ == '__main__':

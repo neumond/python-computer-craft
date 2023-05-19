@@ -138,9 +138,18 @@ def install_import_hook():
 
 
 install_import_hook()
-sys.stdin = StdFileProxy(sys.__stdin__, False)
-sys.stdout = StdFileProxy(sys.__stdout__, False)
-sys.stderr = StdFileProxy(sys.__stderr__, True)
+
+
+@contextmanager
+def patch_std_files():
+    pin, pout, perr = sys.stdin, sys.stdout, sys.stderr
+    sys.stdin = StdFileProxy(pin, False)
+    sys.stdout = StdFileProxy(pout, False)
+    sys.stderr = StdFileProxy(perr, True)
+    try:
+        yield
+    finally:
+        sys.stdin, sys.stdout, sys.stderr = pin, pout, perr
 
 
 def eval_lua(lua_code, *params, immediate=False):
