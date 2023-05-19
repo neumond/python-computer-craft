@@ -40,14 +40,14 @@ def test_proto(logfile):
                 return frame
 
             while True:
-                match lf.read(1):
-                    case b'':
-                        break
-                    case b'R':
-                        pgen.send(read_frame())
-                    case b'S':
-                        assert read_frame() == sbuf.popleft()
-                    case _ as x:
-                        raise ValueError('Bad prefix ' + repr(x))
+                t = lf.read(1)
+                if t == b'':
+                    break
+                elif t == b'R':
+                    pgen.send(read_frame())
+                elif t == b'S':
+                    assert read_frame() == sbuf.popleft()
+                else:
+                    raise ValueError('Bad prefix ' + repr(t))
 
     assert len(sbuf) == 0
