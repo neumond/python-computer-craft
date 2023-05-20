@@ -39,10 +39,16 @@ def protocol(send, sess_cls=sess.CCSession):
             ))))
         return
 
-    args = lua_table_to_list(next(msg), low_index=0)
+    args = lua_table_to_list(next(msg))
+    path, code = None, None
+    try:
+        path = next(msg)
+        code = next(msg)
+    except StopIteration:
+        pass
     sess = sess_cls(send)
-    if len(args) >= 2:
-        sess.run_program(args[1], [ser.decode(x) for x in args[2:]])
+    if code is not None:
+        sess.run_program(args, path, code)
     else:
         sess.run_repl()
 

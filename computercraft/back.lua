@@ -310,8 +310,39 @@ function _py.resume_coros(event, p1, p2, p3, p4, p5)
     for task_id in pairs(del_tasks) do _py.drop_task(task_id) end
 end
 
+if type(fs) == 'table' and type(fs.combine) == 'function' then
+    function _py.start_program(name)
+        local path = fs.combine(shell.dir(), name)
+        if not fs.exists(path) then return nil end
+        if fs.isDir(path) then return nil end
+        local f = fs.open(path, 'r')
+        local code = f.readAll()
+        f.close()
+        return path, code
+    end
+else
+    function _py.start_program(name)
+        local filesystem = require('filesystem')
+        local shell = require('shell')
+        local path = filesystem.concat(shell.getWorkingDirectory(), name)
+        if not filesystem.exists(path) then return nil end
+        if filesystem.isDirectory(path) then return nil end
+        local f = io.open(path, 'rb')
+        local code = f:read('*a')
+        f:close()
+        return path, code
+    end
+end
+
 _py.start_connection()
-_py.ws_send('0', _py.proto_version, _py.argv)
+do
+    local path, code = nil, nil
+    if _py.argv[1] ~= nil then
+        path, code = _py.start_program(_py.argv[1])
+        if path == nil then error('Program not found') end
+    end
+    _py.ws_send('0', _py.proto_version, _py.argv, path, code)
+end
 while true do
     local event, p1, p2, p3, p4, p5 = _py.pullEvent()
     if event == 'websocket_message' then

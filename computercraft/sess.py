@@ -350,24 +350,10 @@ class CCSession:
         self._program_greenlet = CCGreenlet(fn, sess=self)
         self._program_greenlet.switch()
 
-    def run_program(self, program, args):
+    def run_program(self, args, path, code):
         def _run_program():
-            rp = eval_lua('''
-local p = fs.combine(shell.dir(), ...)
-if not fs.exists(p) then return nil end
-if fs.isDir(p) then return nil end
-local f = fs.open(p, 'r')
-local code = f.readAll()
-f.close()
-return p, code
-'''.lstrip(), program)
-            if rp.peek() is None:
-                print('Program not found', file=sys.stderr)
-                return
-            p = rp.take_string()
-            code = rp.take_string()
-            cc = compile(code, p, 'exec')
-            exec(cc, {'__file__': p, 'args': args})
+            cc = compile(code, path, 'exec')
+            exec(cc, {'__file__': path, 'args': args})
 
         self._run_sandboxed_greenlet(_run_program)
 
