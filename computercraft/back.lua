@@ -6,8 +6,9 @@ local _py = {
     event_sub = {},
     tasks = {},
     filters = {},
-    ycounts = {},
     coparams = {},
+    modules = {},
+    mcache = {},
 }
 
 if type(getfenv) == 'function' then
@@ -51,6 +52,41 @@ if type(require) == 'function' then
     end
 else
     function _py.try_import() return false end
+end
+
+function _py.loadmethod(code)
+    -- R:module.method  (needs require(module))
+    -- M:module.method
+    -- E:code  (eval)
+    -- code  (eval without cache)
+    if _py.mcache[code] ~= nil then return _py.mcache[code] end
+
+    local _, _, f, mcode = string.find(code, '^([RME]):(.*)$')
+    if f == nil then return _py.loadstring(code) end
+
+    local fn
+    if f == 'R' or f == 'M' then
+        local _, _, md, mt = string.find(mcode, '^(%a%w*)%.(%a%w*)$')
+        if md == nil then return nil, 'malformed method name' end
+        if f == 'R' then
+            if _py.modules[md] == nil then
+                local r, v = pcall(require, md)
+                if not r then return nil, 'module not found' end
+                _py.modules[md] = v
+            end
+            fn = _py.modules[md][mt]
+        else
+            if _py.genv[md] == nil then return nil, 'module not found' end
+            fn = _py.genv[md][mt]
+        end
+        if fn == nil then return nil, 'method not found' end
+    elseif f == 'E' then
+        local err
+        fn, err = _py.loadstring(mcode)
+        if not fn then return nil, err end
+    end
+    _py.mcache[code] = fn
+    return fn
 end
 
 if type(os) == 'table' and type(os.pullEvent) == 'function' then
@@ -154,7 +190,6 @@ end
 function _py.drop_task(task_id)
     _py.tasks[task_id] = nil
     _py.filters[task_id] = nil
-    _py.ycounts[task_id] = nil
     _py.coparams[task_id] = nil
 end
 
@@ -246,16 +281,15 @@ function _py.exec_python_directive(dstring)
         local code = _py.deserialize(msg)
         local params = _py.deserialize(msg)
 
-        local fn, err = _py.loadstring(code)
+        local fn, err = _py.loadmethod(code)
         if fn == nil then
             -- couldn't compile
-            _py.ws_send('T', task_id, _py.serialize{false, err}, 0)
+            _py.ws_send('T', task_id, _py.serialize{false, err})
         else
             if action == 'I' then
-                _py.ws_send('T', task_id, _py.serialize{fn(_py.safe_unpack(params))}, 0)
+                _py.ws_send('T', task_id, _py.serialize{fn(_py.safe_unpack(params))})
             else
                 _py.tasks[task_id] = coroutine.create(fn)
-                _py.ycounts[task_id] = 0
                 _py.coparams[task_id] = params
             end
         end
@@ -294,9 +328,8 @@ function _py.resume_coros(event, p1, p2, p3, p4, p5)
                     _py.tasks[task_id],
                     event, p1, p2, p3, p4, p5)}
             end
-            _py.ycounts[task_id] = _py.ycounts[task_id] + 1
             if coroutine.status(_py.tasks[task_id]) == 'dead' then
-                _py.ws_send('T', task_id, _py.serialize(r), _py.ycounts[task_id])
+                _py.ws_send('T', task_id, _py.serialize(r))
                 del_tasks[task_id] = true
             else
                 if r[1] == true then

@@ -112,6 +112,10 @@ class ComputerCraftFinder(MetaPathFinder):
             return ModuleSpec(fullname, ComputerCraftLoader, is_package=True)
         if fullname.startswith('cc.'):
             return ModuleSpec(fullname, ComputerCraftLoader, is_package=False)
+        if fullname == 'oc':
+            return ModuleSpec(fullname, OpenComputersLoader, is_package=True)
+        if fullname.startswith('oc.'):
+            return ModuleSpec(fullname, OpenComputersLoader, is_package=False)
 
 
 class ComputerCraftLoader(Loader):
@@ -122,6 +126,24 @@ class ComputerCraftLoader(Loader):
         if len(sn) == 1:
             sn.append('_pkg')
         rawmod = import_module('.' + sn[1], 'computercraft.subapis')
+        mod = ModuleType(spec.name)
+        for k in rawmod.__all__:
+            setattr(mod, k, getattr(rawmod, k))
+        return mod
+
+    @staticmethod
+    def exec_module(module):
+        pass
+
+
+class OpenComputersLoader(Loader):
+    @staticmethod
+    def create_module(spec):
+        sn = spec.name.split('.', 1)
+        assert sn[0] == 'oc'
+        if len(sn) == 1:
+            sn.append('_pkg')
+        rawmod = import_module('.' + sn[1], 'computercraft.oc')
         mod = ModuleType(spec.name)
         for k in rawmod.__all__:
             setattr(mod, k, getattr(rawmod, k))

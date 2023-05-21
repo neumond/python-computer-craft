@@ -127,6 +127,15 @@ class ResultProc:
                 assert isinstance(item, int)
         return x
 
+    def take_int_or_unicode(self):
+        x = self.take()
+        if isinstance(x, bytes):
+            x = x.decode('utf-8')
+        else:
+            assert isinstance(x, int)
+        assert not isinstance(x, bool)
+        return x
+
 
 class TableProc(ResultProc):
     def __init__(self, result, keys):
