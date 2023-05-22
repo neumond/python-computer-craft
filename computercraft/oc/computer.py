@@ -1,4 +1,4 @@
-# from typing import Optional, Union
+from typing import Optional, Union
 
 # from .. import ser
 from ..sess import eval_lua
@@ -56,11 +56,11 @@ def getBootAddress() -> str:
     return eval_lua(b'R:computer.getBootAddress').take_unicode()
 
 
-def setBootAddress(address: str | None = None) -> None:
+def setBootAddress(address: Optional[str] = None) -> None:
     return eval_lua(b'R:computer.setBootAddress', address).take_none()
 
 
-def runlevel() -> str | int:
+def runlevel() -> Union[str, int]:
     return eval_lua(b'R:computer.runlevel').take_int_or_unicode()
 
 
