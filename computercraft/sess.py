@@ -87,7 +87,10 @@ class StdFileProxy:
         if _is_global_greenlet():
             return self._native.write(s)
         else:
-            s = ser.dirty_encode(s)
+            if get_current_session()._oc:
+                s = ser.u_dirty_encode(s)
+            else:
+                s = ser.dirty_encode(s)
             if self._err:
                 return eval_lua('io.stderr:write(...)', s).take_none()
             else:
@@ -330,9 +333,10 @@ class CCEventRouter:
 
 
 class CCSession:
-    def __init__(self, sender):
+    def __init__(self, sender, oc=False):
         self._tid_allocator = map(base36, count(start=1))
         self._sender = sender
+        self._oc = oc
         self._greenlets = {}
         self._server_greenlet = get_current_greenlet()
         self._program_greenlet = None

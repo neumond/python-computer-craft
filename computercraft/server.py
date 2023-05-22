@@ -21,7 +21,7 @@ async def _bin_messages(ws):
         yield msg.data
 
 
-def protocol(send, sess_cls=sess.CCSession):
+def protocol(send, sess_cls=sess.CCSession, oc=False):
     # handle first frame
     msg = yield
     msg = ser.dcmditer(msg)
@@ -46,7 +46,7 @@ def protocol(send, sess_cls=sess.CCSession):
         code = next(msg)
     except StopIteration:
         pass
-    sess = sess_cls(send)
+    sess = sess_cls(send, oc=oc)
     if code is not None:
         sess.run_program(args, path, code)
     else:
@@ -72,7 +72,7 @@ class CCApplication(web.Application):
         await ws.prepare(request)
 
         squeue = []
-        pgen = self['protocol_factory'](squeue.append)
+        pgen = self['protocol_factory'](squeue.append, oc=False)
         next(pgen)
         mustquit = False
         async for msg in _bin_messages(ws):
@@ -98,7 +98,7 @@ class CCApplication(web.Application):
         def send(m):
             squeue.append(m)
 
-        pgen = self['protocol_factory'](squeue.append)
+        pgen = self['protocol_factory'](squeue.append, oc=True)
         next(pgen)
         mustquit = False
         while True:
@@ -178,7 +178,7 @@ def main():
 
     async def capture(app):
         with open(args.capture, 'wb') as f:
-            def protocol_factory(send, sess_cls=sess.CCSession):
+            def protocol_factory(send, sess_cls=sess.CCSession, oc=False):
                 def write_frame(t, m):
                     ln = str(len(m)).encode('ascii')
                     f.write(t + ln + b':' + m + b'\n')
@@ -187,7 +187,7 @@ def main():
                     write_frame(b'S', m)
                     return send(m)
 
-                p = protocol(send_wrap, sess_cls=sess_cls)
+                p = protocol(send_wrap, sess_cls=sess_cls, oc=oc)
 
                 def pgen():
                     next(p)

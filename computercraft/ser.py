@@ -28,6 +28,10 @@ def dirty_encode(s: str) -> bytes:
     return s.encode(_ENC, errors='replace')
 
 
+def u_dirty_encode(s: str) -> bytes:
+    return s.encode('utf-8', errors='replace')
+
+
 def decode(b):
     return b.decode(_ENC)
 

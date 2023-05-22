@@ -1,0 +1,25 @@
+R157:0[4]{:[1]<13>helloworld.py:[2]<2>42:[3]<3>abc}<19>/home/helloworld.py<84>print(args)
+for _ in range(2):
+  print("Hello world!")
+print("Привет мир!")
+S65:T<1>1<13>io.write(...){:[1]<33>[b'helloworld.py', b'42', b'abc']}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<13>io.write(...){:[1]<12>Hello world!}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<13>io.write(...){:[1]<12>Hello world!}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S52:T<1>1<13>io.write(...){:[1]<20>Привет мир!}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN
