@@ -1,8 +1,8 @@
 `py`
 
 ```py
->>> 'a' * 5
-'aaaaa'
+>>> 'wщ' * 3
+'wщwщwщ'
 >>> (ctrl+C)
 interrupted
 ```
