@@ -74,12 +74,12 @@ class StdFileProxy:
                 raise RuntimeError(
                     "Computercraft environment doesn't support "
                     "stdin readline method with parameter")
-            r = eval_lua(b'M:io.read')
+            r = eval_lua(b'G:io:M:read')
             if r.peek() is None:
                 return ''  # press ctrl+D in OC
             if r.peek() is False:
                 r.take()   # press ctrl+C in OC
-                eval_lua('io.stderr:write(...)', r.take_bytes(), immediate=True)
+                eval_lua(b'io.stderr:write(...)', r.take_bytes(), immediate=True)
                 return ''
             if get_current_session()._oc:
                 return r.take_unicode() + '\n'

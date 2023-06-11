@@ -2,7 +2,7 @@ local _py = {
     cc_url = '__cc_url__',
     oc_host = '__oc_host__',
     oc_port = __oc_port__,
-    proto_version = 4,
+    proto_version = 5,
     event_sub = {},
     tasks = {},
     filters = {},
@@ -61,29 +61,36 @@ function _py.loadmethod(code)
     -- code  (eval without cache)
     if _py.mcache[code] ~= nil then return _py.mcache[code] end
 
-    local _, _, f, mcode = string.find(code, '^([RME]):(.*)$')
-    if f == nil then return _py.loadstring(code) end
+    local mod, modname
+    while true do
+        local _, _, rmod, mcode = string.find(code, '^R:(%a%w*):(.*)$')
+        if rmod == nil then break end
+        if _py.modules[rmod] == nil then
+            local r, v = pcall(require, rmod)
+            if not r then return nil, 'module not found' end
+            _py.modules[rmod] = v
+        end
+        mod, code = _py.modules[rmod], mcode
+    end
+    do
+        local _, _, rmod, mcode = string.find(code, '^G:(%a%w*):(.*)$')
+        if rmod ~= nil then
+            mod, code = _py.genv[rmod], mcode
+            if mod == nil then return nil, 'module not found' end
+        end
+    end
 
     local fn
-    if f == 'R' or f == 'M' then
-        local _, _, md, mt = string.find(mcode, '^(%a%w*)%.(%a%w*)$')
-        if md == nil then return nil, 'malformed method name' end
-        if f == 'R' then
-            if _py.modules[md] == nil then
-                local r, v = pcall(require, md)
-                if not r then return nil, 'module not found' end
-                _py.modules[md] = v
-            end
-            fn = _py.modules[md][mt]
+    do
+        local _, _, meth = string.find(code, '^M:(%a%w*)$')
+        if meth ~= nil then
+            fn = mod[meth]
+            if fn == nil then return nil, 'method not found' end
         else
-            if _py.genv[md] == nil then return nil, 'module not found' end
-            fn = _py.genv[md][mt]
+            local err
+            fn, err = _py.loadstring(code)
+            if not fn then return nil, err end
         end
-        if fn == nil then return nil, 'method not found' end
-    elseif f == 'E' then
-        local err
-        fn, err = _py.loadstring(mcode)
-        if not fn then return nil, err end
     end
     _py.mcache[code] = fn
     return fn

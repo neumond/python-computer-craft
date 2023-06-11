@@ -10,7 +10,7 @@ from .rproc import lua_table_to_list
 
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
-PROTO_VERSION = 4
+PROTO_VERSION = 5
 PROTO_ERROR = b'C' + ser.serialize(b'protocol error')
 
 
@@ -212,3 +212,26 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# TODO: move greenlets into separate thread
+# to prevent hanging
+
+"""
+import ctypes
+import time
+import threading
+
+def thmain():
+    # hangs
+    while True:
+        pass
+
+th = threading.Thread(target=thmain)
+th.start()
+time.sleep(5)
+ctypes.pythonapi.PyThreadState_SetAsyncExc(
+    ctypes.c_long(th.ident),
+    ctypes.py_object(TimeoutError))
+time.sleep(3)
+"""

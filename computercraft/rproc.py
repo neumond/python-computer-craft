@@ -87,6 +87,11 @@ class ResultProc:
             self.forward()
             raise LuaException(self.take_string())
 
+    def u_check_nil_error(self):
+        if self.peek() is None:
+            self.forward()
+            raise LuaException(self.take_string())
+
     def take_option_int(self):
         if self.peek() is None:
             return self.take_none()

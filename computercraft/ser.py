@@ -1,4 +1,5 @@
 from typing import Any, Tuple
+from uuid import UUID
 
 from . import lua
 
@@ -16,6 +17,16 @@ assert [bytes([i]) for i in range(256)] == [chr(i).encode(_ENC) for i in range(2
 
 def encode(s: str) -> bytes:
     return s.encode(_ENC)
+
+
+def u_encode(s: str) -> bytes:
+    return s.encode('utf-8')
+
+
+def u_encode_if_str(s: str) -> bytes:
+    if isinstance(s, str):
+        return s.encode('utf-8')
+    return s
 
 
 def nil_encode(s):
@@ -36,6 +47,10 @@ def decode(b):
     return b.decode(_ENC)
 
 
+def u_decode(b):
+    return b.decode('utf-8')
+
+
 def serialize(v: Any) -> bytes:
     if v is None:
         return b'N'
@@ -44,9 +59,11 @@ def serialize(v: Any) -> bytes:
     elif v is True:
         return b'T'
     elif isinstance(v, (int, float)):
-        return '[{}]'.format(v).encode(_ENC)
+        return '[{}]'.format(v).encode('ascii')
     elif isinstance(v, bytes):
-        return '<{}>'.format(len(v)).encode(_ENC) + v
+        return '<{}>'.format(len(v)).encode('ascii') + v
+    elif isinstance(v, UUID):
+        return serialize(str(v).encode('ascii'))
     elif isinstance(v, str):
         raise ValueError('Strings are not allowed for serialization')
     elif isinstance(v, (list, tuple)):
@@ -60,8 +77,8 @@ def serialize(v: Any) -> bytes:
             items.append(b':' + serialize(k) + serialize(x))
         return b'{' + b''.join(items) + b'}'
     elif isinstance(v, lua.LuaExpr):
-        e = 'return ' + v.get_expr_code()
-        return 'E{}>'.format(len(e)).encode(_ENC) + e.encode(_ENC)
+        code = v.get_expr_code()
+        return 'E{}>'.format(len(code)).encode('ascii') + code
     else:
         raise ValueError('Value can\'t be serialized: {}'.format(repr(v)))
 
