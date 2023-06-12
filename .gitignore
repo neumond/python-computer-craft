@@ -6,3 +6,4 @@ __pypackages__/
 /*.egg-info/
 /dist/
 /todo.txt
+/copy_programs.fish

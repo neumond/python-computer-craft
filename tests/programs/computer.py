@@ -1,6 +1,3 @@
-`py oc_computer.py`
-
-```py
 from oc import computer
 
 print(computer.address())
@@ -12,4 +9,3 @@ print(computer.maxEnergy())
 print(computer.uptime())
 print(computer.getBootAddress())
 print(computer.runlevel())
-```
