@@ -4,6 +4,8 @@ from ._base import BaseComponent
 
 
 class GPUComponent(BaseComponent):
+    TYPE = 'gpu'
+
     def maxDepth(self) -> int:
         return self._call(b'maxDepth').take_int()
 

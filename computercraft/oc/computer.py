@@ -1,6 +1,7 @@
 from typing import Optional, Union
+from uuid import UUID
 
-# from .. import ser
+from .. import ser
 from ..sess import eval_lua
 
 
@@ -19,14 +20,12 @@ __all__ = (
 )
 
 
-def address() -> str:
-    # TODO: return UUID
-    return eval_lua(b'R:computer:M:address').take_unicode()
+def address() -> UUID:
+    return eval_lua(b'R:computer:M:address').take_uuid()
 
 
-def tmpAddress() -> str:
-    # TODO: return UUID
-    return eval_lua(b'R:computer:M:tmpAddress').take_unicode()
+def tmpAddress() -> UUID:
+    return eval_lua(b'R:computer:M:tmpAddress').take_uuid()
 
 
 def freeMemory() -> int:
@@ -54,14 +53,15 @@ def shutdown(reboot: bool = False) -> None:
     return eval_lua(b'R:computer:M:shutdown', reboot).take_none()
 
 
-def getBootAddress() -> str:
-    # TODO: return UUID
-    return eval_lua(b'R:computer:M:getBootAddress').take_unicode()
+def getBootAddress() -> UUID:
+    return eval_lua(b'R:computer:M:getBootAddress').take_uuid()
 
 
-def setBootAddress(address: Optional[str] = None) -> None:
-    # TODO: accept UUID
-    return eval_lua(b'R:computer:M:setBootAddress', address).take_none()
+def setBootAddress(address: Optional[UUID] = None) -> None:
+    return eval_lua(
+        b'R:computer:M:setBootAddress',
+        ser.u_encode_uuid(address),
+    ).take_none()
 
 
 def runlevel() -> Union[str, int]:

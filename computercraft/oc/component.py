@@ -1,7 +1,7 @@
 from typing import Dict, Type, TypeVar
 from uuid import UUID
 
-from ..ser import u_decode, u_encode, u_encode_if_str
+from ..ser import u_decode, u_encode, u_encode_uuid
 from ..sess import eval_lua
 from ..oc_components import register_std_components
 
@@ -30,17 +30,18 @@ def isAvailable(componentType: str) -> bool:
     ).take_bool()
 
 
-def slot(address: UUID | str) -> int:
-    return eval_lua(
+def slot(address: UUID) -> int:
+    r = eval_lua(
         b'R:component:M:slot',
-        u_encode_if_str(address),
-    ).take_int()
+        u_encode_uuid(address))
+    r.u_check_nil_error()
+    return r.take_int()
 
 
-def type(address: UUID | str) -> str:
+def type(address: UUID) -> str:
     r = eval_lua(
         b'R:component:M:type',
-        u_encode_if_str(address))
+        u_encode_uuid(address))
     r.u_check_nil_error()
     return r.take_unicode()
 
@@ -60,10 +61,10 @@ def proxy(address: UUID) -> C:
 
 
 def getPrimaryAddress(componentType: str) -> UUID:
-    return UUID(eval_lua(
-        b'R:component:return component.getPrimary(...).address',
+    return eval_lua(
+        b'R:component:return _m.component.getPrimary(...).address',
         u_encode(componentType),
-    ).take_bytes().decode('ascii'))
+    ).take_uuid()
 
 
 def getPrimary(componentType: str) -> C:
@@ -74,7 +75,7 @@ def setPrimary(componentType: str, address: UUID):
     eval_lua(
         b'R:component:M:setPrimary',
         u_encode(componentType),
-        u_encode_if_str(address))
+        u_encode_uuid(address))
 
 
 def registerType(componentType: str, pcls: Type[C]):

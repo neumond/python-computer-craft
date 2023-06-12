@@ -22,6 +22,7 @@ else
 end
 -- TODO: rename temp to _pytemp
 _py.genv.temp = {}
+_py.genv._m = _py.modules
 
 if type(loadstring) == 'function' then
     -- 5.1: prefer loadstring

@@ -23,9 +23,9 @@ def u_encode(s: str) -> bytes:
     return s.encode('utf-8')
 
 
-def u_encode_if_str(s: str) -> bytes:
+def u_encode_uuid(s: str | UUID) -> bytes:
     if isinstance(s, str):
-        return s.encode('utf-8')
+        return u_encode(s)
     return s
 
 

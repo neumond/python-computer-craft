@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from . import ser
 from .errors import LuaException
 
@@ -66,6 +68,9 @@ class ResultProc:
 
     def take_unicode(self):
         return self.take_bytes().decode('utf-8')
+
+    def take_uuid(self):
+        return UUID(self.take_bytes().decode('ascii'))
 
     def take_dict(self, keys=None):
         x = self.take()
