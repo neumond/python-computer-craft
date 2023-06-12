@@ -1,4 +1,4 @@
-from typing import Any, Tuple
+from typing import Any, Tuple, Union
 from uuid import UUID
 
 from . import lua
@@ -23,7 +23,7 @@ def u_encode(s: str) -> bytes:
     return s.encode('utf-8')
 
 
-def u_encode_uuid(s: str | UUID) -> bytes:
+def u_encode_uuid(s: Union[str, UUID]) -> bytes:
     if isinstance(s, str):
         return u_encode(s)
     return s

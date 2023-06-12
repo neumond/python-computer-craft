@@ -20,16 +20,14 @@ assert component.isAvailable('gpu') is True
 assert component.isAvailable('nonexistent') is False
 cs = component.list()
 
-while True:
-    inv_addr = uuid.uuid4()
-    if inv_addr not in cs:
-        break
+inv_addr = uuid.UUID(int=0)
+assert inv_addr not in cs
 
 for addr, ctype in cs.items():
     assert component.type(addr) == ctype
     slot = component.slot(addr)
     assert isinstance(slot, int)
-    # print('{} {}'.format(slot, ctype))
+    print('{} {}'.format(slot, ctype))
 
 with assert_raises('no such component'):
     component.type(inv_addr)
