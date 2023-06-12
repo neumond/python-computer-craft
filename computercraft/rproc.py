@@ -52,6 +52,9 @@ class ResultProc:
         assert not isinstance(x, bool)
         return x
 
+    def take_rounded_int(self):
+        return round(self.take_number())
+
     def take_number(self):
         x = self.take()
         assert isinstance(x, (int, float))
@@ -95,7 +98,7 @@ class ResultProc:
     def u_check_nil_error(self):
         if self.peek() is None:
             self.forward()
-            raise LuaException(self.take_string())
+            raise LuaException(self.take_unicode())
 
     def take_option_int(self):
         if self.peek() is None:

@@ -1,0 +1,122 @@
+R983:0[5]{:[1]<7>term.py}<13>/home/term.py<941>from oc import term
+
+
+assert term.isAvailable() is True
+term.clear()
+term.setCursor(1, 1)
+assert term.getCursor() == (1, 1)
+
+blink = term.getCursorBlink()
+term.setCursorBlink(False)
+term.setCursorBlink(True)
+term.setCursorBlink(blink)
+assert term.getCursorBlink() == blink
+print('Screen', term.screen())
+print('Keyboard', term.keyboard())
+
+width, height, xoff, yoff, relx, rely = term.getViewport()
+print('Width={} Height={}'.format(width, height))
+print('Offset X={} Y={}'.format(xoff, yoff))
+print('Relative X={} Y={}'.format(relx, rely))
+
+term.write('Write text no wrap')
+term.clearLine()
+term.write('Write text with wrap. ' * 7 + '\n', True)
+
+term.write('Input "qwerty" twice:\n')
+assert term.read(dobreak=False) == 'qwerty\n'
+term.clearLine()
+assert term.read(pwchar='*') == 'qwerty\n'
+term.write('\nInput "привет":\n')
+assert term.read() == 'привет\n'
+term.write('Press ctrl+D in this input:\n')
+assert term.read() is None
+
+S31:T<1>1<20>R:term:M:isAvailable{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S25:T<1>1<14>R:term:M:clear{}
+R15:T<1>1<7>{:[1]T}
+S43:T<1>1<18>R:term:M:setCursor{:[1][1]:[2][1]}
+R15:T<1>1<7>{:[1]T}
+S29:T<1>1<18>R:term:M:getCursor{}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][1]}
+S34:T<1>1<23>R:term:M:getCursorBlink{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>R:term:M:setCursorBlink{:[1]F}
+R15:T<1>1<7>{:[1]T}
+S39:T<1>1<23>R:term:M:setCursorBlink{:[1]T}
+R15:T<1>1<7>{:[1]T}
+S39:T<1>1<23>R:term:M:setCursorBlink{:[1]T}
+R15:T<1>1<7>{:[1]T}
+S34:T<1>1<23>R:term:M:getCursorBlink{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S26:T<1>1<15>R:term:M:screen{}
+R60:T<1>1<51>{:[1]T:[2]<36>28125799-6b35-40a7-8b37-47e526e24edd}
+S37:T<1>1<13>io.write(...){:[1]<6>Screen}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<13>io.write(...){:[1]<36>28125799-6b35-40a7-8b37-47e526e24edd}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S28:T<1>1<17>R:term:M:keyboard{}
+R60:T<1>1<51>{:[1]T:[2]<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9}
+S39:T<1>1<13>io.write(...){:[1]<8>Keyboard}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<13>io.write(...){:[1]<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S31:T<1>1<20>R:term:M:getViewport{}
+R60:T<1>1<51>{:[1]T:[2][50]:[3][16]:[4][0]:[5][0]:[6][1]:[7][3]}
+S50:T<1>1<13>io.write(...){:[1]<18>Width=50 Height=16}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S46:T<1>1<13>io.write(...){:[1]<14>Offset X=0 Y=0}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S48:T<1>1<13>io.write(...){:[1]<16>Relative X=1 Y=3}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S56:T<1>1<14>R:term:M:write{:[1]<18>Write text no wrap:[2]F}
+R15:T<1>1<7>{:[1]T}
+S29:T<1>1<18>R:term:M:clearLine{}
+R15:T<1>1<7>{:[1]T}
+S194:T<1>1<14>R:term:M:write{:[1]<155>Write text with wrap. Write text with wrap. Write text with wrap. Write text with wrap. Write text with wrap. Write text with wrap. Write text with wrap. 
+:[2]T}
+R15:T<1>1<7>{:[1]T}
+S60:T<1>1<14>R:term:M:write{:[1]<22>Input "qwerty" twice:
+:[2]F}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<13>R:term:M:read{:[1]N:[2]F:[3]N:[4]N}
+R30:T<1>1<21>{:[1]T:[2]<7>qwerty
+}
+S29:T<1>1<18>R:term:M:clearLine{}
+R15:T<1>1<7>{:[1]T}
+S47:T<1>1<13>R:term:M:read{:[1]N:[2]T:[3]N:[4]<1>*}
+R30:T<1>1<21>{:[1]T:[2]<7>qwerty
+}
+S61:T<1>1<14>R:term:M:write{:[1]<23>
+Input "привет":
+:[2]F}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<13>R:term:M:read{:[1]N:[2]T:[3]N:[4]N}
+R37:T<1>1<28>{:[1]T:[2]<13>привет
+}
+S66:T<1>1<14>R:term:M:write{:[1]<28>Press ctrl+D in this input:
+:[2]F}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<13>R:term:M:read{:[1]N:[2]T:[3]N:[4]N}
+R15:T<1>1<7>{:[1]T}
+S2:CN

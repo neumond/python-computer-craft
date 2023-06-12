@@ -19,13 +19,9 @@ def encode(s: str) -> bytes:
     return s.encode(_ENC)
 
 
-def u_encode(s: str) -> bytes:
-    return s.encode('utf-8')
-
-
-def u_encode_uuid(s: Union[str, UUID]) -> bytes:
+def u_encode(s: Union[str, UUID, None]) -> Union[bytes, UUID, None]:
     if isinstance(s, str):
-        return u_encode(s)
+        return s.encode('utf-8')
     return s
 
 

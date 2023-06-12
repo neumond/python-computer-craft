@@ -1,7 +1,7 @@
 from typing import Dict, Type, TypeVar
 from uuid import UUID
 
-from ..ser import u_decode, u_encode, u_encode_uuid
+from ..ser import u_decode, u_encode
 from ..sess import eval_lua
 from ..oc_components import register_std_components
 
@@ -31,17 +31,13 @@ def isAvailable(componentType: str) -> bool:
 
 
 def slot(address: UUID) -> int:
-    r = eval_lua(
-        b'R:component:M:slot',
-        u_encode_uuid(address))
+    r = eval_lua(b'R:component:M:slot', u_encode(address))
     r.u_check_nil_error()
     return r.take_int()
 
 
 def type(address: UUID) -> str:
-    r = eval_lua(
-        b'R:component:M:type',
-        u_encode_uuid(address))
+    r = eval_lua(b'R:component:M:type', u_encode(address))
     r.u_check_nil_error()
     return r.take_unicode()
 
@@ -75,7 +71,7 @@ def setPrimary(componentType: str, address: UUID):
     eval_lua(
         b'R:component:M:setPrimary',
         u_encode(componentType),
-        u_encode_uuid(address))
+        u_encode(address))
 
 
 def registerType(componentType: str, pcls: Type[C]):

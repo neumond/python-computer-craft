@@ -60,7 +60,7 @@ def getBootAddress() -> UUID:
 def setBootAddress(address: Optional[UUID] = None) -> None:
     return eval_lua(
         b'R:computer:M:setBootAddress',
-        ser.u_encode_uuid(address),
+        ser.u_encode(address),
     ).take_none()
 
 
