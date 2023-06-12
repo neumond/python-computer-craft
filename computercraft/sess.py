@@ -81,23 +81,17 @@ class StdFileProxy:
                 r.take()   # press ctrl+C in OC
                 eval_lua(b'io.stderr:write(...)', r.take_bytes(), immediate=True)
                 return ''
-            if get_current_session()._oc:
-                return r.take_unicode() + '\n'
-            else:
-                return r.take_string() + '\n'
+            return r.take_string() + '\n'
 
     def write(self, s):
         if _is_global_greenlet():
             return self._native.write(s)
         else:
-            if get_current_session()._oc:
-                s = ser.u_dirty_encode(s)
-            else:
-                s = ser.dirty_encode(s)
+            s = ser.dirty_encode(s, get_current_session()._enc)
             if self._err:
-                return eval_lua('io.stderr:write(...)', s).take_none()
+                return eval_lua(b'io.stderr:write(...)', s).take_none()
             else:
-                return eval_lua('io.write(...)', s).take_none()
+                return eval_lua(b'io.write(...)', s).take_none()
 
     def fileno(self):
         if _is_global_greenlet():
@@ -181,15 +175,15 @@ def patch_std_files():
 
 
 def eval_lua(lua_code, *params, immediate=False):
-    if isinstance(lua_code, str):
-        lua_code = ser.encode(lua_code)
+    sess = get_current_session()
+    assert isinstance(lua_code, bytes)
     request = (
         (b'I' if immediate else b'T')
-        + ser.serialize(lua_code)
-        + ser.serialize(params)
+        + ser.serialize(lua_code, sess._enc)
+        + ser.serialize(params, sess._enc)
     )
-    result = get_current_session()._server_greenlet.switch(request)
-    rp = rproc.ResultProc(ser.deserialize(result))
+    result = sess._server_greenlet.switch(request)
+    rp = rproc.ResultProc(ser.deserialize(result), sess._enc)
     if not immediate:
         rp.check_bool_error()
     return rp
@@ -250,8 +244,8 @@ class CCGreenlet:
             if error is True:
                 error = None
             else:
-                error = ser.dirty_encode(error)
-            self._sess._sender(b'C' + ser.serialize(error))
+                error = ser.dirty_encode(error, self._sess._enc)
+            self._sess._sender(b'C' + ser.serialize(error, self._sess._enc))
         if self._parent is not None:
             self._parent._children.discard(self._task_id)
 
@@ -276,7 +270,8 @@ class CCGreenlet:
             x = self
             while x._g.dead:
                 x = x._parent
-            self._sess._sender(task[0:1] + ser.serialize(x._task_id) + task[1:])
+            self._sess._sender(
+                task[0:1] + ser.serialize(x._task_id, 'ascii') + task[1:])
 
         if self._g.dead:
             if self._parent is None:
@@ -340,12 +335,13 @@ class CCSession:
         self._tid_allocator = map(base36, count(start=1))
         self._sender = sender
         self._oc = oc
+        self._enc = 'utf-8' if oc else 'latin1'
         self._greenlets = {}
         self._server_greenlet = get_current_greenlet()
         self._program_greenlet = None
         self._evr = CCEventRouter(
-            lambda event: self._sender(b'S' + ser.serialize(event)),
-            lambda event: self._sender(b'U' + ser.serialize(event)),
+            lambda event: self._sender(b'S' + ser.serialize(event, self._enc)),
+            lambda event: self._sender(b'U' + ser.serialize(event, self._enc)),
             lambda task_id: self._greenlets[task_id].defer_switch('event'),
         )
 
@@ -373,7 +369,8 @@ class CCSession:
         for task_id in task_ids:
             all_tids.extend(collect(task_id))
 
-        self._sender(b'D' + b''.join(ser.serialize(tid) for tid in all_tids))
+        self._sender(b'D' + b''.join(
+            ser.serialize(tid, self._enc) for tid in all_tids))
 
     def _run_sandboxed_greenlet(self, fn):
         self._program_greenlet = CCGreenlet(fn, sess=self)

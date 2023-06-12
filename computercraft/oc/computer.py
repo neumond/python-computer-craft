@@ -1,7 +1,6 @@
 from typing import Optional, Union
 from uuid import UUID
 
-from .. import ser
 from ..sess import eval_lua
 
 
@@ -58,14 +57,14 @@ def getBootAddress() -> UUID:
 
 
 def setBootAddress(address: Optional[UUID] = None) -> None:
-    return eval_lua(
-        b'R:computer:M:setBootAddress',
-        ser.u_encode(address),
-    ).take_none()
+    return eval_lua(b'R:computer:M:setBootAddress', address).take_none()
 
 
 def runlevel() -> Union[str, int]:
-    return eval_lua(b'R:computer:M:runlevel').take_int_or_unicode()
+    r = eval_lua(b'R:computer:M:runlevel')
+    if r.peek_type() is bytes:
+        return r.take_string()
+    return r.take_int()
 
 
 # TODO:

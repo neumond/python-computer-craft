@@ -1,7 +1,6 @@
 from typing import Tuple, Optional
 from uuid import UUID
 
-from .. import ser
 from ..sess import eval_lua
 
 
@@ -27,12 +26,12 @@ def isAvailable() -> bool:
 
 def getViewport() -> Tuple[int, int, int, int, int, int]:
     r = eval_lua(b'R:term:M:getViewport')
-    return tuple(r.take_rounded_int() for _ in range(6))
+    return tuple(r.take_int() for _ in range(6))
 
 
 def getCursor() -> Tuple[int, int]:
     r = eval_lua(b'R:term:M:getCursor')
-    return tuple(r.take_rounded_int() for _ in range(2))
+    return tuple(r.take_int() for _ in range(2))
 
 
 def setCursor(col: int, row: int) -> None:
@@ -61,19 +60,15 @@ def read(dobreak: bool = True, pwchar: Optional[str] = None) -> [str, None, Fals
         None,  # TODO: history: table
         dobreak,
         None,  # TODO: hint:table or function
-        ser.u_encode(pwchar))
+        pwchar)
     x = r.peek()
     if x is None or x is False:
         return x
-    return r.take_unicode()
+    return r.take_string()
 
 
 def write(value: str, wrap: bool = False) -> None:
-    return eval_lua(
-        b'R:term:M:write',
-        ser.u_encode(value),
-        wrap,
-    ).take_none()
+    return eval_lua(b'R:term:M:write', value, wrap).take_none()
 
 
 def screen() -> UUID:

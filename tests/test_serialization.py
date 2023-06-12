@@ -27,11 +27,11 @@ from computercraft.ser import serialize, deserialize
     {b'a': 1, b'b': None, b'c': {}, b'd': {b'x': 8}},
 ])
 def test_roundtrip(v):
-    assert v == deserialize(serialize(v))
+    assert v == deserialize(serialize(v, 'ascii'))
 
 
 def test_nan():
-    assert isnan(deserialize(serialize(nan)))
+    assert isnan(deserialize(serialize(nan, 'ascii')))
 
 
 @pytest.mark.parametrize('a,b', [
@@ -41,4 +41,4 @@ def test_nan():
     ([b'a', b'b', b'c'], {1: b'a', 2: b'b', 3: b'c'}),
 ])
 def test_oneway(a, b):
-    assert b == deserialize(serialize(a))
+    assert b == deserialize(serialize(a, 'ascii'))

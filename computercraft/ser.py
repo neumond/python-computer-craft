@@ -31,12 +31,8 @@ def nil_encode(s):
     return encode(s)
 
 
-def dirty_encode(s: str) -> bytes:
-    return s.encode(_ENC, errors='replace')
-
-
-def u_dirty_encode(s: str) -> bytes:
-    return s.encode('utf-8', errors='replace')
+def dirty_encode(s: str, enc: str) -> bytes:
+    return s.encode(enc, errors='replace')
 
 
 def decode(b):
@@ -47,7 +43,7 @@ def u_decode(b):
     return b.decode('utf-8')
 
 
-def serialize(v: Any) -> bytes:
+def serialize(v: Any, encoding: str) -> bytes:
     if v is None:
         return b'N'
     elif v is False:
@@ -59,18 +55,18 @@ def serialize(v: Any) -> bytes:
     elif isinstance(v, bytes):
         return '<{}>'.format(len(v)).encode('ascii') + v
     elif isinstance(v, UUID):
-        return serialize(str(v).encode('ascii'))
+        return serialize(str(v).encode('ascii'), encoding)
     elif isinstance(v, str):
-        raise ValueError('Strings are not allowed for serialization')
+        return serialize(v.encode(encoding), encoding)
     elif isinstance(v, (list, tuple)):
         items = []
         for k, x in enumerate(v, start=1):
-            items.append(b':' + serialize(k) + serialize(x))
+            items.append(b':' + serialize(k, encoding) + serialize(x, encoding))
         return b'{' + b''.join(items) + b'}'
     elif isinstance(v, dict):
         items = []
         for k, x in v.items():
-            items.append(b':' + serialize(k) + serialize(x))
+            items.append(b':' + serialize(k, encoding) + serialize(x, encoding))
         return b'{' + b''.join(items) + b'}'
     elif isinstance(v, lua.LuaExpr):
         code = v.get_expr_code()

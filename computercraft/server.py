@@ -11,7 +11,7 @@ from .rproc import lua_table_to_list
 THIS_DIR = dirname(abspath(__file__))
 LUA_FILE = join(THIS_DIR, 'back.lua')
 PROTO_VERSION = 5
-PROTO_ERROR = b'C' + ser.serialize(b'protocol error')
+PROTO_ERROR = b'C' + ser.serialize(b'protocol error', 'ascii')
 
 
 async def _bin_messages(ws):
@@ -33,10 +33,10 @@ def protocol(send, sess_cls=sess.CCSession, oc=False):
 
     version = next(msg)
     if version != PROTO_VERSION:
-        send(b'C' + ser.serialize(ser.encode(
+        send(b'C' + ser.serialize(
             'protocol version mismatch (expected {}, got {}), redownload py'.format(
                 PROTO_VERSION, version,
-            ))))
+            ), 'ascii'))
         return
 
     args = lua_table_to_list(next(msg))

@@ -28,3 +28,11 @@ interrupted
 # computer
 
 `py computer.py`
+
+# component
+
+`py component.py`
+
+# term
+
+`py term.py`

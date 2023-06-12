@@ -13,7 +13,7 @@ class GPUComponent(BaseComponent):
         return self._call(b'getDepth').take_int()
 
     def setDepth(self, bit: int) -> str:
-        return self._call(b'setDepth').take_unicode()
+        return self._call(b'setDepth').take_string()
 
     def maxResolution(self) -> Tuple[int, int]:
         return self._call(b'maxResolution').take_2d_int()

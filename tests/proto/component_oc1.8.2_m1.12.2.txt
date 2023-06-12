@@ -47,111 +47,12 @@ R21:T<1>1<12>{:[1]T:[2]T}
 S55:T<1>1<25>R:component:M:isAvailable{:[1]<11>nonexistent}
 R21:T<1>1<12>{:[1]T:[2]F}
 S29:T<1>1<18>R:component:M:list{}
-R1032:T<1>1<1021>{:[1]T:[2]{:<36>2f821d20-bc83-4ae3-95c1-a171439850ff<10>filesystem:<36>a2d51bff-a6a8-435f-89e5-cecb49259434<8>redstone:<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f<10>filesystem:<36>a5b1411e-60dc-4cfa-881c-c1e0550ab7bd<10>experience:<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9<8>keyboard:<36>021442c9-1bb5-4037-95fc-6cafc9733b7d<8>computer:<36>479f3d10-ca60-41d6-86b1-b8e472dc4d2b<5>robot:<36>28125799-6b35-40a7-8b37-47e526e24edd<6>screen:<36>aea7d223-6e47-4fd7-b567-081d6dec0777<10>filesystem:<36>248e7560-b8dc-4516-bba9-0de3b5b043bf<8>geolyzer:<36>9c0f1134-d55d-4793-b8b2-d97655b80209<8>crafting:<36>79a9b8eb-7189-4eb7-a5d6-587c597e22d7<20>inventory_controller:<36>2cd01791-1463-4fa8-a3c1-4277dbd0acfd<8>internet:<36>99e51b75-be78-437a-ad1c-34109fc2c1ce<3>gpu:<36>7c9b319c-6be4-47d7-8e8b-ea42149e9a67<6>eeprom:<36>9ad13475-5e59-4801-a461-03d8450b8dcb<10>filesystem:<36>7a1c769f-4f18-4f7e-9854-6b44b5898b8c<5>modem:<36>70985d49-ac20-4354-96d7-83fc467ac16c<7>trading:<36>8ba0d546-1274-471e-8177-3795b7456994<15>tank_controller}}
-S73:T<1>1<18>R:component:M:type{:[1]<36>2f821d20-bc83-4ae3-95c1-a171439850ff}
-R34:T<1>1<25>{:[1]T:[2]<10>filesystem}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>2f821d20-bc83-4ae3-95c1-a171439850ff}
-R24:T<1>1<15>{:[1]T:[2][-1]}
-S45:T<1>1<13>io.write(...){:[1]<13>-1 filesystem}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>a2d51bff-a6a8-435f-89e5-cecb49259434}
-R31:T<1>1<22>{:[1]T:[2]<8>redstone}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>a2d51bff-a6a8-435f-89e5-cecb49259434}
-R24:T<1>1<15>{:[1]T:[2][84]}
-S43:T<1>1<13>io.write(...){:[1]<11>84 redstone}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f}
-R34:T<1>1<25>{:[1]T:[2]<10>filesystem}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f}
-R24:T<1>1<15>{:[1]T:[2][92]}
-S45:T<1>1<13>io.write(...){:[1]<13>92 filesystem}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>a5b1411e-60dc-4cfa-881c-c1e0550ab7bd}
-R34:T<1>1<25>{:[1]T:[2]<10>experience}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>a5b1411e-60dc-4cfa-881c-c1e0550ab7bd}
-R24:T<1>1<15>{:[1]T:[2][82]}
-S45:T<1>1<13>io.write(...){:[1]<13>82 experience}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9}
-R31:T<1>1<22>{:[1]T:[2]<8>keyboard}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9}
-R24:T<1>1<15>{:[1]T:[2][69]}
-S43:T<1>1<13>io.write(...){:[1]<11>69 keyboard}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>021442c9-1bb5-4037-95fc-6cafc9733b7d}
-R31:T<1>1<22>{:[1]T:[2]<8>computer}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>021442c9-1bb5-4037-95fc-6cafc9733b7d}
-R24:T<1>1<15>{:[1]T:[2][-1]}
-S43:T<1>1<13>io.write(...){:[1]<11>-1 computer}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>479f3d10-ca60-41d6-86b1-b8e472dc4d2b}
-R28:T<1>1<19>{:[1]T:[2]<5>robot}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>479f3d10-ca60-41d6-86b1-b8e472dc4d2b}
-R24:T<1>1<15>{:[1]T:[2][-1]}
-S39:T<1>1<13>io.write(...){:[1]<8>-1 robot}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>28125799-6b35-40a7-8b37-47e526e24edd}
-R29:T<1>1<20>{:[1]T:[2]<6>screen}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>28125799-6b35-40a7-8b37-47e526e24edd}
-R24:T<1>1<15>{:[1]T:[2][68]}
-S40:T<1>1<13>io.write(...){:[1]<9>68 screen}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>aea7d223-6e47-4fd7-b567-081d6dec0777}
-R34:T<1>1<25>{:[1]T:[2]<10>filesystem}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>aea7d223-6e47-4fd7-b567-081d6dec0777}
-R24:T<1>1<15>{:[1]T:[2][91]}
-S45:T<1>1<13>io.write(...){:[1]<13>91 filesystem}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>248e7560-b8dc-4516-bba9-0de3b5b043bf}
-R31:T<1>1<22>{:[1]T:[2]<8>geolyzer}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>248e7560-b8dc-4516-bba9-0de3b5b043bf}
-R24:T<1>1<15>{:[1]T:[2][70]}
-S43:T<1>1<13>io.write(...){:[1]<11>70 geolyzer}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>9c0f1134-d55d-4793-b8b2-d97655b80209}
-R31:T<1>1<22>{:[1]T:[2]<8>crafting}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>9c0f1134-d55d-4793-b8b2-d97655b80209}
-R24:T<1>1<15>{:[1]T:[2][78]}
-S43:T<1>1<13>io.write(...){:[1]<11>78 crafting}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>79a9b8eb-7189-4eb7-a5d6-587c597e22d7}
-R44:T<1>1<35>{:[1]T:[2]<20>inventory_controller}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>79a9b8eb-7189-4eb7-a5d6-587c597e22d7}
-R24:T<1>1<15>{:[1]T:[2][75]}
-S55:T<1>1<13>io.write(...){:[1]<23>75 inventory_controller}
+R1032:T<1>1<1021>{:[1]T:[2]{:<36>99e51b75-be78-437a-ad1c-34109fc2c1ce<3>gpu:<36>2cd01791-1463-4fa8-a3c1-4277dbd0acfd<8>internet:<36>aea7d223-6e47-4fd7-b567-081d6dec0777<10>filesystem:<36>70985d49-ac20-4354-96d7-83fc467ac16c<7>trading:<36>a5b1411e-60dc-4cfa-881c-c1e0550ab7bd<10>experience:<36>248e7560-b8dc-4516-bba9-0de3b5b043bf<8>geolyzer:<36>28125799-6b35-40a7-8b37-47e526e24edd<6>screen:<36>9ad13475-5e59-4801-a461-03d8450b8dcb<10>filesystem:<36>79a9b8eb-7189-4eb7-a5d6-587c597e22d7<20>inventory_controller:<36>8ba0d546-1274-471e-8177-3795b7456994<15>tank_controller:<36>7c9b319c-6be4-47d7-8e8b-ea42149e9a67<6>eeprom:<36>9c0f1134-d55d-4793-b8b2-d97655b80209<8>crafting:<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9<8>keyboard:<36>7a1c769f-4f18-4f7e-9854-6b44b5898b8c<5>modem:<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f<10>filesystem:<36>a2d51bff-a6a8-435f-89e5-cecb49259434<8>redstone:<36>479f3d10-ca60-41d6-86b1-b8e472dc4d2b<5>robot:<36>2f821d20-bc83-4ae3-95c1-a171439850ff<10>filesystem:<36>021442c9-1bb5-4037-95fc-6cafc9733b7d<8>computer}}
+S73:T<1>1<18>R:component:M:type{:[1]<36>99e51b75-be78-437a-ad1c-34109fc2c1ce}
+R26:T<1>1<17>{:[1]T:[2]<3>gpu}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>99e51b75-be78-437a-ad1c-34109fc2c1ce}
+R24:T<1>1<15>{:[1]T:[2][83]}
+S37:T<1>1<13>io.write(...){:[1]<6>83 gpu}
 R15:T<1>1<7>{:[1]T}
 S32:T<1>1<13>io.write(...){:[1]<1>
 }
@@ -165,38 +66,11 @@ R15:T<1>1<7>{:[1]T}
 S32:T<1>1<13>io.write(...){:[1]<1>
 }
 R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>99e51b75-be78-437a-ad1c-34109fc2c1ce}
-R26:T<1>1<17>{:[1]T:[2]<3>gpu}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>99e51b75-be78-437a-ad1c-34109fc2c1ce}
-R24:T<1>1<15>{:[1]T:[2][83]}
-S37:T<1>1<13>io.write(...){:[1]<6>83 gpu}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>7c9b319c-6be4-47d7-8e8b-ea42149e9a67}
-R29:T<1>1<20>{:[1]T:[2]<6>eeprom}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>7c9b319c-6be4-47d7-8e8b-ea42149e9a67}
-R24:T<1>1<15>{:[1]T:[2][90]}
-S40:T<1>1<13>io.write(...){:[1]<9>90 eeprom}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>9ad13475-5e59-4801-a461-03d8450b8dcb}
+S73:T<1>1<18>R:component:M:type{:[1]<36>aea7d223-6e47-4fd7-b567-081d6dec0777}
 R34:T<1>1<25>{:[1]T:[2]<10>filesystem}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>9ad13475-5e59-4801-a461-03d8450b8dcb}
-R24:T<1>1<15>{:[1]T:[2][-1]}
-S45:T<1>1<13>io.write(...){:[1]<13>-1 filesystem}
-R15:T<1>1<7>{:[1]T}
-S32:T<1>1<13>io.write(...){:[1]<1>
-}
-R15:T<1>1<7>{:[1]T}
-S73:T<1>1<18>R:component:M:type{:[1]<36>7a1c769f-4f18-4f7e-9854-6b44b5898b8c}
-R28:T<1>1<19>{:[1]T:[2]<5>modem}
-S73:T<1>1<18>R:component:M:slot{:[1]<36>7a1c769f-4f18-4f7e-9854-6b44b5898b8c}
-R24:T<1>1<15>{:[1]T:[2][85]}
-S39:T<1>1<13>io.write(...){:[1]<8>85 modem}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>aea7d223-6e47-4fd7-b567-081d6dec0777}
+R24:T<1>1<15>{:[1]T:[2][91]}
+S45:T<1>1<13>io.write(...){:[1]<13>91 filesystem}
 R15:T<1>1<7>{:[1]T}
 S32:T<1>1<13>io.write(...){:[1]<1>
 }
@@ -210,11 +84,137 @@ R15:T<1>1<7>{:[1]T}
 S32:T<1>1<13>io.write(...){:[1]<1>
 }
 R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>a5b1411e-60dc-4cfa-881c-c1e0550ab7bd}
+R34:T<1>1<25>{:[1]T:[2]<10>experience}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>a5b1411e-60dc-4cfa-881c-c1e0550ab7bd}
+R24:T<1>1<15>{:[1]T:[2][82]}
+S45:T<1>1<13>io.write(...){:[1]<13>82 experience}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>248e7560-b8dc-4516-bba9-0de3b5b043bf}
+R31:T<1>1<22>{:[1]T:[2]<8>geolyzer}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>248e7560-b8dc-4516-bba9-0de3b5b043bf}
+R24:T<1>1<15>{:[1]T:[2][70]}
+S43:T<1>1<13>io.write(...){:[1]<11>70 geolyzer}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>28125799-6b35-40a7-8b37-47e526e24edd}
+R29:T<1>1<20>{:[1]T:[2]<6>screen}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>28125799-6b35-40a7-8b37-47e526e24edd}
+R24:T<1>1<15>{:[1]T:[2][68]}
+S40:T<1>1<13>io.write(...){:[1]<9>68 screen}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>9ad13475-5e59-4801-a461-03d8450b8dcb}
+R34:T<1>1<25>{:[1]T:[2]<10>filesystem}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>9ad13475-5e59-4801-a461-03d8450b8dcb}
+R24:T<1>1<15>{:[1]T:[2][-1]}
+S45:T<1>1<13>io.write(...){:[1]<13>-1 filesystem}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>79a9b8eb-7189-4eb7-a5d6-587c597e22d7}
+R44:T<1>1<35>{:[1]T:[2]<20>inventory_controller}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>79a9b8eb-7189-4eb7-a5d6-587c597e22d7}
+R24:T<1>1<15>{:[1]T:[2][75]}
+S55:T<1>1<13>io.write(...){:[1]<23>75 inventory_controller}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
 S73:T<1>1<18>R:component:M:type{:[1]<36>8ba0d546-1274-471e-8177-3795b7456994}
 R39:T<1>1<30>{:[1]T:[2]<15>tank_controller}
 S73:T<1>1<18>R:component:M:slot{:[1]<36>8ba0d546-1274-471e-8177-3795b7456994}
 R24:T<1>1<15>{:[1]T:[2][77]}
 S50:T<1>1<13>io.write(...){:[1]<18>77 tank_controller}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>7c9b319c-6be4-47d7-8e8b-ea42149e9a67}
+R29:T<1>1<20>{:[1]T:[2]<6>eeprom}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>7c9b319c-6be4-47d7-8e8b-ea42149e9a67}
+R24:T<1>1<15>{:[1]T:[2][90]}
+S40:T<1>1<13>io.write(...){:[1]<9>90 eeprom}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>9c0f1134-d55d-4793-b8b2-d97655b80209}
+R31:T<1>1<22>{:[1]T:[2]<8>crafting}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>9c0f1134-d55d-4793-b8b2-d97655b80209}
+R24:T<1>1<15>{:[1]T:[2][78]}
+S43:T<1>1<13>io.write(...){:[1]<11>78 crafting}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9}
+R31:T<1>1<22>{:[1]T:[2]<8>keyboard}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>373ddc8c-8986-4481-a4d2-4c4598d38ec9}
+R24:T<1>1<15>{:[1]T:[2][69]}
+S43:T<1>1<13>io.write(...){:[1]<11>69 keyboard}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>7a1c769f-4f18-4f7e-9854-6b44b5898b8c}
+R28:T<1>1<19>{:[1]T:[2]<5>modem}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>7a1c769f-4f18-4f7e-9854-6b44b5898b8c}
+R24:T<1>1<15>{:[1]T:[2][85]}
+S39:T<1>1<13>io.write(...){:[1]<8>85 modem}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f}
+R34:T<1>1<25>{:[1]T:[2]<10>filesystem}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f}
+R24:T<1>1<15>{:[1]T:[2][92]}
+S45:T<1>1<13>io.write(...){:[1]<13>92 filesystem}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>a2d51bff-a6a8-435f-89e5-cecb49259434}
+R31:T<1>1<22>{:[1]T:[2]<8>redstone}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>a2d51bff-a6a8-435f-89e5-cecb49259434}
+R24:T<1>1<15>{:[1]T:[2][84]}
+S43:T<1>1<13>io.write(...){:[1]<11>84 redstone}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>479f3d10-ca60-41d6-86b1-b8e472dc4d2b}
+R28:T<1>1<19>{:[1]T:[2]<5>robot}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>479f3d10-ca60-41d6-86b1-b8e472dc4d2b}
+R24:T<1>1<15>{:[1]T:[2][-1]}
+S39:T<1>1<13>io.write(...){:[1]<8>-1 robot}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>2f821d20-bc83-4ae3-95c1-a171439850ff}
+R34:T<1>1<25>{:[1]T:[2]<10>filesystem}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>2f821d20-bc83-4ae3-95c1-a171439850ff}
+R24:T<1>1<15>{:[1]T:[2][-1]}
+S45:T<1>1<13>io.write(...){:[1]<13>-1 filesystem}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<18>R:component:M:type{:[1]<36>021442c9-1bb5-4037-95fc-6cafc9733b7d}
+R31:T<1>1<22>{:[1]T:[2]<8>computer}
+S73:T<1>1<18>R:component:M:slot{:[1]<36>021442c9-1bb5-4037-95fc-6cafc9733b7d}
+R24:T<1>1<15>{:[1]T:[2][-1]}
+S43:T<1>1<13>io.write(...){:[1]<11>-1 computer}
 R15:T<1>1<7>{:[1]T}
 S32:T<1>1<13>io.write(...){:[1]<1>
 }

@@ -18,8 +18,9 @@ def lua_table_to_list(x, length: int = None, low_index: int = 1):
 
 
 class ResultProc:
-    def __init__(self, result):
+    def __init__(self, result, enc):
         self._v = result
+        self._enc = enc
         self._i = 1
 
     def forward(self):
@@ -30,6 +31,12 @@ class ResultProc:
 
     def peek(self):
         return self._v.get(self._i)
+
+    def peek_type(self):
+        v = self.peek()
+        if v is None:
+            return None
+        return type(v)
 
     def take(self):
         r = self.peek()
@@ -52,9 +59,6 @@ class ResultProc:
         assert not isinstance(x, bool)
         return x
 
-    def take_rounded_int(self):
-        return round(self.take_number())
-
     def take_number(self):
         x = self.take()
         assert isinstance(x, (int, float))
@@ -67,9 +71,10 @@ class ResultProc:
         return x
 
     def take_string(self):
-        return self.take_bytes().decode('latin1')
+        return self.take_bytes().decode(self._enc)
 
     def take_unicode(self):
+        # specific case in CC, reading unicode files
         return self.take_bytes().decode('utf-8')
 
     def take_uuid(self):
@@ -94,11 +99,6 @@ class ResultProc:
         if self.peek() is None:
             self.forward()
             raise LuaException(self.take_string())
-
-    def u_check_nil_error(self):
-        if self.peek() is None:
-            self.forward()
-            raise LuaException(self.take_unicode())
 
     def take_option_int(self):
         if self.peek() is None:
@@ -138,15 +138,6 @@ class ResultProc:
         for row in x:
             for item in row:
                 assert isinstance(item, int)
-        return x
-
-    def take_int_or_unicode(self):
-        x = self.take()
-        if isinstance(x, bytes):
-            x = x.decode('utf-8')
-        else:
-            assert isinstance(x, int)
-        assert not isinstance(x, bool)
         return x
 
 
