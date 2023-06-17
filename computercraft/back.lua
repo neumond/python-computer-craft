@@ -56,10 +56,11 @@ else
 end
 
 function _py.loadmethod(code)
-    -- R:module.method  (needs require(module))
-    -- M:module.method
-    -- E:code  (eval)
-    -- code  (eval without cache)
+    -- 0..N  R:module:   -- require(module)
+    -- 0..1  G:module:   -- use builtin module
+    -- choice:
+    --   M:method$   -- take method of loaded module
+    --   code$       -- arbitrary code
     if _py.mcache[code] ~= nil then return _py.mcache[code] end
 
     local mod, modname

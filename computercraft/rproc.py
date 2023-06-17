@@ -1,6 +1,5 @@
 from uuid import UUID
 
-from . import ser
 from .errors import LuaException
 
 
@@ -90,34 +89,41 @@ class ResultProc:
     def take_list(self, length: int = None):
         return lua_table_to_list(self.take_dict(), length)
 
+    def take_proc(self):
+        x = self.take()
+        assert isinstance(x, dict)
+        return ResultProc(x, self._enc)
+
     def check_bool_error(self):
         success = self.take_bool()
         if not success:
             raise LuaException(self.take_string())
 
-    def check_nil_error(self):
+    def check_nil_error(self, allow_nil_nil=False):
         if self.peek() is None:
             self.forward()
+            if allow_nil_nil and self.peek() is None:
+                return
             raise LuaException(self.take_string())
 
     def take_option_int(self):
         if self.peek() is None:
-            return self.take_none()
+            return None
         return self.take_int()
 
     def take_option_bytes(self):
         if self.peek() is None:
-            return self.take_none()
+            return None
         return self.take_bytes()
 
     def take_option_string(self):
         if self.peek() is None:
-            return self.take_none()
+            return None
         return self.take_string()
 
     def take_option_unicode(self):
         if self.peek() is None:
-            return self.take_none()
+            return None
         return self.take_unicode()
 
     def take_option_string_bool(self):
@@ -130,7 +136,7 @@ class ResultProc:
     def take_list_of_strings(self, length: int = None):
         x = self.take_list(length)
         assert all(map(lambda v: isinstance(v, bytes), x))
-        return [ser.decode(v) for v in x]
+        return [v.decode(self._enc) for v in x]
 
     def take_2d_int(self):
         x = self.take_list()

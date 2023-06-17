@@ -15,7 +15,6 @@ from types import ModuleType
 
 from greenlet import greenlet, getcurrent as get_current_greenlet
 
-from .lua import lua_string
 from . import rproc, ser
 
 
@@ -32,15 +31,15 @@ def debug(*args):
     sys.__stdout__.flush()
 
 
-DIGITS = string.digits + string.ascii_lowercase
+DIGITS = (string.digits + string.ascii_lowercase).encode('ascii')
 
 
-def base36(n):
-    r = ''
+def base36(n: int) -> bytes:
+    r = bytearray()
     while n:
-        r += DIGITS[n % 36]
+        r.append(DIGITS[n % 36])
         n //= 36
-    return ser.encode(r[::-1])
+    return bytes(r)
 
 
 def _is_global_greenlet():
@@ -190,20 +189,47 @@ def eval_lua(lua_code, *params, immediate=False):
 
 
 @contextmanager
-def lua_context_object(create_expr: str, create_params: tuple, finalizer_template: str = ''):
+def lua_context_object(
+    create_expr: bytes,
+    create_params: tuple,
+    finalizer_template: bytes = b'',
+    prefix: bytes = b'',
+):
     sess = get_current_session()
     fid = sess.create_task_id()
-    var = 'temp[{}]'.format(lua_string(fid))
-    eval_lua('{} = {}'.format(var, create_expr), *create_params)
+    r = eval_lua(
+        prefix
+        + b'return(function(n,...)local o,e='
+        + create_expr
+        + b';if o then temp[n]=o;return true;end'
+        + b';return o,e;end)(...)', fid, *create_params)
+    r.check_nil_error()
+    assert r.take_bool() is True
     try:
-        yield var
+        yield fid
     finally:
-        finalizer_template += '; {e} = nil'
-        finalizer_template = finalizer_template.lstrip(' ;')
-        eval_lua(finalizer_template.format(e=var))
+        eval_lua(
+            b'local n=...;'
+            + finalizer_template.replace(b'{e}', b'temp[n]')
+            + b';temp[n]=nil', fid)
+
+
+class ContextObject:
+    # TODO: support serializing this object
+
+    def __init__(self, fid):
+        self._fid = fid
+
+    def _call(self, method: bytes, *args):
+        return eval_lua(
+            b'return(function(n,...)return temp[n]'
+            + method
+            + b'(...);end)(...)', self._fid, *args)
 
 
 def eval_lua_method_factory(obj):
+    # TODO: remove this
+    # eval strings must be cacheable
     def method(name, *params):
         code = 'return ' + obj + name + '(...)'
         return eval_lua(code, *params)

@@ -1,0 +1,274 @@
+R3895:0[5]{:[1]<13>filesystem.py}<19>/home/filesystem.py<3839>from contextlib import contextmanager
+
+from computercraft.errors import LuaException
+from oc import filesystem
+
+
+@contextmanager
+def assert_raises(text):
+    try:
+        yield
+    except LuaException as e:
+        assert text in e.message, \
+            'message mismatch {} != {}'.format(e.message, text)
+    else:
+        assert False, 'must raise an exception'
+
+
+val = filesystem.isAutorunEnabled()
+filesystem.setAutorunEnabled(False)
+filesystem.setAutorunEnabled(True)
+filesystem.setAutorunEnabled(val)
+
+assert filesystem.canonical('a/../b/../c') == 'c'
+assert filesystem.canonical('/a/../b') == '/b'
+assert filesystem.segments('/a/b/c') == ['a', 'b', 'c']
+assert filesystem.concat('/a', 'b', '..', 'c') == '/a/c'
+assert filesystem.path('/a/b/c/d') == '/a/b/c/'
+assert filesystem.name('/a/b/c/d') == 'd'
+
+target = '/testtemp'
+
+if filesystem.isDirectory(target):
+    assert filesystem.remove(target) is True
+
+assert filesystem.exists(target) is False
+assert filesystem.isDirectory(target) is False
+
+assert filesystem.makeDirectory(target) is True
+with assert_raises('already exists'):
+    filesystem.makeDirectory(target)
+
+assert filesystem.exists(target) is True
+assert filesystem.isDirectory(target) is True
+
+file_a = filesystem.concat(target, 'a.txt')
+with filesystem.open(file_a, 'w') as f:
+    assert f.write(b'12345') is True
+    assert f.seek('set') == 0
+    assert f.write(b'67890') is True
+    assert f.seek('cur') == 5
+
+with filesystem.open(file_a, 'r') as f:
+    assert f.read(10) == b'67890'
+    assert f.read(10) is None
+
+file_b = filesystem.concat(target, 'b.txt')
+file_c = filesystem.concat(target, 'c.txt')
+
+assert filesystem.copy(file_a + '.notexists', file_b) is False
+assert filesystem.copy(file_a, file_b) is True
+assert filesystem.copy(file_a, file_b) is True
+
+assert filesystem.rename(file_b + '.notexists', file_c) is False
+assert filesystem.rename(file_b, file_c) is True
+
+with assert_raises('no such file'):
+    filesystem.remove(file_b + '.notexists')
+assert filesystem.remove(file_c) is True
+
+assert filesystem.exists(file_a) is True
+assert filesystem.exists(file_b) is False
+assert filesystem.exists(file_c) is False
+assert filesystem.exists(target) is True
+
+assert filesystem.isDirectory(file_a) is False
+assert filesystem.isDirectory(file_b) is False
+assert filesystem.isDirectory(target) is True
+
+assert filesystem.isLink(file_a) == (False, None)
+assert filesystem.isLink(file_b) == (False, None)
+assert filesystem.isLink(target) == (False, None)
+
+assert filesystem.link(file_a, file_b) is True
+with assert_raises('already exists'):
+    filesystem.link(file_a, file_b)
+
+assert filesystem.isLink(file_b) == (True, file_a)
+assert filesystem.exists(file_b) is True
+assert filesystem.isDirectory(file_b) is False
+
+assert filesystem.link(target, file_c) is True
+assert filesystem.exists(file_c) is True
+assert filesystem.isDirectory(file_c) is True
+
+assert filesystem.size(file_a) == 5
+assert filesystem.size(file_b) == 5
+assert filesystem.size(file_c) == 0
+assert filesystem.size(file_a + '.notexists') == 0
+
+lm = filesystem.lastModified(file_a)
+assert lm > 0
+assert filesystem.lastModified(file_b) == lm
+assert filesystem.lastModified(file_c) == 0
+assert filesystem.lastModified(file_a + '.notexists') == 0
+
+assert sorted(filesystem.list(target)) == ['a.txt', 'b.txt', 'c.txt']
+
+root_fs = filesystem.get('/')[0]
+mpoint = filesystem.concat(target, 'mpoint')
+assert filesystem.list(mpoint) == []
+assert filesystem.get(mpoint + '.notexists')[0] == root_fs
+
+for fs, p in filesystem.mounts():
+    if fs != root_fs:
+        assert filesystem.get(p) == (fs, p)
+        assert filesystem.mount(fs, mpoint) is True
+        assert filesystem.get(mpoint) == (fs, mpoint)
+        assert filesystem.umount(mpoint) is True
+        break
+
+assert filesystem.umount(mpoint) is False
+assert filesystem.remove(target) is True
+
+S42:T<1>1<31>R:filesystem:M:isAutorunEnabled{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S48:T<1>1<32>R:filesystem:M:setAutorunEnabled{:[1]F}
+R15:T<1>1<7>{:[1]T}
+S48:T<1>1<32>R:filesystem:M:setAutorunEnabled{:[1]T}
+R15:T<1>1<7>{:[1]T}
+S48:T<1>1<32>R:filesystem:M:setAutorunEnabled{:[1]T}
+R15:T<1>1<7>{:[1]T}
+S54:T<1>1<24>R:filesystem:M:canonical{:[1]<11>a/../b/../c}
+R24:T<1>1<15>{:[1]T:[2]<1>c}
+S49:T<1>1<24>R:filesystem:M:canonical{:[1]<7>/a/../b}
+R25:T<1>1<16>{:[1]T:[2]<2>/b}
+S47:T<1>1<23>R:filesystem:M:segments{:[1]<6>/a/b/c}
+R46:T<1>1<37>{:[1]T:[2]{:[1]<1>a:[2]<1>b:[3]<1>c}}
+S66:T<1>1<21>R:filesystem:M:concat{:[1]<2>/a:[2]<1>b:[3]<2>..:[4]<1>c}
+R27:T<1>1<18>{:[1]T:[2]<4>/a/c}
+S45:T<1>1<19>R:filesystem:M:path{:[1]<8>/a/b/c/d}
+R30:T<1>1<21>{:[1]T:[2]<7>/a/b/c/}
+S45:T<1>1<19>R:filesystem:M:name{:[1]<8>/a/b/c/d}
+R24:T<1>1<15>{:[1]T:[2]<1>d}
+S53:T<1>1<26>R:filesystem:M:isDirectory{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]F}
+S48:T<1>1<21>R:filesystem:M:exists{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]F}
+S53:T<1>1<26>R:filesystem:M:isDirectory{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]F}
+S55:T<1>1<28>R:filesystem:M:makeDirectory{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]T}
+S55:T<1>1<28>R:filesystem:M:makeDirectory{:[1]<9>/testtemp}
+R71:T<1>1<62>{:[1]T:[3]<47>file or directory with that name already exists}
+S48:T<1>1<21>R:filesystem:M:exists{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]T}
+S53:T<1>1<26>R:filesystem:M:isDirectory{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]T}
+S60:T<1>1<21>R:filesystem:M:concat{:[1]<9>/testtemp:[2]<5>a.txt}
+R39:T<1>1<30>{:[1]T:[2]<15>/testtemp/a.txt}
+S176:T<1>1<125>R:filesystem:return(function(n,...)local o,e=_m.filesystem.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>2:[2]<15>/testtemp/a.txt:[3]<1>w}
+R21:T<1>1<12>{:[1]T:[2]T}
+S88:T<1>1<57>return(function(n,...)return temp[n]:write(...);end)(...){:[1]<1>2:[2]<5>12345}
+R21:T<1>1<12>{:[1]T:[2]T}
+S92:T<1>1<56>return(function(n,...)return temp[n]:seek(...);end)(...){:[1]<1>2:[2]<3>set:[3][0]}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S88:T<1>1<57>return(function(n,...)return temp[n]:write(...);end)(...){:[1]<1>2:[2]<5>67890}
+R21:T<1>1<12>{:[1]T:[2]T}
+S92:T<1>1<56>return(function(n,...)return temp[n]:seek(...);end)(...){:[1]<1>2:[2]<3>cur:[3][0]}
+R23:T<1>1<14>{:[1]T:[2][5]}
+S58:T<1>1<39>local n=...;temp[n]:close();temp[n]=nil{:[1]<1>2}
+R15:T<1>1<7>{:[1]T}
+S176:T<1>1<125>R:filesystem:return(function(n,...)local o,e=_m.filesystem.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>3:[2]<15>/testtemp/a.txt:[3]<1>r}
+R21:T<1>1<12>{:[1]T:[2]T}
+S83:T<1>1<56>return(function(n,...)return temp[n]:read(...);end)(...){:[1]<1>3:[2][10]}
+R28:T<1>1<19>{:[1]T:[2]<5>67890}
+S83:T<1>1<56>return(function(n,...)return temp[n]:read(...);end)(...){:[1]<1>3:[2][10]}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<39>local n=...;temp[n]:close();temp[n]=nil{:[1]<1>3}
+R15:T<1>1<7>{:[1]T}
+S60:T<1>1<21>R:filesystem:M:concat{:[1]<9>/testtemp:[2]<5>b.txt}
+R39:T<1>1<30>{:[1]T:[2]<15>/testtemp/b.txt}
+S60:T<1>1<21>R:filesystem:M:concat{:[1]<9>/testtemp:[2]<5>c.txt}
+R39:T<1>1<30>{:[1]T:[2]<15>/testtemp/c.txt}
+S86:T<1>1<19>R:filesystem:M:copy{:[1]<25>/testtemp/a.txt.notexists:[2]<15>/testtemp/b.txt}
+R43:T<1>1<34>{:[1]T:[2]F:[3]<14>file not found}
+S76:T<1>1<19>R:filesystem:M:copy{:[1]<15>/testtemp/a.txt:[2]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S76:T<1>1<19>R:filesystem:M:copy{:[1]<15>/testtemp/a.txt:[2]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S88:T<1>1<21>R:filesystem:M:rename{:[1]<25>/testtemp/b.txt.notexists:[2]<15>/testtemp/c.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S78:T<1>1<21>R:filesystem:M:rename{:[1]<15>/testtemp/b.txt:[2]<15>/testtemp/c.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S65:T<1>1<21>R:filesystem:M:remove{:[1]<25>/testtemp/b.txt.notexists}
+R49:T<1>1<40>{:[1]T:[3]<25>no such file or directory}
+S55:T<1>1<21>R:filesystem:M:remove{:[1]<15>/testtemp/c.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S55:T<1>1<21>R:filesystem:M:exists{:[1]<15>/testtemp/a.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S55:T<1>1<21>R:filesystem:M:exists{:[1]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S55:T<1>1<21>R:filesystem:M:exists{:[1]<15>/testtemp/c.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S48:T<1>1<21>R:filesystem:M:exists{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]T}
+S60:T<1>1<26>R:filesystem:M:isDirectory{:[1]<15>/testtemp/a.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S60:T<1>1<26>R:filesystem:M:isDirectory{:[1]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S53:T<1>1<26>R:filesystem:M:isDirectory{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]T}
+S55:T<1>1<21>R:filesystem:M:isLink{:[1]<15>/testtemp/a.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S55:T<1>1<21>R:filesystem:M:isLink{:[1]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S48:T<1>1<21>R:filesystem:M:isLink{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]F}
+S76:T<1>1<19>R:filesystem:M:link{:[1]<15>/testtemp/a.txt:[2]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S76:T<1>1<19>R:filesystem:M:link{:[1]<15>/testtemp/a.txt:[2]<15>/testtemp/b.txt}
+R43:T<1>1<34>{:[1]T:[3]<19>file already exists}
+S55:T<1>1<21>R:filesystem:M:isLink{:[1]<15>/testtemp/b.txt}
+R44:T<1>1<35>{:[1]T:[2]T:[3]<15>/testtemp/a.txt}
+S55:T<1>1<21>R:filesystem:M:exists{:[1]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S60:T<1>1<26>R:filesystem:M:isDirectory{:[1]<15>/testtemp/b.txt}
+R21:T<1>1<12>{:[1]T:[2]F}
+S69:T<1>1<19>R:filesystem:M:link{:[1]<9>/testtemp:[2]<15>/testtemp/c.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S55:T<1>1<21>R:filesystem:M:exists{:[1]<15>/testtemp/c.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S60:T<1>1<26>R:filesystem:M:isDirectory{:[1]<15>/testtemp/c.txt}
+R21:T<1>1<12>{:[1]T:[2]T}
+S53:T<1>1<19>R:filesystem:M:size{:[1]<15>/testtemp/a.txt}
+R23:T<1>1<14>{:[1]T:[2][5]}
+S53:T<1>1<19>R:filesystem:M:size{:[1]<15>/testtemp/b.txt}
+R23:T<1>1<14>{:[1]T:[2][5]}
+S53:T<1>1<19>R:filesystem:M:size{:[1]<15>/testtemp/c.txt}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S63:T<1>1<19>R:filesystem:M:size{:[1]<25>/testtemp/a.txt.notexists}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S61:T<1>1<27>R:filesystem:M:lastModified{:[1]<15>/testtemp/a.txt}
+R35:T<1>1<26>{:[1]T:[2][1687045980348]}
+S61:T<1>1<27>R:filesystem:M:lastModified{:[1]<15>/testtemp/b.txt}
+R35:T<1>1<26>{:[1]T:[2][1687045980348]}
+S61:T<1>1<27>R:filesystem:M:lastModified{:[1]<15>/testtemp/c.txt}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S71:T<1>1<27>R:filesystem:M:lastModified{:[1]<25>/testtemp/a.txt.notexists}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S109:T<1>1<82>R:filesystem:local r={};for n in _m.filesystem.list(...) do r[#r+1]=n end;return r{:[1]<9>/testtemp}
+R58:T<1>1<49>{:[1]T:[2]{:[1]<5>a.txt:[2]<5>b.txt:[3]<5>c.txt}}
+S101:T<1>1<82>R:filesystem:local a,b=_m.filesystem.get(...);if a then a=a.address end;return a,b{:[1]<1>/}
+R68:T<1>1<59>{:[1]T:[2]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f:[3]<1>/}
+S61:T<1>1<21>R:filesystem:M:concat{:[1]<9>/testtemp:[2]<6>mpoint}
+R40:T<1>1<31>{:[1]T:[2]<16>/testtemp/mpoint}
+S117:T<1>1<82>R:filesystem:local r={};for n in _m.filesystem.list(...) do r[#r+1]=n end;return r{:[1]<16>/testtemp/mpoint}
+R22:T<1>1<13>{:[1]T:[2]{}}
+S127:T<1>1<82>R:filesystem:local a,b=_m.filesystem.get(...);if a then a=a.address end;return a,b{:[1]<26>/testtemp/mpoint.notexists}
+R68:T<1>1<59>{:[1]T:[2]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f:[3]<1>/}
+S113:T<1>1<101>R:filesystem:local r={};for c,t in _m.filesystem.mounts() do r[#r+1]=c.address;r[#r+1]=t;end;return r{}
+R365:T<1>1<355>{:[1]T:[2]{:[1]<36>b5dc2bc6-61af-48e4-9926-c078610990cd:[2]<8>/mnt/b5d:[3]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f:[4]<8>/mnt/bfa:[5]<36>aea7d223-6e47-4fd7-b567-081d6dec0777:[6]<8>/mnt/aea:[7]<36>f5501a9b-9c23-1e7a-4afe-4b65eed9b88a:[8]<4>/dev:[9]<36>9488437d-5668-46bd-bceb-d89c292e1dd1:[10]<4>/tmp:[11]<36>bfa2ec7b-fcd9-46bd-b5f0-50836c23757f:[12]<1>/}}
+S108:T<1>1<82>R:filesystem:local a,b=_m.filesystem.get(...);if a then a=a.address end;return a,b{:[1]<8>/mnt/b5d}
+R75:T<1>1<66>{:[1]T:[2]<36>b5dc2bc6-61af-48e4-9926-c078610990cd:[3]<8>/mnt/b5d}
+S99:T<1>1<20>R:filesystem:M:mount{:[1]<36>b5dc2bc6-61af-48e4-9926-c078610990cd:[2]<16>/testtemp/mpoint}
+R21:T<1>1<12>{:[1]T:[2]T}
+S117:T<1>1<82>R:filesystem:local a,b=_m.filesystem.get(...);if a then a=a.address end;return a,b{:[1]<16>/testtemp/mpoint}
+R84:T<1>1<75>{:[1]T:[2]<36>b5dc2bc6-61af-48e4-9926-c078610990cd:[3]<16>/testtemp/mpoint}
+S56:T<1>1<21>R:filesystem:M:umount{:[1]<16>/testtemp/mpoint}
+R21:T<1>1<12>{:[1]T:[2]T}
+S56:T<1>1<21>R:filesystem:M:umount{:[1]<16>/testtemp/mpoint}
+R21:T<1>1<12>{:[1]T:[2]F}
+S48:T<1>1<21>R:filesystem:M:remove{:[1]<9>/testtemp}
+R21:T<1>1<12>{:[1]T:[2]T}
+S2:CN
