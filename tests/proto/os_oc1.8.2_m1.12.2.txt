@@ -1,0 +1,35 @@
+R238:0[5]{:[1]<5>os.py}<11>/home/os.py<200>from oc import os
+
+
+print(os.date())
+c = os.clock()
+assert c >= 0
+t = os.time()
+assert t >= 0
+
+assert os.sleep(2) is None
+
+assert os.clock() >= c
+assert os.time() >= t
+
+os.exit()
+print('unreachable')
+
+S22:T<1>1<11>R:os:M:date{}
+R41:T<1>1<32>{:[1]T:[2]<17>01/01/70 08:34:33}
+S49:T<1>1<13>io.write(...){:[1]<17>01/01/70 08:34:33}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S23:T<1>1<12>R:os:M:clock{}
+R35:T<1>1<26>{:[1]T:[2][224.519711718]}
+S22:T<1>1<11>R:os:M:time{}
+R29:T<1>1<20>{:[1]T:[2][27273.6]}
+S23:T<1>1<12>R:os:M:sleep{}
+R15:T<1>1<7>{:[1]T}
+S23:T<1>1<12>R:os:M:clock{}
+R35:T<1>1<26>{:[1]T:[2][224.527750133]}
+S22:T<1>1<11>R:os:M:time{}
+R29:T<1>1<20>{:[1]T:[2][27273.6]}
+S2:CN
