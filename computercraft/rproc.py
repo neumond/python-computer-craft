@@ -52,6 +52,11 @@ class ResultProc:
         assert x is True or x is False
         return x
 
+    def take_bool_coerce_nil(self):
+        x = self.take()
+        assert x is True or x is False or x is None
+        return bool(x)
+
     def take_int(self):
         x = self.take()
         assert isinstance(x, int)

@@ -143,6 +143,9 @@ class OpenComputersLoader(Loader):
         if len(sn) == 1:
             sn.append('_pkg')
         rawmod = import_module('.' + sn[1], 'computercraft.oc')
+        mod = getattr(rawmod, '__replace_module__', None)
+        if mod is not None:
+            return mod
         mod = ModuleType(spec.name)
         for k in rawmod.__all__:
             setattr(mod, k, getattr(rawmod, k))

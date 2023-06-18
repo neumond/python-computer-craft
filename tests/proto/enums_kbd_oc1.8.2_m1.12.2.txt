@@ -1,0 +1,49 @@
+R861:0[5]{:[1]<12>enums_kbd.py}<18>/home/enums_kbd.py<808>from oc import sides, colors, keyboard
+
+
+def check_iterable(m, mlen):
+    n = 0
+    for i, v in m:
+        assert m[i] == v
+        assert getattr(m, v) == i
+        n += 1
+    assert len(m) == n == mlen > 0
+
+
+assert sides.left == 5
+assert sides.forward == 3
+assert sides[2] == 'back'
+check_iterable(sides, 6)
+
+assert colors.yellow == 4
+assert colors[14] == 'red'
+check_iterable(colors, 16)
+
+assert keyboard.keys.a == 0x1E
+assert keyboard.keys[0x40] == 'f6'
+check_iterable(keyboard.keys, len(keyboard.keys))
+
+assert keyboard.isAltDown() is False
+assert keyboard.isControlDown() is False
+assert keyboard.isShiftDown() is False
+assert keyboard.isKeyDown('a') is False
+assert keyboard.isKeyDown(keyboard.keys.b) is False
+
+assert keyboard.isControl(0) is True
+assert keyboard.isControl(keyboard.keys.c) is False
+
+S33:T<1>1<22>R:keyboard:M:isAltDown{}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<26>R:keyboard:M:isControlDown{}
+R15:T<1>1<7>{:[1]T}
+S35:T<1>1<24>R:keyboard:M:isShiftDown{}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<22>R:keyboard:M:isKeyDown{:[1]<1>a}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<22>R:keyboard:M:isKeyDown{:[1][48]}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<22>R:keyboard:M:isControl{:[1][0]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S41:T<1>1<22>R:keyboard:M:isControl{:[1][46]}
+R21:T<1>1<12>{:[1]T:[2]F}
+S2:CN
