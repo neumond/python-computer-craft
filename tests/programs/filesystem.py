@@ -53,6 +53,17 @@ with filesystem.open(file_a, 'r') as f:
     assert f.read(10) == b'67890'
     assert f.read(10) is None
 
+file_x = filesystem.concat(target, 'x.txt')
+for mdp in ('', 'b'):
+    with filesystem.open(file_x, 'w' + mdp) as f:
+        assert f.write(bytes(range(256))) is True
+    with filesystem.open(file_x, 'r' + mdp) as f:
+        assert f.read(300) == bytes(range(256))
+    with filesystem.open(file_x, 'w' + mdp) as f:
+        assert f.write('привет') is True
+    with filesystem.open(file_x, 'r' + mdp) as f:
+        assert f.read(300) == 'привет'.encode('utf-8')
+
 file_b = filesystem.concat(target, 'b.txt')
 file_c = filesystem.concat(target, 'c.txt')
 
@@ -103,7 +114,7 @@ assert filesystem.lastModified(file_b) == lm
 assert filesystem.lastModified(file_c) == 0
 assert filesystem.lastModified(file_a + '.notexists') == 0
 
-assert sorted(filesystem.list(target)) == ['a.txt', 'b.txt', 'c.txt']
+assert sorted(filesystem.list(target)) == ['a.txt', 'b.txt', 'c.txt', 'x.txt']
 
 root_fs = filesystem.get('/')[0]
 mpoint = filesystem.concat(target, 'mpoint')
