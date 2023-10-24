@@ -2,6 +2,7 @@ from typing import Optional
 
 from .. import ser
 from ..lua import LuaNum
+from ..sess import eval_lua
 from ..sess import eval_lua_method_factory, get_current_greenlet
 
 
@@ -31,19 +32,19 @@ __all__ = (
 
 
 def version() -> str:
-    return method('version').take_string()
+    return eval_lua(b'G:os:M:version').take_string()
 
 
 def getComputerID() -> int:
-    return method('getComputerID').take_int()
+    return eval_lua(b'G:os:M:getComputerID').take_int()
 
 
 def getComputerLabel() -> Optional[str]:
-    return method('getComputerLabel').take_option_string()
+    return eval_lua(b'G:os:M:getComputerLabel').take_option_string()
 
 
 def setComputerLabel(label: Optional[str]):
-    return method('setComputerLabel', ser.nil_encode(label)).take_none()
+    return eval_lua(b'G:os:M:setComputerLabel', label).take_none()
 
 
 def run(environment: dict, programPath: str, *args: str):
@@ -96,7 +97,7 @@ def epoch() -> int:
 
 
 def sleep(seconds: LuaNum):
-    return method('sleep', seconds).take_none()
+    return eval_lua(b'G:os:M:sleep', seconds).take_none()
 
 
 def startTimer(timeout: LuaNum) -> int:

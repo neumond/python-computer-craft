@@ -98,7 +98,9 @@ function _py.loadmethod(code)
     return fn
 end
 
-if type(os) == 'table' and type(os.pullEvent) == 'function' then
+if type(os) == 'table' and type(os.pullEventRaw) == 'function' then
+    _py.pullEvent = os.pullEventRaw  -- computercraft, preferrable
+elseif type(os) == 'table' and type(os.pullEvent) == 'function' then
     _py.pullEvent = os.pullEvent  -- computercraft
 elseif _py.try_import('event', 'pull') then
     _py.pullEvent = _py._impfn  -- opencomputers
@@ -107,7 +109,7 @@ else
 end
 
 if type(arg) == 'table' then
-    _py.argv = arg  -- TODO: remove?
+    _py.argv = arg  -- includes program name
 else
     _py.argv = {...}
 end
@@ -399,6 +401,8 @@ while true do
         if must_exit then
             if err == nil then break else error(err) end
         end
+    elseif event == 'terminate' then
+        _py.ws_send('C')  -- CC:T trigger KeyboardInterrupt
     elseif _py.event_sub[event] == true then
         _py.ws_send('E', event, {p1, p2, p3, p4, p5})
     end

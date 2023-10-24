@@ -1,30 +1,23 @@
-from cc import import_file, colors, os, term
-from computercraft.subapis.mixins import TermMixin
-
-_lib = import_file('_lib.py', __file__)
+from cc import colors, term, os
 
 
-tbl = _lib.get_object_table('term')
+def step(text):
+    input(f'{text} [enter]')
 
-# not defined in TermMixin
-del tbl['function']['redirect']
-del tbl['function']['current']
-del tbl['function']['native']
-del tbl['function']['nativePaletteColor']
 
-# remove British method names to make API lighter
-del tbl['function']['getBackgroundColour']
-del tbl['function']['getPaletteColour']
-del tbl['function']['getTextColour']
-del tbl['function']['isColour']
-del tbl['function']['nativePaletteColour']
-del tbl['function']['setBackgroundColour']
-del tbl['function']['setPaletteColour']
-del tbl['function']['setTextColour']
+def term_step(text):
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
 
-assert _lib.get_class_table(TermMixin) == tbl
 
-_lib.step(
+step(
     'Detach all monitors\n'
     'Use advanced computer for colors\n'
     'Screen will be cleared'
@@ -43,7 +36,7 @@ assert term.setCursorBlink(True) is None
 assert term.getCursorBlink() is True
 os.sleep(2)
 
-_lib.term_step('You must have seen word Alpha with blinking cursor')
+term_step('You must have seen word Alpha with blinking cursor')
 
 assert term.clear() is None
 for offs, (tc, bc) in enumerate((
@@ -67,7 +60,7 @@ for i in range(6):
     assert term.scroll(1) is None
     os.sleep(0.25)
 
-_lib.term_step('You must have seen three texts with different colors scrolling')
+term_step('You must have seen three texts with different colors scrolling')
 
 assert term.clear() is None
 for i in range(1, 10):
@@ -79,7 +72,7 @@ for i in range(2, 10, 2):
     assert term.clearLine() is None
 os.sleep(2)
 
-_lib.term_step('You must have seen some lines disappearing')
+term_step('You must have seen some lines disappearing')
 
 assert term.clear() is None
 assert term.setCursorPos(1, 1) is None
@@ -90,7 +83,7 @@ assert term.blit(
 ) is None
 os.sleep(3)
 
-_lib.term_step('You must have seen per-letter colored text')
+term_step('You must have seen per-letter colored text')
 
 assert term.setBackgroundColor(colors.white) is None
 assert term.clear() is None
@@ -104,6 +97,6 @@ assert term.blit(
 ) is None
 os.sleep(3)
 
-_lib.term_step('You must have seen different shades of red made using palettes')
+term_step('You must have seen different shades of red made using palettes')
 
 print('Test finished successfully')

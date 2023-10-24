@@ -14,13 +14,6 @@ PROTO_VERSION = 5
 PROTO_ERROR = b'C' + ser.serialize(b'protocol error', 'ascii')
 
 
-async def _bin_messages(ws):
-    async for msg in ws:
-        if msg.type != WSMsgType.BINARY:
-            continue
-        yield msg.data
-
-
 def protocol(send, sess_cls=sess.CCSession, oc=False):
     # handle first frame
     msg = yield
@@ -39,7 +32,10 @@ def protocol(send, sess_cls=sess.CCSession, oc=False):
             ), 'ascii'))
         return
 
-    args = lua_table_to_list(next(msg))
+    # CC:T starts its "args" with 0, includes program name
+    # but {...} works normally, starting from 1
+    args = next(msg)
+    args = lua_table_to_list(args, low_index=0 if 0 in args else 1)
     path, code = None, None
     try:
         path = next(msg)
@@ -61,6 +57,8 @@ def protocol(send, sess_cls=sess.CCSession, oc=False):
             sess.on_event(next(msg), lua_table_to_list(next(msg)))
         elif action == b'T':
             sess.on_task_result(next(msg), next(msg))
+        elif action == b'C':
+            sess.throw_keyboard_interrupt()
         else:
             send(PROTO_ERROR)
             return
@@ -75,7 +73,7 @@ class CCApplication(web.Application):
         pgen = self['protocol_factory'](squeue.append, oc=False)
         next(pgen)
         mustquit = False
-        async for msg in _bin_messages(ws):
+        async for msg in ws:
             if msg.type != WSMsgType.BINARY:
                 continue
 

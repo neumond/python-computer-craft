@@ -308,6 +308,9 @@ class CCGreenlet:
             else:
                 self._on_death()
 
+    def throw(self, exc):
+        self._g.throw(exc)
+
 
 class CCEventRouter:
     def __init__(self, on_first_sub, on_last_unsub, resume_task):
@@ -400,6 +403,9 @@ class CCSession:
 
         self._sender(b'D' + b''.join(
             ser.serialize(tid, self._enc) for tid in all_tids))
+
+    def throw_keyboard_interrupt(self):
+        self._program_greenlet.throw(EOFError())
 
     def _run_sandboxed_greenlet(self, fn):
         self._program_greenlet = CCGreenlet(fn, sess=self)

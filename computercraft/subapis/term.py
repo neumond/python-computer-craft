@@ -1,17 +1,6 @@
-from contextlib import contextmanager
 from typing import Tuple
 
-from .base import BaseSubAPI
-from .mixins import TermMixin, TermTarget
-from ..sess import eval_lua_method_factory, lua_context_object
-
-
-class TermAPI(BaseSubAPI, TermMixin):
-    pass
-
-
-method = eval_lua_method_factory('term.')
-tapi = TermAPI('term')
+from ..sess import eval_lua
 
 
 __all__ = (
@@ -33,49 +22,101 @@ __all__ = (
     'getPaletteColor',
     'setPaletteColor',
     'nativePaletteColor',
-    'redirect',
-    'get_current_target',
-    'get_native_target',
+    # 'redirect',
+    # 'get_current_target',
+    # 'get_native_target',
 )
 
 
-write = tapi.write
-blit = tapi.blit
-clear = tapi.clear
-clearLine = tapi.clearLine
-getCursorPos = tapi.getCursorPos
-setCursorPos = tapi.setCursorPos
-getCursorBlink = tapi.getCursorBlink
-setCursorBlink = tapi.setCursorBlink
-isColor = tapi.isColor
-getSize = tapi.getSize
-scroll = tapi.scroll
-setTextColor = tapi.setTextColor
-getTextColor = tapi.getTextColor
-setBackgroundColor = tapi.setBackgroundColor
-getBackgroundColor = tapi.getBackgroundColor
-getPaletteColor = tapi.getPaletteColor
-setPaletteColor = tapi.setPaletteColor
+def write(text: str) -> None:
+    return eval_lua(b'G:term:M:write', text).take_none()
 
 
-def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
-    rp = method('nativePaletteColor', colorID)
+def blit(text: str, textColors: bytes, backgroundColors: bytes) -> None:
+    return eval_lua(b'G:term:M:blit', text, textColors, backgroundColors).take_none()
+
+
+def clear() -> None:
+    return eval_lua(b'G:term:M:clear').take_none()
+
+
+def clearLine() -> None:
+    return eval_lua(b'G:term:M:clearLine').take_none()
+
+
+def getCursorPos() -> Tuple[int, int]:
+    rp = eval_lua(b'G:term:M:getCursorPos')
+    return tuple(rp.take_int() for _ in range(2))
+
+
+def setCursorPos(x: int, y: int) -> None:
+    return eval_lua(b'G:term:M:setCursorPos', x, y).take_none()
+
+
+def getCursorBlink() -> bool:
+    return eval_lua(b'G:term:M:getCursorBlink').take_bool()
+
+
+def setCursorBlink(value: bool):
+    return eval_lua(b'G:term:M:setCursorBlink', value).take_none()
+
+
+def isColor() -> bool:
+    return eval_lua(b'G:term:M:isColor').take_bool()
+
+
+def getSize() -> Tuple[int, int]:
+    rp = eval_lua(b'G:term:M:getSize')
+    return tuple(rp.take_int() for _ in range(2))
+
+
+def scroll(lines: int) -> None:
+    return eval_lua(b'G:term:M:scroll', lines).take_none()
+
+
+def setTextColor(colorID: int) -> None:
+    return eval_lua(b'G:term:M:setTextColor', colorID).take_none()
+
+
+def getTextColor() -> int:
+    return eval_lua(b'G:term:M:getTextColor').take_int()
+
+
+def setBackgroundColor(colorID: int) -> None:
+    return eval_lua(b'G:term:M:setBackgroundColor', colorID).take_none()
+
+
+def getBackgroundColor() -> int:
+    return eval_lua(b'G:term:M:getBackgroundColor').take_int()
+
+
+def getPaletteColor(colorID: int) -> Tuple[float, float, float]:
+    rp = eval_lua(b'G:term:M:getPaletteColor', colorID)
     return tuple(rp.take_number() for _ in range(3))
 
 
-@contextmanager
-def redirect(target: TermTarget):
-    with lua_context_object(
-        'term.redirect(...)',
-        (target, ),
-        'term.redirect({e})',
-    ):
-        yield
+def setPaletteColor(colorID: int, r: float, g: float, b: float) -> None:
+    return eval_lua(b'G:term:M:setPaletteColor', colorID, r, g, b).take_none()
 
 
-def get_current_target() -> TermTarget:
-    return TermTarget('term.current()')
+def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
+    rp = eval_lua(b'G:term:M:nativePaletteColor', colorID)
+    return tuple(rp.take_number() for _ in range(3))
 
 
-def get_native_target() -> TermTarget:
-    return TermTarget('term.native()')
+# @contextmanager
+# def redirect(target: TermTarget):
+#     with lua_context_object(
+#         'term.redirect(...)',
+#         (target, ),
+#         'term.redirect({e})',
+#     ):
+#         yield
+
+
+# def get_current_target() -> TermTarget:
+#     return TermTarget('term.current()')
+
+
+# def get_native_target() -> TermTarget:
+#     return TermTarget('term.native()')
