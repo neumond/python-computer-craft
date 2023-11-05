@@ -86,7 +86,7 @@ class StdFileProxy:
         if _is_global_greenlet():
             return self._native.write(s)
         else:
-            s = ser.dirty_encode(s, get_current_session()._enc)
+            s = s.encode(get_current_session()._enc, errors='replace')
             if self._err:
                 return eval_lua(b'io.stderr:write(...)', s).take_none()
             else:
@@ -273,7 +273,7 @@ class CCGreenlet:
             if error is True:
                 error = None
             else:
-                error = ser.dirty_encode(error, self._sess._enc)
+                error = error.encode(self._sess._enc, errors='replace')
             self._sess._sender(b'C' + ser.serialize(error, self._sess._enc))
         if self._parent is not None:
             self._parent._children.discard(self._task_id)
@@ -367,7 +367,7 @@ class CCSession:
         self._tid_allocator = map(base36, count(start=1))
         self._sender = sender
         self._oc = oc
-        self._enc = 'utf-8' if oc else 'latin1'
+        self._enc = ser._OC_ENC if oc else ser._CC_ENC
         self._greenlets = {}
         self._server_greenlet = get_current_greenlet()
         self._program_greenlet = None

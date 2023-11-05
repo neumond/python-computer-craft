@@ -1,46 +1,27 @@
-from typing import Any, Tuple, Union
+from typing import Any, Tuple
 from uuid import UUID
 
 from . import lua
 
 
 __all__ = (
+    '_CC_ENC',
+    '_OC_ENC',
+    'cc_dirty_encode',
     'serialize',
     'deserialize',
 )
 
 
-_ENC = 'latin1'
+_CC_ENC = 'latin1'
+_OC_ENC = 'utf-8'
+
 # encoding fast check
-assert [bytes([i]) for i in range(256)] == [chr(i).encode(_ENC) for i in range(256)]
+assert [bytes([i]) for i in range(256)] == [chr(i).encode(_CC_ENC) for i in range(256)]
 
 
-def encode(s: str) -> bytes:
-    return s.encode(_ENC)
-
-
-def u_encode(s: Union[str, UUID, None]) -> Union[bytes, UUID, None]:
-    if isinstance(s, str):
-        return s.encode('utf-8')
-    return s
-
-
-def nil_encode(s):
-    if s is None:
-        return None
-    return encode(s)
-
-
-def dirty_encode(s: str, enc: str) -> bytes:
-    return s.encode(enc, errors='replace')
-
-
-def decode(b):
-    return b.decode(_ENC)
-
-
-def u_decode(b):
-    return b.decode('utf-8')
+def cc_dirty_encode(s: str) -> bytes:
+    return s.encode(_CC_ENC, errors='replace')
 
 
 def serialize(v: Any, encoding: str) -> bytes:

@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from ..lua import LuaExpr
-from ..ser import u_encode
 from ..sess import eval_lua
 
 
@@ -22,4 +21,4 @@ class BaseComponent(LuaExpr):
         return eval_lua(b'R:component:M:invoke', self._addr, method, *args)
 
     def get_expr_code(self):
-        return b'component.proxy("' + u_encode(self._addr) + b'")'
+        return b'component.proxy("' + str(self._addr).encode('ascii') + b'")'

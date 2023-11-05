@@ -1,7 +1,4 @@
-from ..sess import eval_lua_method_factory
-
-
-method = eval_lua_method_factory('pocket.')
+from ..sess import eval_lua
 
 
 __all__ = (
@@ -11,8 +8,8 @@ __all__ = (
 
 
 def equipBack():
-    return method('equipBack').check_bool_error()
+    return eval_lua(b'G:pocket:M:equipBack').check_bool_error()
 
 
 def unequipBack():
-    return method('unequipBack').check_bool_error()
+    return eval_lua(b'G:pocket:M:unequipBack').check_bool_error()

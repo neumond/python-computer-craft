@@ -1,10 +1,6 @@
 from typing import Optional
 
-from .. import ser
-from ..sess import eval_lua_method_factory
-
-
-method = eval_lua_method_factory('multishell.')
+from ..sess import eval_lua
 
 
 __all__ = (
@@ -19,29 +15,28 @@ __all__ = (
 
 
 def getCurrent() -> int:
-    return method('getCurrent').take_int()
+    return eval_lua(b'G:multishell:M:getCurrent').take_int()
 
 
 def getCount() -> int:
-    return method('getCount').take_int()
+    return eval_lua(b'G:multishell:M:getCount').take_int()
 
 
 def launch(environment: dict, programPath: str, *args: str) -> int:
-    args = tuple(ser.encode(a) for a in args)
-    return method('launch', environment, ser.encode(programPath), *args).take_int()
+    return eval_lua(b'G:multishell:M:launch', environment, programPath, *args).take_int()
 
 
 def setTitle(tabID: int, title: str):
-    return method('setTitle', tabID, ser.encode(title)).take_none()
+    return eval_lua(b'G:multishell:M:setTitle', tabID, title).take_none()
 
 
 def getTitle(tabID: int) -> Optional[str]:
-    return method('getTitle', tabID).take_option_string()
+    return eval_lua(b'G:multishell:M:getTitle', tabID).take_option_string()
 
 
 def setFocus(tabID: int) -> bool:
-    return method('setFocus', tabID).take_bool()
+    return eval_lua(b'G:multishell:M:setFocus', tabID).take_bool()
 
 
 def getFocus() -> int:
-    return method('getFocus').take_int()
+    return eval_lua(b'G:multishell:M:getFocus').take_int()

@@ -1,11 +1,7 @@
 from typing import Any, List, Optional, Tuple, Union
 
-from .. import ser
 from ..lua import LuaNum
-from ..sess import eval_lua_method_factory
-
-
-method = eval_lua_method_factory('rednet.')
+from ..sess import eval_lua
 
 
 __all__ = (
@@ -27,45 +23,45 @@ CHANNEL_REPEAT = 65533
 CHANNEL_BROADCAST = 65535
 
 
-def open(side: str):
-    return method('open', ser.encode(side)).take_none()
+def open(side: str) -> None:
+    return eval_lua(b'G:rednet:M:open', side).take_none()
 
 
-def close(side: str = None):
-    return method('close', ser.nil_encode(side)).take_none()
+def close(side: str = None) -> None:
+    return eval_lua(b'G:rednet:M:close', side).take_none()
 
 
 def send(receiverID: int, message: Any, protocol: str = None) -> bool:
-    return method('send', receiverID, message, ser.nil_encode(protocol)).take_bool()
+    return eval_lua(b'G:rednet:M:send', receiverID, message, protocol).take_bool()
 
 
-def broadcast(message: Any, protocol: str = None):
-    return method('broadcast', message, ser.nil_encode(protocol)).take_none()
+def broadcast(message: Any, protocol: str = None) -> None:
+    return eval_lua(b'G:rednet:M:broadcast', message, protocol).take_none()
 
 
 def receive(
     protocolFilter: str = None, timeout: LuaNum = None,
 ) -> Optional[Tuple[int, Any, Optional[str]]]:
-    rp = method('receive', ser.nil_encode(protocolFilter), timeout)
+    rp = eval_lua(b'G:rednet:M:receive', protocolFilter, timeout)
     if rp.peek() is None:
         return None
     return (rp.take_int(), rp.take(), rp.take_option_string())
 
 
 def isOpen(side: str = None) -> bool:
-    return method('isOpen', ser.nil_encode(side)).take_bool()
+    return eval_lua(b'G:rednet:M:isOpen', side).take_bool()
 
 
-def host(protocol: str, hostname: str):
-    return method('host', ser.encode(protocol), ser.encode(hostname)).take_none()
+def host(protocol: str, hostname: str) -> None:
+    return eval_lua(b'G:rednet:M:host', protocol, hostname).take_none()
 
 
-def unhost(protocol: str):
-    return method('unhost', ser.encode(protocol)).take_none()
+def unhost(protocol: str) -> None:
+    return eval_lua(b'G:rednet:M:unhost', protocol).take_none()
 
 
 def lookup(protocol: str, hostname: str = None) -> Union[Optional[int], List[int]]:
-    rp = method('lookup', ser.encode(protocol), ser.nil_encode(hostname))
+    rp = eval_lua(b'G:rednet:M:lookup', protocol, hostname)
     if hostname is None:
         r = []
         while rp.peek() is not None:

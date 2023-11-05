@@ -1,6 +1,5 @@
 from cc import keys
 
-
 a = keys.getCode('a')
 space = keys.getCode('space')
 enter = keys.getCode('enter')
@@ -14,7 +13,11 @@ assert keys.getName(a) == 'a'
 assert keys.getName(space) == 'space'
 assert keys.getName(enter) == 'enter'
 
-# for i in range(255):
-#     print(i, keys.getName(i))
+ks = []
+for i in range(256):
+    n = keys.getName(i)
+    if n is not None:
+        ks.append(f'{i}:{n}')
+print(' '.join(ks))
 
 print('Test finished successfully')

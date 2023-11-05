@@ -1,16 +1,4 @@
-from cc import import_file, colors
-
-_lib = import_file('_lib.py', __file__)
-
-
-tbl = _lib.get_object_table('colors')
-
-# use packRGB and unpackRGB
-del tbl['function']['rgb8']
-
-tbl['function']['iter_colors'] = True
-
-assert _lib.get_class_table(colors) == tbl
+from cc import colors
 
 cs = colors.combine(
     colors.orange,

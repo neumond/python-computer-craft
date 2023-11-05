@@ -44,16 +44,16 @@ return src
 
 
 def is_commands() -> bool:
-    return eval_lua('return commands ~= nil').take_bool()
+    return eval_lua(b'return commands ~= nil').take_bool()
 
 
 def is_multishell() -> bool:
-    return eval_lua('return multishell ~= nil').take_bool()
+    return eval_lua(b'return multishell ~= nil').take_bool()
 
 
 def is_turtle() -> bool:
-    return eval_lua('return turtle ~= nil').take_bool()
+    return eval_lua(b'return turtle ~= nil').take_bool()
 
 
 def is_pocket() -> bool:
-    return eval_lua('return pocket ~= nil').take_bool()
+    return eval_lua(b'return pocket ~= nil').take_bool()

@@ -1,9 +1,6 @@
 from typing import Tuple
 
-from ..sess import eval_lua_method_factory
-
-
-method = eval_lua_method_factory('colors.')
+from ..sess import eval_lua
 
 
 __all__ = (
@@ -54,23 +51,23 @@ black = 0x8000
 # combine, subtract and test are mostly for redstone.setBundledOutput
 
 def combine(*colors: int) -> int:
-    return method('combine', *colors).take_int()
+    return eval_lua(b'G:colors:M:combine', *colors).take_int()
 
 
 def subtract(color_set: int, *colors: int) -> int:
-    return method('subtract', color_set, *colors).take_int()
+    return eval_lua(b'G:colors:M:subtract', color_set, *colors).take_int()
 
 
 def test(colors: int, color: int) -> bool:
-    return method('test', colors, color).take_bool()
+    return eval_lua(b'G:colors:M:test', colors, color).take_bool()
 
 
 def packRGB(r: float, g: float, b: float) -> int:
-    return method('packRGB', r, g, b).take_int()
+    return eval_lua(b'G:colors:M:packRGB', r, g, b).take_int()
 
 
 def unpackRGB(rgb: int) -> Tuple[float, float, float]:
-    rp = method('unpackRGB', rgb)
+    rp = eval_lua(b'G:colors:M:unpackRGB', rgb)
     return tuple(rp.take_number() for _ in range(3))
 
 

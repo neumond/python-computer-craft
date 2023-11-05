@@ -1,0 +1,227 @@
+R2585:0[5]{:[1]<7>disk.py:[0]<2>py}<7>disk.py<2540>from contextlib import contextmanager
+from cc import LuaException, disk
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+s = 'right'
+
+step(f'Make sure there is no disk drive at {s} side')
+
+assert disk.isPresent(s) is False
+assert disk.hasData(s) is False
+assert disk.getMountPath(s) is None
+assert disk.setLabel(s, 'text') is None
+assert disk.getLabel(s) is None
+assert disk.getID(s) is None
+assert disk.hasAudio(s) is False
+assert disk.getAudioTitle(s) is None
+assert disk.playAudio(s) is None
+assert disk.stopAudio(s) is None
+assert disk.eject(s) is None
+
+step(f'Place empty disk drive at {s} side')
+
+assert disk.isPresent(s) is False
+assert disk.hasData(s) is False
+assert disk.getMountPath(s) is None
+assert disk.setLabel(s, 'text') is None
+assert disk.getLabel(s) is None
+assert disk.getID(s) is None
+assert disk.hasAudio(s) is False
+assert disk.getAudioTitle(s) is None
+assert disk.playAudio(s) is None
+assert disk.stopAudio(s) is None
+assert disk.eject(s) is None
+
+step('Put new CC diskette into disk drive')
+
+assert disk.isPresent(s) is True
+assert disk.hasData(s) is True
+assert isinstance(disk.getMountPath(s), str)
+assert isinstance(disk.getID(s), int)
+
+assert disk.getLabel(s) is None
+assert disk.setLabel(s, 'label') is None
+assert disk.getLabel(s) == 'label'
+assert disk.setLabel(s, None) is None
+assert disk.getLabel(s) is None
+
+assert disk.hasAudio(s) is False
+assert disk.getAudioTitle(s) is None
+assert disk.playAudio(s) is None
+assert disk.stopAudio(s) is None
+
+assert disk.eject(s) is None
+
+step('Put any audio disk into disk drive')
+
+assert disk.isPresent(s) is True
+assert disk.hasData(s) is False
+assert disk.getMountPath(s) is None
+assert disk.getID(s) is None
+assert disk.hasAudio(s) is True
+
+label = disk.getAudioTitle(s)
+assert isinstance(label, str)
+assert label != 'label'
+print(f'Label is {label}')
+assert disk.getLabel(s) == label
+with assert_raises(LuaException):
+    assert disk.setLabel(s, 'label') is None
+with assert_raises(LuaException):
+    assert disk.setLabel(s, None) is None
+# no effect
+assert disk.getLabel(s) == label
+
+assert disk.playAudio(s) is None
+
+step('Audio must be playing now')
+
+assert disk.stopAudio(s) is None
+assert disk.eject(s) is None
+
+print('Test finished successfully')
+S86:T<1>1<13>io.write(...){:[1]<54>Make sure there is no disk drive at right side [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S41:T<1>1<18>G:disk:M:isPresent{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S39:T<1>1<16>G:disk:M:hasData{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S44:T<1>1<21>G:disk:M:getMountPath{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S51:T<1>1<17>G:disk:M:setLabel{:[1]<5>right:[2]<4>text}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:getLabel{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:disk:M:getID{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:hasAudio{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S45:T<1>1<22>G:disk:M:getAudioTitle{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<18>G:disk:M:playAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<18>G:disk:M:stopAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:disk:M:eject{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<13>io.write(...){:[1]<44>Place empty disk drive at right side [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S41:T<1>1<18>G:disk:M:isPresent{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S39:T<1>1<16>G:disk:M:hasData{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S44:T<1>1<21>G:disk:M:getMountPath{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S51:T<1>1<17>G:disk:M:setLabel{:[1]<5>right:[2]<4>text}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:getLabel{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:disk:M:getID{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:hasAudio{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S45:T<1>1<22>G:disk:M:getAudioTitle{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<18>G:disk:M:playAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<18>G:disk:M:stopAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:disk:M:eject{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<13>io.write(...){:[1]<43>Put new CC diskette into disk drive [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S41:T<1>1<18>G:disk:M:isPresent{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<16>G:disk:M:hasData{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]T}
+S44:T<1>1<21>G:disk:M:getMountPath{:[1]<5>right}
+R27:T<1>1<18>{:[1]T:[2]<4>disk}
+S37:T<1>1<14>G:disk:M:getID{:[1]<5>right}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S40:T<1>1<17>G:disk:M:getLabel{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S52:T<1>1<17>G:disk:M:setLabel{:[1]<5>right:[2]<5>label}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:getLabel{:[1]<5>right}
+R28:T<1>1<19>{:[1]T:[2]<5>label}
+S45:T<1>1<17>G:disk:M:setLabel{:[1]<5>right:[2]N}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:getLabel{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:hasAudio{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S45:T<1>1<22>G:disk:M:getAudioTitle{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<18>G:disk:M:playAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S41:T<1>1<18>G:disk:M:stopAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:disk:M:eject{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S74:T<1>1<13>io.write(...){:[1]<42>Put any audio disk into disk drive [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S41:T<1>1<18>G:disk:M:isPresent{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<16>G:disk:M:hasData{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]F}
+S44:T<1>1<21>G:disk:M:getMountPath{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:disk:M:getID{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:hasAudio{:[1]<5>right}
+R21:T<1>1<12>{:[1]T:[2]T}
+S45:T<1>1<22>G:disk:M:getAudioTitle{:[1]<5>right}
+R36:T<1>1<27>{:[1]T:[2]<12>C418 - strad}
+S53:T<1>1<13>io.write(...){:[1]<21>Label is C418 - strad}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:disk:M:getLabel{:[1]<5>right}
+R36:T<1>1<27>{:[1]T:[2]<12>C418 - strad}
+S52:T<1>1<17>G:disk:M:setLabel{:[1]<5>right:[2]<5>label}
+R75:T<1>1<66>{:[1]F:[2]<51>/rom/apis/disk.lua:62: Disk label cannot be changed}
+S45:T<1>1<17>G:disk:M:setLabel{:[1]<5>right:[2]N}
+R75:T<1>1<66>{:[1]F:[2]<51>/rom/apis/disk.lua:62: Disk label cannot be changed}
+S40:T<1>1<17>G:disk:M:getLabel{:[1]<5>right}
+R36:T<1>1<27>{:[1]T:[2]<12>C418 - strad}
+S41:T<1>1<18>G:disk:M:playAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S65:T<1>1<13>io.write(...){:[1]<33>Audio must be playing now [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S41:T<1>1<18>G:disk:M:stopAudio{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:disk:M:eject{:[1]<5>right}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

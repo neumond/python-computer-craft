@@ -1,6 +1,8 @@
+from contextlib import contextmanager
 from typing import Tuple
 
-from ..sess import eval_lua
+from .. import ser
+from ..sess import eval_lua, lua_context_object, ContextObject
 
 
 __all__ = (
@@ -22,81 +24,97 @@ __all__ = (
     'getPaletteColor',
     'setPaletteColor',
     'nativePaletteColor',
-    # 'redirect',
+    'redirect',
     # 'get_current_target',
     # 'get_native_target',
 )
 
 
-def write(text: str) -> None:
-    return eval_lua(b'G:term:M:write', text).take_none()
+class TermMixin:
+    def write(self, text: str) -> None:
+        return self._call(b'write', ser.cc_dirty_encode(text)).take_none()
+
+    def blit(self, text: str, textColors: bytes, backgroundColors: bytes) -> None:
+        return self._call(b'blit', ser.cc_dirty_encode(text), textColors, backgroundColors).take_none()
+
+    def clear(self) -> None:
+        return self._call(b'clear').take_none()
+
+    def clearLine(self) -> None:
+        return self._call(b'clearLine').take_none()
+
+    def getCursorPos(self) -> Tuple[int, int]:
+        rp = self._call(b'getCursorPos')
+        return tuple(rp.take_int() for _ in range(2))
+
+    def setCursorPos(self, x: int, y: int) -> None:
+        return self._call(b'setCursorPos', x, y).take_none()
+
+    def getCursorBlink(self) -> bool:
+        return self._call(b'getCursorBlink').take_bool()
+
+    def setCursorBlink(self, value: bool) -> None:
+        return self._call(b'setCursorBlink', value).take_none()
+
+    def isColor(self) -> bool:
+        return self._call(b'isColor').take_bool()
+
+    def getSize(self) -> Tuple[int, int]:
+        rp = self._call(b'getSize')
+        return tuple(rp.take_int() for _ in range(2))
+
+    def scroll(self, lines: int) -> None:
+        return self._call(b'scroll', lines).take_none()
+
+    def setTextColor(self, colorID: int) -> None:
+        return self._call(b'setTextColor', colorID).take_none()
+
+    def getTextColor(self) -> int:
+        return self._call(b'getTextColor').take_int()
+
+    def setBackgroundColor(self, colorID: int) -> None:
+        return self._call(b'setBackgroundColor', colorID).take_none()
+
+    def getBackgroundColor(self) -> int:
+        return self._call(b'getBackgroundColor').take_int()
+
+    def getPaletteColor(self, colorID: int) -> Tuple[float, float, float]:
+        rp = self._call(b'getPaletteColor', colorID)
+        return tuple(rp.take_number() for _ in range(3))
+
+    def setPaletteColor(self, colorID: int, r: float, g: float, b: float) -> None:
+        return self._call(b'setPaletteColor', colorID, r, g, b).take_none()
 
 
-def blit(text: str, textColors: bytes, backgroundColors: bytes) -> None:
-    return eval_lua(b'G:term:M:blit', text, textColors, backgroundColors).take_none()
+class TermTarget(ContextObject, TermMixin):
+    pass
 
 
-def clear() -> None:
-    return eval_lua(b'G:term:M:clear').take_none()
+class _Proxy(TermMixin):
+    def _call(self, method, *args):
+        return eval_lua(b'G:term:M:' + method, *args)
 
 
-def clearLine() -> None:
-    return eval_lua(b'G:term:M:clearLine').take_none()
+_p = _Proxy()
 
 
-def getCursorPos() -> Tuple[int, int]:
-    rp = eval_lua(b'G:term:M:getCursorPos')
-    return tuple(rp.take_int() for _ in range(2))
-
-
-def setCursorPos(x: int, y: int) -> None:
-    return eval_lua(b'G:term:M:setCursorPos', x, y).take_none()
-
-
-def getCursorBlink() -> bool:
-    return eval_lua(b'G:term:M:getCursorBlink').take_bool()
-
-
-def setCursorBlink(value: bool):
-    return eval_lua(b'G:term:M:setCursorBlink', value).take_none()
-
-
-def isColor() -> bool:
-    return eval_lua(b'G:term:M:isColor').take_bool()
-
-
-def getSize() -> Tuple[int, int]:
-    rp = eval_lua(b'G:term:M:getSize')
-    return tuple(rp.take_int() for _ in range(2))
-
-
-def scroll(lines: int) -> None:
-    return eval_lua(b'G:term:M:scroll', lines).take_none()
-
-
-def setTextColor(colorID: int) -> None:
-    return eval_lua(b'G:term:M:setTextColor', colorID).take_none()
-
-
-def getTextColor() -> int:
-    return eval_lua(b'G:term:M:getTextColor').take_int()
-
-
-def setBackgroundColor(colorID: int) -> None:
-    return eval_lua(b'G:term:M:setBackgroundColor', colorID).take_none()
-
-
-def getBackgroundColor() -> int:
-    return eval_lua(b'G:term:M:getBackgroundColor').take_int()
-
-
-def getPaletteColor(colorID: int) -> Tuple[float, float, float]:
-    rp = eval_lua(b'G:term:M:getPaletteColor', colorID)
-    return tuple(rp.take_number() for _ in range(3))
-
-
-def setPaletteColor(colorID: int, r: float, g: float, b: float) -> None:
-    return eval_lua(b'G:term:M:setPaletteColor', colorID, r, g, b).take_none()
+write = _p.write
+blit = _p.blit
+clear = _p.clear
+clearLine = _p.clearLine
+getCursorPos = _p.getCursorPos
+setCursorPos = _p.setCursorPos
+getCursorBlink = _p.getCursorBlink
+setCursorBlink = _p.setCursorBlink
+isColor = _p.isColor
+getSize = _p.getSize
+scroll = _p.scroll
+setTextColor = _p.setTextColor
+getTextColor = _p.getTextColor
+setBackgroundColor = _p.setBackgroundColor
+getBackgroundColor = _p.getBackgroundColor
+getPaletteColor = _p.getPaletteColor
+setPaletteColor = _p.setPaletteColor
 
 
 def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
@@ -104,15 +122,17 @@ def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
     return tuple(rp.take_number() for _ in range(3))
 
 
-# @contextmanager
-# def redirect(target: TermTarget):
-#     with lua_context_object(
-#         'term.redirect(...)',
-#         (target, ),
-#         'term.redirect({e})',
-#     ):
-#         yield
+@contextmanager
+def redirect(target: TermTarget):
+    with lua_context_object(
+        b'term.redirect(...)',
+        (target, ),
+        b'term.redirect({e})',
+    ):
+        yield
 
+
+# TODO: implement
 
 # def get_current_target() -> TermTarget:
 #     return TermTarget('term.current()')

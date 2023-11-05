@@ -1,10 +1,7 @@
 from typing import List, Dict, Optional
 
 from .. import ser
-from ..sess import eval_lua_method_factory
-
-
-method = eval_lua_method_factory('shell.')
+from ..sess import eval_lua
 
 
 __all__ = (
@@ -29,80 +26,77 @@ __all__ = (
 )
 
 
-def exit():
-    return method('exit').take_none()
+def exit() -> None:
+    return eval_lua(b'G:shell:M:exit').take_none()
 
 
 def dir() -> str:
-    return method('dir').take_string()
+    return eval_lua(b'G:shell:M:dir').take_string()
 
 
-def setDir(path: str):
-    return method('setDir', ser.encode(path)).take_none()
+def setDir(path: str) -> None:
+    return eval_lua(b'G:shell:M:setDir', path).take_none()
 
 
 def path() -> str:
-    return method('path').take_string()
+    return eval_lua(b'G:shell:M:path').take_string()
 
 
-def setPath(path: str):
-    return method('setPath', ser.encode(path)).take_none()
+def setPath(path: str) -> None:
+    return eval_lua(b'G:shell:M:setPath', path).take_none()
 
 
 def resolve(localPath: str) -> str:
-    return method('resolve', ser.encode(localPath)).take_string()
+    return eval_lua(b'G:shell:M:resolve', localPath).take_string()
 
 
 def resolveProgram(name: str) -> Optional[str]:
-    return method('resolveProgram', ser.encode(name)).take_option_string()
+    return eval_lua(b'G:shell:M:resolveProgram', name).take_option_string()
 
 
 def aliases() -> Dict[str, str]:
-    d = method('aliases').take_dict()
-    return {ser.decode(k): ser.decode(v) for k, v in d.items()}
+    d = eval_lua(b'G:shell:M:aliases').take_dict()
+    return {k.decode(ser._CC_ENC): v.decode(ser._CC_ENC) for k, v in d.items()}
 
 
-def setAlias(alias: str, program: str):
-    return method('setAlias', ser.encode(alias), ser.encode(program)).take_none()
+def setAlias(alias: str, program: str) -> None:
+    return eval_lua(b'G:shell:M:setAlias', alias, program).take_none()
 
 
-def clearAlias(alias: str):
-    return method('clearAlias', ser.encode(alias)).take_none()
+def clearAlias(alias: str) -> None:
+    return eval_lua(b'G:shell:M:clearAlias', alias).take_none()
 
 
 def programs(showHidden: bool = None) -> List[str]:
-    return method('programs', showHidden).take_list_of_strings()
+    return eval_lua(b'G:shell:M:programs', showHidden).take_list_of_strings()
 
 
 def getRunningProgram() -> str:
-    return method('getRunningProgram').take_string()
+    return eval_lua(b'G:shell:M:getRunningProgram').take_string()
 
 
 def run(command: str, *args: str) -> bool:
-    args = tuple(ser.encode(a) for a in args)
-    return method('run', ser.encode(command), *args).take_bool()
+    return eval_lua(b'G:shell:M:run', command, *args).take_bool()
 
 
 def execute(command: str, *args: str) -> bool:
-    args = tuple(ser.encode(a) for a in args)
-    return method('execute', ser.encode(command), *args).take_bool()
+    return eval_lua(b'G:shell:M:execute', command, *args).take_bool()
 
 
 def openTab(command: str, *args: str) -> int:
-    args = tuple(ser.encode(a) for a in args)
-    return method('openTab', ser.encode(command), *args).take_int()
+    return eval_lua(b'G:shell:M:openTab', command, *args).take_int()
 
 
-def switchTab(tabID: int):
-    return method('switchTab', tabID).take_none()
+def switchTab(tabID: int) -> None:
+    return eval_lua(b'G:shell:M:switchTab', tabID).take_none()
 
 
 def complete(prefix: str) -> List[str]:
-    return method('complete', ser.encode(prefix)).take_list_of_strings()
+    return eval_lua(b'G:shell:M:complete', prefix).take_list_of_strings()
 
 
 def completeProgram(prefix: str) -> List[str]:
-    return method('completeProgram', ser.encode(prefix)).take_list_of_strings()
+    return eval_lua(b'G:shell:M:completeProgram', prefix).take_list_of_strings()
 
 # TODO: ?
 # these functions won't be implemented

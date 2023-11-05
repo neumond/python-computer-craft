@@ -1,12 +1,24 @@
-from cc import LuaException, import_file, disk
+from contextlib import contextmanager
+from cc import LuaException, disk
 
-_lib = import_file('_lib.py', __file__)
-step, assert_raises = _lib.step, _lib.assert_raises
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
 
 
 s = 'right'
-
-assert _lib.get_class_table(disk) == _lib.get_object_table('disk')
 
 step(f'Make sure there is no disk drive at {s} side')
 
@@ -31,7 +43,7 @@ assert disk.setLabel(s, 'text') is None
 assert disk.getLabel(s) is None
 assert disk.getID(s) is None
 assert disk.hasAudio(s) is False
-assert disk.getAudioTitle(s) is False  # False instead None!
+assert disk.getAudioTitle(s) is None
 assert disk.playAudio(s) is None
 assert disk.stopAudio(s) is None
 assert disk.eject(s) is None

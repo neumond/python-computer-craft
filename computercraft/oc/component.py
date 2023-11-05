@@ -1,7 +1,7 @@
 from typing import Dict, Type, TypeVar
 from uuid import UUID
 
-from ..ser import u_decode
+from .. import ser
 from ..sess import eval_lua
 from ..oc_components import register_std_components
 
@@ -42,7 +42,7 @@ def type(address: UUID) -> str:
 def list() -> Dict[UUID, str]:
     # TODO: support parameters
     return {
-        UUID(k.decode('ascii')): u_decode(v) for k, v in
+        UUID(k.decode('ascii')): v.decode(ser._OC_ENC) for k, v in
         eval_lua(b'R:component:M:list').take_dict().items()}
 
 
