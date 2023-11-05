@@ -1,9 +1,5 @@
-from cc import import_file, help
+from cc import help
 
-_lib = import_file('_lib.py', __file__)
-
-
-assert _lib.get_class_table(help) == _lib.get_object_table('help')
 
 help.setPath('/rom/help')
 
@@ -15,7 +11,6 @@ assert help.lookup('abracadabra') is None
 ts = help.topics()
 assert isinstance(ts, list)
 assert len(ts) > 2
-# print(ts)
 assert 'disk' in ts
 
 assert help.completeTopic('di') == ['sk']

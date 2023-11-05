@@ -1,0 +1,531 @@
+R6975:0[5]{:[1]<5>fs.py:[0]<2>py}<5>fs.py<6934>from contextlib import contextmanager
+from cc import LuaException, fs
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+for name in ('tdir', 'tfile'):
+    if fs.exists(name):
+        fs.delete(name)
+
+assert fs.makeDir('tdir') is None
+with fs.open('tfile', 'w') as f:
+    f.writeLine('textline')
+
+dlist = set(fs.list('.'))
+
+assert {'tdir', 'tfile', 'rom'}.issubset(dlist)
+assert fs.list('tdir') == []
+
+capacity = fs.getCapacity('.')
+free = fs.getFreeSpace('.')
+assert isinstance(capacity, int)
+assert isinstance(free, int)
+assert free < capacity
+assert free > 0
+assert capacity > 0
+
+assert fs.exists('tdir') is True
+assert fs.exists('tfile') is True
+assert fs.exists('doesnotexist') is False
+
+assert fs.isDir('tdir') is True
+assert fs.isDir('tfile') is False
+assert fs.isDir('doesnotexist') is False
+
+assert fs.isReadOnly('rom') is True
+assert fs.isReadOnly('tdir') is False
+assert fs.isReadOnly('tfile') is False
+assert fs.isReadOnly('doesnotexist') is False
+
+assert fs.getDrive('rom') == 'rom'
+assert fs.getDrive('tdir') == 'hdd'
+assert fs.getDrive('tfile') == 'hdd'
+assert fs.getDrive('doesnotexist') is None
+
+assert fs.isDriveRoot('/') is True
+assert fs.isDriveRoot('rom') is True
+assert fs.isDriveRoot('tdir') is False
+assert fs.isDriveRoot('tfile') is False
+assert fs.isDriveRoot('doesnotexist') is True  # wtf?
+
+assert fs.getName('a/b/c/d') == 'd'
+assert fs.getName('a/b/c/') == 'c'
+assert fs.getName('/a/b/c/d') == 'd'
+assert fs.getName('///a/b/c/d') == 'd'
+assert fs.getName('') == 'root'  # wtf?
+assert fs.getName('/') == 'root'
+assert fs.getName('///') == 'root'
+assert fs.getName('.') == 'root'
+assert fs.getName('..') == '..'
+assert fs.getName('../../..') == '..'
+
+assert fs.getDir('a/b/c/d') == 'a/b/c'
+assert fs.getDir('a/b/c/') == 'a/b'
+assert fs.getDir('/a/b/c/d') == 'a/b/c'
+assert fs.getDir('///a/b/c/d') == 'a/b/c'
+assert fs.getDir('') == '..'
+assert fs.getDir('/') == '..'
+assert fs.getDir('///') == '..'
+assert fs.getDir('.') == '..'
+assert fs.getDir('..') == ''
+assert fs.getDir('../../..') == '../..'
+
+assert fs.combine('a', 'b') == 'a/b'
+assert fs.combine('a/', 'b') == 'a/b'
+assert fs.combine('a//', 'b') == 'a/b'
+assert fs.combine('a/', '/b') == 'a/b'
+assert fs.combine('a/b/c', '..') == 'a/b'
+assert fs.combine('a/b/c', '../..') == 'a'
+assert fs.combine('a/b/c', '../../..') == ''
+assert fs.combine('a/b/c', '../../../..') == '..'
+assert fs.combine('a/b/c', '../../../../..') == '../..'
+assert fs.combine('/a/b/c', '../../../../..') == '../..'
+assert fs.combine('a/b/c', '////') == 'a/b/c'
+assert fs.combine('a/b/c', '.') == 'a/b/c'
+assert fs.combine('a/b/c', './.') == 'a/b/c'
+assert fs.combine('a/b/c', './../.') == 'a/b'
+
+assert fs.getSize('tfile') == 9
+assert fs.getSize('tdir') == 0
+with assert_raises(LuaException):
+    fs.getSize('doesnotexist')
+
+assert fs.move('tfile', 'tdir/apple') is None
+assert fs.list('tdir') == ['apple']
+assert fs.copy('tdir/apple', 'tdir/banana') is None
+assert fs.list('tdir/') == ['apple', 'banana']
+assert fs.copy('tdir/apple', 'tdir/cherry') is None
+
+assert fs.getSize('tdir') == 0
+
+dlist = set(fs.find('*'))
+assert 'tdir' in dlist
+assert 'rom' in dlist
+assert 'tfile' not in dlist
+assert 'tdir/apple' not in dlist
+
+dlist = set(fs.find('tdir/*'))
+assert dlist == {'tdir/apple', 'tdir/banana', 'tdir/cherry'}
+
+dlist = set(fs.find('tdir/*a*'))
+assert dlist == {'tdir/apple', 'tdir/banana'}
+
+dlist = set(fs.find('**'))
+assert 'tdir' in dlist
+assert 'tdir/apple' not in dlist  # not recursive
+
+dlist = set(fs.list(''))
+assert 'tfile' not in dlist
+assert 'tdir' in dlist
+assert 'rom' in dlist
+
+dlist = set(fs.list('tdir'))
+assert dlist == {'apple', 'banana', 'cherry'}
+
+assert fs.attributes('tdir/banana') == {
+    'created': AnyInstanceOf(int),
+    'modified': AnyInstanceOf(int),
+    'modification': AnyInstanceOf(int),
+    'isReadOnly': False,
+    'isDir': False,
+    'size': 9,
+}
+assert fs.attributes('tdir') == {
+    'created': AnyInstanceOf(int),
+    'modified': AnyInstanceOf(int),
+    'modification': AnyInstanceOf(int),
+    'isReadOnly': False,
+    'isDir': True,
+    'size': 0,
+}
+with assert_raises(LuaException):
+    fs.attributes('doesnotexist')
+
+assert fs.complete('ba', 'tdir') == ['nana']
+assert fs.complete('ap', 'tdir') == ['ple']
+assert fs.complete('c', 'tdir') == ['herry']
+assert fs.complete('td', '') == ['ir/', 'ir']
+assert fs.complete('td', '', includeDirs=True) == ['ir/', 'ir']
+assert fs.complete('td', '', includeDirs=False) == ['ir/']  # wtf?
+assert fs.complete('ap', 'tdir', includeFiles=True) == ['ple']
+assert fs.complete('ap', 'tdir', includeFiles=False) == []
+
+assert fs.getSize('tdir/banana') == 9
+with fs.open('tdir/banana', 'r') as f:
+    assert f.read(4) == 'text'
+    assert f.readLine() == 'line'
+    assert f.read(1) is None
+    assert f.readLine() is None
+    assert f.readAll() is None
+    assert f.readAll() is None
+assert fs.getSize('tdir/banana') == 9
+with fs.open('tdir/banana', 'a') as f:
+    assert f.write('x') is None
+assert fs.getSize('tdir/banana') == 10
+with fs.open('tdir/banana', 'w') as f:
+    pass
+assert fs.getSize('tdir/banana') == 0  # truncate
+with fs.open('tdir/banana', 'w') as f:
+    assert f.write('Bro') is None
+    assert f.writeLine('wn fox jumps') is None
+    # assert fs.getSize('tdir/banana') == 0  # changes are not on a disk
+    assert f.flush() is None
+    assert fs.getSize('tdir/banana') == len('Brown fox jumps\n')
+    assert f.write('ov') is None
+    assert f.write('er ') is None
+    assert f.write('a lazy') is None
+    assert f.writeLine(' ???.') is None  # supports unicode!
+assert fs.getSize('tdir/banana') > 9
+with fs.open('tdir/banana', 'r') as f:
+    assert f.readAll() == 'Brown fox jumps\nover a lazy ???.\n'
+with assert_raises(LuaException):
+    with fs.open('tdir/banana', 'rw') as f:
+        pass
+
+assert fs.exists('tdir/banana') is True
+
+with fs.open('tdir/binfile', 'wb') as f:
+    assert f.write(b'a' * 9) is None
+    assert f.seek() == 9
+    assert f.seek('set', 0) == 0
+    assert f.write(b'b' * 3) is None
+    assert f.seek('cur', -1) == 2
+    assert f.write(b'c' * 3) is None
+    assert f.seek('end') == 9
+    assert f.write(b'd' * 3) is None
+    with assert_raises(LuaException):
+        f.seek('set', -10)
+
+with fs.open('tdir/binfile', 'rb') as f:
+    assert f.readAll() == b'bbcccaaaaddd'
+
+with fs.open('tdir/binfile', 'r') as f:
+    assert [line for line in f] == ['bbcccaaaaddd']
+
+assert fs.delete('tdir') is None
+assert fs.delete('tfile') is None
+assert fs.delete('doesnotexist') is None
+
+assert fs.exists('tdir/banana') is False
+
+print('Test finished successfully')
+S35:T<1>1<13>G:fs:M:exists{:[1]<4>tdir}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<13>G:fs:M:delete{:[1]<4>tdir}
+R15:T<1>1<7>{:[1]T}
+S36:T<1>1<13>G:fs:M:exists{:[1]<5>tfile}
+R21:T<1>1<12>{:[1]T:[2]F}
+S36:T<1>1<14>G:fs:M:makeDir{:[1]<4>tdir}
+R15:T<1>1<7>{:[1]T}
+S142:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>2:[2]<5>tfile:[3]<2>wb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S92:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>2:[2]<9>textline
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>2}
+R15:T<1>1<7>{:[1]T}
+S30:T<1>1<11>G:fs:M:list{:[1]<1>.}
+R157:T<1>1<147>{:[1]T:[2]{:[1]<9>colors.py:[2]<7>disk.py:[3]<5>fs.py:[4]<13>helloworld.py:[5]<7>keys.py:[6]<2>py:[7]<3>rom:[8]<4>tdir:[9]<7>term.py:[10]<5>tfile}}
+S33:T<1>1<11>G:fs:M:list{:[1]<4>tdir}
+R22:T<1>1<13>{:[1]T:[2]{}}
+S37:T<1>1<18>G:fs:M:getCapacity{:[1]<1>.}
+R29:T<1>1<20>{:[1]T:[2][1000000]}
+S38:T<1>1<19>G:fs:M:getFreeSpace{:[1]<1>.}
+R28:T<1>1<19>{:[1]T:[2][979148]}
+S35:T<1>1<13>G:fs:M:exists{:[1]<4>tdir}
+R21:T<1>1<12>{:[1]T:[2]T}
+S36:T<1>1<13>G:fs:M:exists{:[1]<5>tfile}
+R21:T<1>1<12>{:[1]T:[2]T}
+S44:T<1>1<13>G:fs:M:exists{:[1]<12>doesnotexist}
+R21:T<1>1<12>{:[1]T:[2]F}
+S34:T<1>1<12>G:fs:M:isDir{:[1]<4>tdir}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<12>G:fs:M:isDir{:[1]<5>tfile}
+R21:T<1>1<12>{:[1]T:[2]F}
+S43:T<1>1<12>G:fs:M:isDir{:[1]<12>doesnotexist}
+R21:T<1>1<12>{:[1]T:[2]F}
+S38:T<1>1<17>G:fs:M:isReadOnly{:[1]<3>rom}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<17>G:fs:M:isReadOnly{:[1]<4>tdir}
+R21:T<1>1<12>{:[1]T:[2]F}
+S40:T<1>1<17>G:fs:M:isReadOnly{:[1]<5>tfile}
+R21:T<1>1<12>{:[1]T:[2]F}
+S48:T<1>1<17>G:fs:M:isReadOnly{:[1]<12>doesnotexist}
+R21:T<1>1<12>{:[1]T:[2]F}
+S36:T<1>1<15>G:fs:M:getDrive{:[1]<3>rom}
+R26:T<1>1<17>{:[1]T:[2]<3>rom}
+S37:T<1>1<15>G:fs:M:getDrive{:[1]<4>tdir}
+R26:T<1>1<17>{:[1]T:[2]<3>hdd}
+S38:T<1>1<15>G:fs:M:getDrive{:[1]<5>tfile}
+R26:T<1>1<17>{:[1]T:[2]<3>hdd}
+S46:T<1>1<15>G:fs:M:getDrive{:[1]<12>doesnotexist}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<18>G:fs:M:isDriveRoot{:[1]<1>/}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<18>G:fs:M:isDriveRoot{:[1]<3>rom}
+R21:T<1>1<12>{:[1]T:[2]T}
+S40:T<1>1<18>G:fs:M:isDriveRoot{:[1]<4>tdir}
+R21:T<1>1<12>{:[1]T:[2]F}
+S41:T<1>1<18>G:fs:M:isDriveRoot{:[1]<5>tfile}
+R21:T<1>1<12>{:[1]T:[2]F}
+S49:T<1>1<18>G:fs:M:isDriveRoot{:[1]<12>doesnotexist}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<14>G:fs:M:getName{:[1]<7>a/b/c/d}
+R24:T<1>1<15>{:[1]T:[2]<1>d}
+S38:T<1>1<14>G:fs:M:getName{:[1]<6>a/b/c/}
+R24:T<1>1<15>{:[1]T:[2]<1>c}
+S40:T<1>1<14>G:fs:M:getName{:[1]<8>/a/b/c/d}
+R24:T<1>1<15>{:[1]T:[2]<1>d}
+S43:T<1>1<14>G:fs:M:getName{:[1]<10>///a/b/c/d}
+R24:T<1>1<15>{:[1]T:[2]<1>d}
+S32:T<1>1<14>G:fs:M:getName{:[1]<0>}
+R27:T<1>1<18>{:[1]T:[2]<4>root}
+S33:T<1>1<14>G:fs:M:getName{:[1]<1>/}
+R27:T<1>1<18>{:[1]T:[2]<4>root}
+S35:T<1>1<14>G:fs:M:getName{:[1]<3>///}
+R27:T<1>1<18>{:[1]T:[2]<4>root}
+S33:T<1>1<14>G:fs:M:getName{:[1]<1>.}
+R27:T<1>1<18>{:[1]T:[2]<4>root}
+S34:T<1>1<14>G:fs:M:getName{:[1]<2>..}
+R25:T<1>1<16>{:[1]T:[2]<2>..}
+S40:T<1>1<14>G:fs:M:getName{:[1]<8>../../..}
+R25:T<1>1<16>{:[1]T:[2]<2>..}
+S38:T<1>1<13>G:fs:M:getDir{:[1]<7>a/b/c/d}
+R28:T<1>1<19>{:[1]T:[2]<5>a/b/c}
+S37:T<1>1<13>G:fs:M:getDir{:[1]<6>a/b/c/}
+R26:T<1>1<17>{:[1]T:[2]<3>a/b}
+S39:T<1>1<13>G:fs:M:getDir{:[1]<8>/a/b/c/d}
+R28:T<1>1<19>{:[1]T:[2]<5>a/b/c}
+S42:T<1>1<13>G:fs:M:getDir{:[1]<10>///a/b/c/d}
+R28:T<1>1<19>{:[1]T:[2]<5>a/b/c}
+S31:T<1>1<13>G:fs:M:getDir{:[1]<0>}
+R25:T<1>1<16>{:[1]T:[2]<2>..}
+S32:T<1>1<13>G:fs:M:getDir{:[1]<1>/}
+R25:T<1>1<16>{:[1]T:[2]<2>..}
+S34:T<1>1<13>G:fs:M:getDir{:[1]<3>///}
+R25:T<1>1<16>{:[1]T:[2]<2>..}
+S32:T<1>1<13>G:fs:M:getDir{:[1]<1>.}
+R25:T<1>1<16>{:[1]T:[2]<2>..}
+S33:T<1>1<13>G:fs:M:getDir{:[1]<2>..}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S39:T<1>1<13>G:fs:M:getDir{:[1]<8>../../..}
+R28:T<1>1<19>{:[1]T:[2]<5>../..}
+S41:T<1>1<14>G:fs:M:combine{:[1]<1>a:[2]<1>b}
+R26:T<1>1<17>{:[1]T:[2]<3>a/b}
+S42:T<1>1<14>G:fs:M:combine{:[1]<2>a/:[2]<1>b}
+R26:T<1>1<17>{:[1]T:[2]<3>a/b}
+S43:T<1>1<14>G:fs:M:combine{:[1]<3>a//:[2]<1>b}
+R26:T<1>1<17>{:[1]T:[2]<3>a/b}
+S43:T<1>1<14>G:fs:M:combine{:[1]<2>a/:[2]<2>/b}
+R26:T<1>1<17>{:[1]T:[2]<3>a/b}
+S46:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<2>..}
+R26:T<1>1<17>{:[1]T:[2]<3>a/b}
+S49:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<5>../..}
+R24:T<1>1<15>{:[1]T:[2]<1>a}
+S52:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<8>../../..}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S56:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<11>../../../..}
+R25:T<1>1<16>{:[1]T:[2]<2>..}
+S59:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<14>../../../../..}
+R28:T<1>1<19>{:[1]T:[2]<5>../..}
+S60:T<1>1<14>G:fs:M:combine{:[1]<6>/a/b/c:[2]<14>../../../../..}
+R28:T<1>1<19>{:[1]T:[2]<5>../..}
+S48:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<4>////}
+R28:T<1>1<19>{:[1]T:[2]<5>a/b/c}
+S45:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<1>.}
+R28:T<1>1<19>{:[1]T:[2]<5>a/b/c}
+S47:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<3>./.}
+R28:T<1>1<19>{:[1]T:[2]<5>a/b/c}
+S50:T<1>1<14>G:fs:M:combine{:[1]<5>a/b/c:[2]<6>./../.}
+R26:T<1>1<17>{:[1]T:[2]<3>a/b}
+S37:T<1>1<14>G:fs:M:getSize{:[1]<5>tfile}
+R23:T<1>1<14>{:[1]T:[2][9]}
+S36:T<1>1<14>G:fs:M:getSize{:[1]<4>tdir}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S45:T<1>1<14>G:fs:M:getSize{:[1]<12>doesnotexist}
+R51:T<1>1<42>{:[1]F:[2]<27>/doesnotexist: No such file}
+S52:T<1>1<11>G:fs:M:move{:[1]<5>tfile:[2]<10>tdir/apple}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<11>G:fs:M:list{:[1]<4>tdir}
+R34:T<1>1<25>{:[1]T:[2]{:[1]<5>apple}}
+S59:T<1>1<11>G:fs:M:copy{:[1]<10>tdir/apple:[2]<11>tdir/banana}
+R15:T<1>1<7>{:[1]T}
+S34:T<1>1<11>G:fs:M:list{:[1]<5>tdir/}
+R47:T<1>1<38>{:[1]T:[2]{:[1]<5>apple:[2]<6>banana}}
+S59:T<1>1<11>G:fs:M:copy{:[1]<10>tdir/apple:[2]<11>tdir/cherry}
+R15:T<1>1<7>{:[1]T}
+S36:T<1>1<14>G:fs:M:getSize{:[1]<4>tdir}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S30:T<1>1<11>G:fs:M:find{:[1]<1>*}
+R144:T<1>1<134>{:[1]T:[2]{:[1]<9>colors.py:[2]<7>disk.py:[3]<5>fs.py:[4]<13>helloworld.py:[5]<7>keys.py:[6]<2>py:[7]<3>rom:[8]<4>tdir:[9]<7>term.py}}
+S35:T<1>1<11>G:fs:M:find{:[1]<6>tdir/*}
+R78:T<1>1<69>{:[1]T:[2]{:[1]<10>tdir/apple:[2]<11>tdir/banana:[3]<11>tdir/cherry}}
+S37:T<1>1<11>G:fs:M:find{:[1]<8>tdir/*a*}
+R59:T<1>1<50>{:[1]T:[2]{:[1]<10>tdir/apple:[2]<11>tdir/banana}}
+S31:T<1>1<11>G:fs:M:find{:[1]<2>**}
+R144:T<1>1<134>{:[1]T:[2]{:[1]<9>colors.py:[2]<7>disk.py:[3]<5>fs.py:[4]<13>helloworld.py:[5]<7>keys.py:[6]<2>py:[7]<3>rom:[8]<4>tdir:[9]<7>term.py}}
+S29:T<1>1<11>G:fs:M:list{:[1]<0>}
+R144:T<1>1<134>{:[1]T:[2]{:[1]<9>colors.py:[2]<7>disk.py:[3]<5>fs.py:[4]<13>helloworld.py:[5]<7>keys.py:[6]<2>py:[7]<3>rom:[8]<4>tdir:[9]<7>term.py}}
+S33:T<1>1<11>G:fs:M:list{:[1]<4>tdir}
+R60:T<1>1<51>{:[1]T:[2]{:[1]<5>apple:[2]<6>banana:[3]<6>cherry}}
+S47:T<1>1<17>G:fs:M:attributes{:[1]<11>tdir/banana}
+R145:T<1>1<135>{:[1]T:[2]{:<7>created[1699216918044]:<10>isReadOnlyF:<8>modified[1699216918044]:<12>modification[1699216918044]:<5>isDirF:<4>size[9]}}
+S39:T<1>1<17>G:fs:M:attributes{:[1]<4>tdir}
+R145:T<1>1<135>{:[1]T:[2]{:<7>created[1699216918048]:<10>isReadOnlyF:<8>modified[1699216918048]:<12>modification[1699216918048]:<5>isDirT:<4>size[0]}}
+S48:T<1>1<17>G:fs:M:attributes{:[1]<12>doesnotexist}
+R51:T<1>1<42>{:[1]F:[2]<27>/doesnotexist: No such file}
+S56:T<1>1<15>G:fs:M:complete{:[1]<2>ba:[2]<4>tdir:[3]N:[4]N}
+R33:T<1>1<24>{:[1]T:[2]{:[1]<4>nana}}
+S56:T<1>1<15>G:fs:M:complete{:[1]<2>ap:[2]<4>tdir:[3]N:[4]N}
+R32:T<1>1<23>{:[1]T:[2]{:[1]<3>ple}}
+S55:T<1>1<15>G:fs:M:complete{:[1]<1>c:[2]<4>tdir:[3]N:[4]N}
+R34:T<1>1<25>{:[1]T:[2]{:[1]<5>herry}}
+S52:T<1>1<15>G:fs:M:complete{:[1]<2>td:[2]<0>:[3]N:[4]N}
+R41:T<1>1<32>{:[1]T:[2]{:[1]<3>ir/:[2]<2>ir}}
+S52:T<1>1<15>G:fs:M:complete{:[1]<2>td:[2]<0>:[3]N:[4]T}
+R41:T<1>1<32>{:[1]T:[2]{:[1]<3>ir/:[2]<2>ir}}
+S52:T<1>1<15>G:fs:M:complete{:[1]<2>td:[2]<0>:[3]N:[4]F}
+R32:T<1>1<23>{:[1]T:[2]{:[1]<3>ir/}}
+S56:T<1>1<15>G:fs:M:complete{:[1]<2>ap:[2]<4>tdir:[3]T:[4]N}
+R32:T<1>1<23>{:[1]T:[2]{:[1]<3>ple}}
+S56:T<1>1<15>G:fs:M:complete{:[1]<2>ap:[2]<4>tdir:[3]F:[4]N}
+R22:T<1>1<13>{:[1]T:[2]{}}
+S44:T<1>1<14>G:fs:M:getSize{:[1]<11>tdir/banana}
+R23:T<1>1<14>{:[1]T:[2][9]}
+S149:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>3:[2]<11>tdir/banana:[3]<2>rb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S82:T<1>1<56>return(function(n,...)return temp[n].read(...);end)(...){:[1]<1>3:[2][4]}
+R27:T<1>1<18>{:[1]T:[2]<4>text}
+S84:T<1>1<60>return(function(n,...)return temp[n].readLine(...);end)(...){:[1]<1>3:[2]F}
+R27:T<1>1<18>{:[1]T:[2]<4>line}
+S82:T<1>1<56>return(function(n,...)return temp[n].read(...);end)(...){:[1]<1>3:[2][1]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<60>return(function(n,...)return temp[n].readLine(...);end)(...){:[1]<1>3:[2]F}
+R15:T<1>1<7>{:[1]T}
+S78:T<1>1<59>return(function(n,...)return temp[n].readAll(...);end)(...){:[1]<1>3}
+R15:T<1>1<7>{:[1]T}
+S78:T<1>1<59>return(function(n,...)return temp[n].readAll(...);end)(...){:[1]<1>3}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>3}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<14>G:fs:M:getSize{:[1]<11>tdir/banana}
+R23:T<1>1<14>{:[1]T:[2][9]}
+S149:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>4:[2]<11>tdir/banana:[3]<2>ab}
+R21:T<1>1<12>{:[1]T:[2]T}
+S84:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>4:[2]<1>x}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>4}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<14>G:fs:M:getSize{:[1]<11>tdir/banana}
+R24:T<1>1<15>{:[1]T:[2][10]}
+S149:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>5:[2]<11>tdir/banana:[3]<2>wb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>5}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<14>G:fs:M:getSize{:[1]<11>tdir/banana}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S149:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>6:[2]<11>tdir/banana:[3]<2>wb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S86:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>6:[2]<3>Bro}
+R15:T<1>1<7>{:[1]T}
+S97:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>6:[2]<13>wn fox jumps
+}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<57>return(function(n,...)return temp[n].flush(...);end)(...){:[1]<1>6}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<14>G:fs:M:getSize{:[1]<11>tdir/banana}
+R24:T<1>1<15>{:[1]T:[2][16]}
+S85:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>6:[2]<2>ov}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>6:[2]<3>er }
+R15:T<1>1<7>{:[1]T}
+S89:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>6:[2]<6>a lazy}
+R15:T<1>1<7>{:[1]T}
+S89:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>6:[2]<6> ???.
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>6}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<14>G:fs:M:getSize{:[1]<11>tdir/banana}
+R24:T<1>1<15>{:[1]T:[2][33]}
+S149:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>7:[2]<11>tdir/banana:[3]<2>rb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S78:T<1>1<59>return(function(n,...)return temp[n].readAll(...);end)(...){:[1]<1>7}
+R57:T<1>1<48>{:[1]T:[2]<33>Brown fox jumps
+over a lazy ???.
+}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>7}
+R15:T<1>1<7>{:[1]T}
+S150:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>8:[2]<11>tdir/banana:[3]<3>rwb}
+R71:T<1>1<62>{:[1]F:[2]<47>[string "return(functi..."]:1: Unsupported mode}
+S43:T<1>1<13>G:fs:M:exists{:[1]<11>tdir/banana}
+R21:T<1>1<12>{:[1]T:[2]T}
+S150:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>9:[2]<12>tdir/binfile:[3]<2>wb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S92:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>9:[2]<9>aaaaaaaaa}
+R15:T<1>1<7>{:[1]T}
+S85:T<1>1<56>return(function(n,...)return temp[n].seek(...);end)(...){:[1]<1>9:[2]N:[3]N}
+R23:T<1>1<14>{:[1]T:[2][9]}
+S92:T<1>1<56>return(function(n,...)return temp[n].seek(...);end)(...){:[1]<1>9:[2]<3>set:[3][0]}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S86:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>9:[2]<3>bbb}
+R15:T<1>1<7>{:[1]T}
+S93:T<1>1<56>return(function(n,...)return temp[n].seek(...);end)(...){:[1]<1>9:[2]<3>cur:[3][-1]}
+R23:T<1>1<14>{:[1]T:[2][2]}
+S86:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>9:[2]<3>ccc}
+R15:T<1>1<7>{:[1]T}
+S90:T<1>1<56>return(function(n,...)return temp[n].seek(...);end)(...){:[1]<1>9:[2]<3>end:[3]N}
+R23:T<1>1<14>{:[1]T:[2][9]}
+S86:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>9:[2]<3>ddd}
+R15:T<1>1<7>{:[1]T}
+S94:T<1>1<56>return(function(n,...)return temp[n].seek(...);end)(...){:[1]<1>9:[2]<3>set:[3][-10]}
+R44:T<1>1<35>{:[1]T:[3]<20>Position is negative}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>9}
+R15:T<1>1<7>{:[1]T}
+S150:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>a:[2]<12>tdir/binfile:[3]<2>rb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S78:T<1>1<59>return(function(n,...)return temp[n].readAll(...);end)(...){:[1]<1>a}
+R36:T<1>1<27>{:[1]T:[2]<12>bbcccaaaaddd}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>a}
+R15:T<1>1<7>{:[1]T}
+S150:T<1>1<101>return(function(n,...)local o,e=fs.open(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>b:[2]<12>tdir/binfile:[3]<2>rb}
+R21:T<1>1<12>{:[1]T:[2]T}
+S84:T<1>1<60>return(function(n,...)return temp[n].readLine(...);end)(...){:[1]<1>b:[2]F}
+R36:T<1>1<27>{:[1]T:[2]<12>bbcccaaaaddd}
+S84:T<1>1<60>return(function(n,...)return temp[n].readLine(...);end)(...){:[1]<1>b:[2]F}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<39>local n=...;temp[n].close();temp[n]=nil{:[1]<1>b}
+R15:T<1>1<7>{:[1]T}
+S35:T<1>1<13>G:fs:M:delete{:[1]<4>tdir}
+R15:T<1>1<7>{:[1]T}
+S36:T<1>1<13>G:fs:M:delete{:[1]<5>tfile}
+R15:T<1>1<7>{:[1]T}
+S44:T<1>1<13>G:fs:M:delete{:[1]<12>doesnotexist}
+R15:T<1>1<7>{:[1]T}
+S43:T<1>1<13>G:fs:M:exists{:[1]<11>tdir/banana}
+R21:T<1>1<12>{:[1]T:[2]F}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

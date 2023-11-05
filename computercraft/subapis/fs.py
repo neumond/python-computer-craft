@@ -1,8 +1,7 @@
 from contextlib import contextmanager
-from typing import Optional, List
+from typing import Any, Dict, Optional, List
 
-from .base import BaseSubAPI
-from ..sess import eval_lua, lua_context_object
+from ..sess import eval_lua, lua_context_object, ContextObject
 
 
 __all__ = (
@@ -32,7 +31,7 @@ __all__ = (
 class SeekMixin:
     def seek(self, whence: str = None, offset: int = None) -> int:
         # whence: set, cur, end
-        rp = self._call(b'seek', whence, offset)
+        rp = self._call(b'.seek', whence, offset)
         rp.check_nil_error()
         return rp.take_int()
 
@@ -42,13 +41,13 @@ class ReadMixin:
         raise NotImplementedError
 
     def read(self, count: int = 1) -> Optional[str]:
-        return self._take(self._call(b'read', count))
+        return self._take(self._call(b'.read', count))
 
     def readLine(self, withTrailing: bool = False) -> Optional[str]:
-        return self._take(self._call(b'readLine', withTrailing))
+        return self._take(self._call(b'.readLine', withTrailing))
 
     def readAll(self) -> Optional[str]:
-        return self._take(self._call(b'readAll'))
+        return self._take(self._call(b'.readAll'))
 
     def __iter__(self):
         return self
@@ -64,32 +63,32 @@ class WriteMixin:
     def _put(self, t):
         raise NotImplementedError
 
-    def write(self, text: str):
-        return self._call(b'write', self._put(text)).take_none()
+    def write(self, text: str) -> None:
+        return self._call(b'.write', self._put(text)).take_none()
 
-    def flush(self):
-        return self._call(b'flush').take_none()
+    def flush(self) -> None:
+        return self._call(b'.flush').take_none()
 
 
-class ReadHandle(ReadMixin, BaseSubAPI):
+class ReadHandle(ReadMixin, ContextObject):
     def _take(self, rp):
         return rp.take_option_unicode()
 
 
-class BinaryReadHandle(ReadMixin, SeekMixin, BaseSubAPI):
+class BinaryReadHandle(ReadMixin, SeekMixin, ContextObject):
     def _take(self, rp):
         return rp.take_option_bytes()
 
 
-class WriteHandle(WriteMixin, BaseSubAPI):
+class WriteHandle(WriteMixin, ContextObject):
     def _put(self, t: str) -> bytes:
         return t.encode('utf-8')
 
-    def writeLine(self, text: str):
+    def writeLine(self, text: str) -> None:
         return self.write(text + '\n')
 
 
-class BinaryWriteHandle(WriteMixin, SeekMixin, BaseSubAPI):
+class BinaryWriteHandle(WriteMixin, SeekMixin, ContextObject):
     def _put(self, b: bytes) -> bytes:
         return b
 
@@ -194,17 +193,6 @@ def complete(
     ).take_list_of_strings()
 
 
-def attributes(path: str) -> dict:
-    # TODO: may be just .take_dict() ?
-    tp = eval_lua(b'G:fs:M:attributes', path).take_dict((
-        b'created',
-        b'modification',
-        b'isDir',
-        b'size',
-    ))
-    r = {}
-    r['created'] = tp.take_int()
-    r['modification'] = tp.take_int()
-    r['isDir'] = tp.take_bool()
-    r['size'] = tp.take_int()
-    return r
+def attributes(path: str) -> Dict[str, Any]:
+    r = eval_lua(b'G:fs:M:attributes', path).take_dict()
+    return {k.decode('ascii'): v for k, v in r.items()}

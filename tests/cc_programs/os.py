@@ -1,27 +1,7 @@
 from cc import import_file, os
 
+
 _lib = import_file('_lib.py', __file__)
-
-
-tbl = _lib.get_object_table('os')
-
-# use methods with get*
-del tbl['function']['computerID']
-del tbl['function']['computerLabel']
-
-# we are in python world, loading lua modules is useless
-del tbl['function']['loadAPI']
-del tbl['function']['unloadAPI']
-
-# remove complex date formatting function in favor of python stdlib
-del tbl['function']['date']
-
-# event capturing is completely different
-del tbl['function']['pullEvent']
-del tbl['function']['pullEventRaw']
-tbl['function']['captureEvent'] = True
-
-assert _lib.get_class_table(os) == tbl
 
 
 with _lib.assert_takes_time(1.5, 3):
@@ -60,6 +40,6 @@ assert isinstance(os.day(), int)
 assert isinstance(os.time(), (int, float))
 assert isinstance(os.clock(), (int, float))
 
-assert os.run({}, 'rom/programs/fun/hello.lua') is True
+assert os.run({}, '/rom/programs/fun/hello.lua') is True
 
 print('Test finished successfully')

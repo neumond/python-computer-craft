@@ -1,7 +1,6 @@
 from types import ModuleType
 
 from ..errors import LuaException
-from ..lua import lua_string
 from ..sess import eval_lua
 
 
@@ -17,27 +16,22 @@ __all__ = (
 
 
 def import_file(path: str, relative_to: str = None):
-    mod = ModuleType(path)
-    mod.__file__ = path
-    path_expr = lua_string(path)
-    if relative_to is not None:
-        path_expr = 'fs.combine(fs.getDir({}), {})'.format(
-            lua_string(relative_to),
-            path_expr,
-        )
-    source = eval_lua('''
-local p = {}
+    source = eval_lua(b'''
+local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
 if not fs.exists(p) then return nil end
 if fs.isDir(p) then return nil end
 f = fs.open(p, "r")
 local src = f.readAll()
 f.close()
 return src
-'''.lstrip().format(
-        path_expr,
-    )).take_option_string()
+'''.strip(), path, relative_to).take_option_string()
     if source is None:
         raise ImportError('File not found: {}'.format(path))
+    mod = ModuleType(path)
+    mod.__file__ = path
     cc = compile(source, mod.__name__, 'exec')
     exec(cc, vars(mod))
     return mod

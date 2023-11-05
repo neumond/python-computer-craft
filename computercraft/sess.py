@@ -374,7 +374,7 @@ class CCSession:
         self._evr = CCEventRouter(
             lambda event: self._sender(b'S' + ser.serialize(event, self._enc)),
             lambda event: self._sender(b'U' + ser.serialize(event, self._enc)),
-            lambda task_id: self._greenlets[task_id].defer_switch('event'),
+            lambda task_id: self._greenlets[task_id].switch('event'),
         )
 
     def on_task_result(self, task_id, result):
@@ -385,7 +385,7 @@ class CCSession:
         self._greenlets[task_id].switch(result)
 
     def on_event(self, event, params):
-        self._evr.on_event(event, params)
+        self._evr.on_event(event.decode(self._enc), params)
 
     def create_task_id(self):
         return next(self._tid_allocator)

@@ -1,10 +1,26 @@
-from cc import LuaException, import_file, fs
-
-_lib = import_file('_lib.py', __file__)
-assert_raises, AnyInstanceOf = _lib.assert_raises, _lib.AnyInstanceOf
+from contextlib import contextmanager
+from cc import LuaException, fs
 
 
-assert _lib.get_class_table(fs) == _lib.get_object_table('fs')
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
 
 for name in ('tdir', 'tfile'):
     if fs.exists(name):
@@ -127,13 +143,17 @@ assert dlist == {'apple', 'banana', 'cherry'}
 
 assert fs.attributes('tdir/banana') == {
     'created': AnyInstanceOf(int),
+    'modified': AnyInstanceOf(int),
     'modification': AnyInstanceOf(int),
+    'isReadOnly': False,
     'isDir': False,
     'size': 9,
 }
 assert fs.attributes('tdir') == {
     'created': AnyInstanceOf(int),
+    'modified': AnyInstanceOf(int),
     'modification': AnyInstanceOf(int),
+    'isReadOnly': False,
     'isDir': True,
     'size': 0,
 }

@@ -50,7 +50,6 @@ def run(environment: dict, programPath: str, *args: str):
 def captureEvent(event: str):
     glet = get_current_greenlet().cc_greenlet
     sess = glet._sess
-    event = event.encode(sess._enc)
     evr = sess._evr
     evr.sub(glet._task_id, event)
     try:
@@ -78,17 +77,17 @@ def clock() -> LuaNum:
 # python has great stdlib to deal with real current time
 # we keep here only in-game time methods and parameters
 
-def time() -> LuaNum:
+def time(locale=b'ingame') -> LuaNum:
     # in hours 0..24
-    return eval_lua(b'G:os:M:time', b'ingame').take_number()
+    return eval_lua(b'G:os:M:time', locale).take_number()
 
 
-def day() -> int:
-    return eval_lua(b'G:os:M:day', b'ingame').take_int()
+def day(locale=b'ingame') -> int:
+    return eval_lua(b'G:os:M:day', locale).take_int()
 
 
-def epoch() -> int:
-    return eval_lua(b'G:os:M:epoch', b'ingame').take_int()
+def epoch(locale=b'ingame') -> int:
+    return eval_lua(b'G:os:M:epoch', locale).take_int()
 
 
 def sleep(seconds: LuaNum):

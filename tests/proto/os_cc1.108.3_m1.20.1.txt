@@ -1,0 +1,201 @@
+R1243:0[5]{:[1]<5>os.py:[0]<2>py}<5>os.py<1202>from cc import import_file, os
+
+
+_lib = import_file('_lib.py', __file__)
+
+
+with _lib.assert_takes_time(1.5, 3):
+    timer_id = os.startTimer(2)
+    for e in os.captureEvent('timer'):
+        if e[0] == timer_id:
+            print('Timer reached')
+            break
+
+
+timer_id = os.startTimer(20)
+assert isinstance(timer_id, int)
+assert os.cancelTimer(timer_id) is None
+assert os.cancelTimer(timer_id) is None
+
+alarm_id = os.setAlarm(0.0)
+assert isinstance(alarm_id, int)
+assert os.cancelAlarm(alarm_id) is None
+assert os.cancelAlarm(alarm_id) is None
+
+with _lib.assert_takes_time(1.5, 3):
+    assert os.sleep(2) is None
+
+assert (os.version()).startswith('CraftOS ')
+assert isinstance(os.getComputerID(), int)
+
+assert os.setComputerLabel(None) is None
+assert os.getComputerLabel() is None
+assert os.setComputerLabel('altair') is None
+assert os.getComputerLabel() == 'altair'
+assert os.setComputerLabel(None) is None
+assert os.getComputerLabel() is None
+
+assert isinstance(os.epoch(), int)
+assert isinstance(os.day(), int)
+assert isinstance(os.time(), (int, float))
+assert isinstance(os.clock(), (int, float))
+
+assert os.run({}, '/rom/programs/fun/hello.lua') is True
+
+print('Test finished successfully')
+S253:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<5>os.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699223414263]}
+S35:T<1>1<17>G:os:M:startTimer{:[1][2]}
+R25:T<1>1<16>{:[1]T:[2][258]}
+S9:S<5>timer
+R20:E<5>timer{:[1][258]}
+S45:T<1>1<13>io.write(...){:[1]<13>Timer reached}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S9:U<5>timer
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699223416241]}
+S36:T<1>1<17>G:os:M:startTimer{:[1][20]}
+R25:T<1>1<16>{:[1]T:[2][259]}
+S38:T<1>1<18>G:os:M:cancelTimer{:[1][259]}
+R15:T<1>1<7>{:[1]T}
+S38:T<1>1<18>G:os:M:cancelTimer{:[1][259]}
+R15:T<1>1<7>{:[1]T}
+S35:T<1>1<15>G:os:M:setAlarm{:[1][0.0]}
+R23:T<1>1<14>{:[1]T:[2][6]}
+S36:T<1>1<18>G:os:M:cancelAlarm{:[1][6]}
+R15:T<1>1<7>{:[1]T}
+S36:T<1>1<18>G:os:M:cancelAlarm{:[1][6]}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699223416252]}
+S30:T<1>1<12>G:os:M:sleep{:[1][2]}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699223418239]}
+S25:T<1>1<14>G:os:M:version{}
+R35:T<1>1<26>{:[1]T:[2]<11>CraftOS 1.8}
+S31:T<1>1<20>G:os:M:getComputerID{}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S39:T<1>1<23>G:os:M:setComputerLabel{:[1]N}
+R15:T<1>1<7>{:[1]T}
+S34:T<1>1<23>G:os:M:getComputerLabel{}
+R15:T<1>1<7>{:[1]T}
+S47:T<1>1<23>G:os:M:setComputerLabel{:[1]<6>altair}
+R15:T<1>1<7>{:[1]T}
+S34:T<1>1<23>G:os:M:getComputerLabel{}
+R29:T<1>1<20>{:[1]T:[2]<6>altair}
+S39:T<1>1<23>G:os:M:setComputerLabel{:[1]N}
+R15:T<1>1<7>{:[1]T}
+S34:T<1>1<23>G:os:M:getComputerLabel{}
+R15:T<1>1<7>{:[1]T}
+S36:T<1>1<12>G:os:M:epoch{:[1]<6>ingame}
+R31:T<1>1<22>{:[1]T:[2][109393200]}
+S34:T<1>1<10>G:os:M:day{:[1]<6>ingame}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S35:T<1>1<11>G:os:M:time{:[1]<6>ingame}
+R27:T<1>1<18>{:[1]T:[2][6.387]}
+S23:T<1>1<12>G:os:M:clock{}
+R27:T<1>1<18>{:[1]T:[2][654.7]}
+S62:T<1>1<10>G:os:M:run{:[1]{}:[2]<27>/rom/programs/fun/hello.lua}
+R21:T<1>1<12>{:[1]T:[2]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN
