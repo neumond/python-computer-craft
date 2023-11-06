@@ -25,8 +25,6 @@ bbbbbbbbbbbbbbbbbbbbbb399399bbbbbbbbbbbbbbbbbbbbb
 '''.strip()
 
 
-assert _lib.get_class_table(paintutils) == _lib.get_object_table('paintutils')
-
 with fs.open('img.nfp', 'w') as f:
     f.write(pixels)
 

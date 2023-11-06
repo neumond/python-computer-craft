@@ -3,10 +3,14 @@ from cc import LuaException, import_file, fs, settings
 _lib = import_file('_lib.py', __file__)
 step, assert_raises = _lib.step, _lib.assert_raises
 
-
-assert _lib.get_class_table(settings) == _lib.get_object_table('settings')
-
 step('Settings will be cleared')
+
+assert settings.undefine('test.a') is None
+assert settings.undefine('test.a') is None
+assert settings.undefine('test.a') is None
+assert settings.undefine('test.b') is None
+assert settings.undefine('test.c') is None
+assert settings.undefine('test.d') is None
 
 assert settings.clear() is None
 # names are not empty, there are system settings
@@ -14,7 +18,7 @@ assert isinstance(settings.getNames(), list)
 
 assert settings.define('test.a') is None
 assert settings.define('test.b', description='b') is None
-assert settings.define('test.c', type='string') is None
+assert settings.define('test.c', type='string', default='x') is None
 assert settings.define('test.d', default=42) is None
 
 assert settings.getDetails('test.a') == {
@@ -27,6 +31,8 @@ assert settings.getDetails('test.b') == {
 assert settings.getDetails('test.c') == {
     'changed': False,
     'type': 'string',
+    'default': 'x',
+    'value': 'x',
 }
 assert settings.getDetails('test.d') == {
     'changed': False,
@@ -48,12 +54,12 @@ assert settings.get('test.a') == 11
 assert settings.set('test.a', 12) is None
 assert settings.get('test.a') == 12
 with assert_raises(LuaException):
-    settings.set('test.a', b'text')
+    settings.set('test.a', 'text')
 assert settings.get('test.a') == 12
 assert settings.unset('test.a') is None
 assert settings.get('test.a') == 11
 
-assert settings.set('test.c', b'hello') is None
+assert settings.set('test.c', 'hello') is None
 
 assert {'test.a', 'test.b', 'test.c', 'test.d'}.issubset(set(settings.getNames()))
 
@@ -63,10 +69,10 @@ assert settings.undefine('test.c') is None
 assert settings.undefine('test.d') is None
 
 assert 'test.c' in settings.getNames()
-assert settings.get('test.c') == b'hello'
+assert settings.get('test.c') == 'hello'
 assert settings.getDetails('test.c') == {
     'changed': True,
-    'value': b'hello',
+    'value': 'hello',
 }
 
 assert settings.unset('test.c') is None

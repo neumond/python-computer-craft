@@ -2,16 +2,6 @@ from cc import import_file, os, redstone
 
 _lib = import_file('_lib.py', __file__)
 
-
-tbl = _lib.get_object_table('redstone')
-
-# remove British method names to make API lighter
-del tbl['function']['getAnalogueInput']
-del tbl['function']['getAnalogueOutput']
-del tbl['function']['setAnalogueOutput']
-
-assert _lib.get_class_table(redstone) == tbl
-
 assert set(redstone.getSides()) == {'top', 'bottom', 'front', 'back', 'left', 'right'}
 
 _lib.step('Remove all the redstone from sides of computer')

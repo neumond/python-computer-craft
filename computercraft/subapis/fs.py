@@ -194,5 +194,4 @@ def complete(
 
 
 def attributes(path: str) -> Dict[str, Any]:
-    r = eval_lua(b'G:fs:M:attributes', path).take_dict()
-    return {k.decode('ascii'): v for k, v in r.items()}
+    return eval_lua(b'G:fs:M:attributes', path).take_dict()

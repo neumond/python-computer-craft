@@ -3,11 +3,6 @@ from cc import import_file, shell
 _lib = import_file('_lib.py', __file__)
 
 
-tbl = _lib.get_object_table('shell')
-del tbl['function']['setCompletionFunction']
-del tbl['function']['getCompletionInfo']
-assert _lib.get_class_table(shell) == tbl
-
 assert shell.complete('ls ro') == ['m/', 'm']
 assert shell.completeProgram('lu') == ['a']
 

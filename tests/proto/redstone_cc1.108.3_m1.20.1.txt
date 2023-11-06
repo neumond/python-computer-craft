@@ -1,0 +1,210 @@
+R1504:0[5]{:[1]<11>redstone.py:[0]<2>py}<11>redstone.py<1449>from cc import import_file, os, redstone
+
+_lib = import_file('_lib.py', __file__)
+
+assert set(redstone.getSides()) == {'top', 'bottom', 'front', 'back', 'left', 'right'}
+
+_lib.step('Remove all the redstone from sides of computer')
+
+side = 'top'
+
+assert redstone.setOutput(side, True) is None
+assert redstone.getOutput(side) is True
+assert redstone.getAnalogOutput(side) == 15
+assert redstone.setOutput(side, False) is None
+assert redstone.getOutput(side) is False
+assert redstone.getAnalogOutput(side) == 0
+
+assert redstone.setAnalogOutput(side, 7) is None
+assert redstone.getAnalogOutput(side) == 7
+assert redstone.getOutput(side) is True
+assert redstone.setAnalogOutput(side, 15) is None
+assert redstone.getAnalogOutput(side) == 15
+assert redstone.setAnalogOutput(side, 0) is None
+assert redstone.getAnalogOutput(side) == 0
+assert redstone.getOutput(side) is False
+
+assert redstone.getInput(side) is False
+assert redstone.getAnalogInput(side) == 0
+
+_lib.step(f'Put redstone block on {side} side of computer')
+
+assert redstone.getInput(side) is True
+assert redstone.getAnalogInput(side) > 0
+
+_lib.step(f'Remove redstone block\nPut piston on {side} side of computer')
+
+assert redstone.getInput(side) is False
+assert redstone.getAnalogInput(side) == 0
+assert redstone.setOutput(side, True) is None
+os.sleep(2)
+assert redstone.setOutput(side, False) is None
+
+print('Piston must have been activated\nRemove piston')
+
+print('Test finished successfully')
+S260:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<11>redstone.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S32:T<1>1<21>G:redstone:M:getSides{}
+R91:T<1>1<82>{:[1]T:[2]{:[1]<6>bottom:[2]<3>top:[3]<4>back:[4]<5>front:[5]<5>right:[6]<4>left}}
+S86:T<1>1<13>io.write(...){:[1]<54>Remove all the redstone from sides of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S48:T<1>1<22>G:redstone:M:setOutput{:[1]<3>top:[2]T}
+R15:T<1>1<7>{:[1]T}
+S43:T<1>1<22>G:redstone:M:getOutput{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]T}
+S49:T<1>1<28>G:redstone:M:getAnalogOutput{:[1]<3>top}
+R24:T<1>1<15>{:[1]T:[2][15]}
+S48:T<1>1<22>G:redstone:M:setOutput{:[1]<3>top:[2]F}
+R15:T<1>1<7>{:[1]T}
+S43:T<1>1<22>G:redstone:M:getOutput{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]F}
+S49:T<1>1<28>G:redstone:M:getAnalogOutput{:[1]<3>top}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S56:T<1>1<28>G:redstone:M:setAnalogOutput{:[1]<3>top:[2][7]}
+R15:T<1>1<7>{:[1]T}
+S49:T<1>1<28>G:redstone:M:getAnalogOutput{:[1]<3>top}
+R23:T<1>1<14>{:[1]T:[2][7]}
+S43:T<1>1<22>G:redstone:M:getOutput{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]T}
+S57:T<1>1<28>G:redstone:M:setAnalogOutput{:[1]<3>top:[2][15]}
+R15:T<1>1<7>{:[1]T}
+S49:T<1>1<28>G:redstone:M:getAnalogOutput{:[1]<3>top}
+R24:T<1>1<15>{:[1]T:[2][15]}
+S56:T<1>1<28>G:redstone:M:setAnalogOutput{:[1]<3>top:[2][0]}
+R15:T<1>1<7>{:[1]T}
+S49:T<1>1<28>G:redstone:M:getAnalogOutput{:[1]<3>top}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S43:T<1>1<22>G:redstone:M:getOutput{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]F}
+S42:T<1>1<21>G:redstone:M:getInput{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]F}
+S48:T<1>1<27>G:redstone:M:getAnalogInput{:[1]<3>top}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S82:T<1>1<13>io.write(...){:[1]<50>Put redstone block on top side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S42:T<1>1<21>G:redstone:M:getInput{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]T}
+S48:T<1>1<27>G:redstone:M:getAnalogInput{:[1]<3>top}
+R24:T<1>1<15>{:[1]T:[2][15]}
+S96:T<1>1<13>io.write(...){:[1]<64>Remove redstone block
+Put piston on top side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S42:T<1>1<21>G:redstone:M:getInput{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]F}
+S48:T<1>1<27>G:redstone:M:getAnalogInput{:[1]<3>top}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S48:T<1>1<22>G:redstone:M:setOutput{:[1]<3>top:[2]T}
+R15:T<1>1<7>{:[1]T}
+S30:T<1>1<12>G:os:M:sleep{:[1][2]}
+R15:T<1>1<7>{:[1]T}
+S48:T<1>1<22>G:redstone:M:setOutput{:[1]<3>top:[2]F}
+R15:T<1>1<7>{:[1]T}
+S77:T<1>1<13>io.write(...){:[1]<45>Piston must have been activated
+Remove piston}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

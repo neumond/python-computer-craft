@@ -1,5 +1,6 @@
 from typing import Any, List
 
+from .. import ser
 from ..sess import eval_lua
 
 
@@ -33,24 +34,7 @@ def undefine(name: str) -> None:
 
 
 def getDetails(name: str) -> dict:
-    tp = eval_lua(b'G:settings:M:getDetails', name).take_dict((
-        b'changed',
-        b'description',
-        b'default',
-        b'type',
-        b'value',
-    ))
-    r = {}
-    r['changed'] = tp.take_bool()
-    for k, v in [
-        ('description', tp.take_option_string()),
-        ('default', tp.take()),
-        ('type', tp.take_option_string()),
-        ('value', tp.take()),
-    ]:
-        if v is not None:
-            r[k] = v
-    return r
+    return eval_lua(b'G:settings:M:getDetails', name).take_dict()
 
 
 def set(name: str, value: Any) -> None:
@@ -58,7 +42,8 @@ def set(name: str, value: Any) -> None:
 
 
 def get(name: str, default: Any = None) -> Any:
-    return eval_lua(b'G:settings:M:get', name, default).take()
+    r = eval_lua(b'G:settings:M:get', name, default).take()
+    return r.decode(ser._CC_ENC) if isinstance(r, bytes) else r
 
 
 def unset(name: str) -> None:

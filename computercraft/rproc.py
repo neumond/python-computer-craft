@@ -16,6 +16,19 @@ def lua_table_to_list(x, length: int = None, low_index: int = 1):
     return [x.get(i + low_index) for i in range(length)]
 
 
+def _decode_rec(enc, d):
+    if isinstance(d, bytes):
+        return d.decode(enc)
+    if isinstance(d, dict):
+        return {
+            _decode_rec(enc, k): _decode_rec(enc, v)
+            for k, v in d.items()
+        }
+    if isinstance(d, list):
+        return [_decode_rec(enc, v) for v in d]
+    return d
+
+
 class ResultProc:
     def __init__(self, result, enc):
         self._v = result
@@ -84,12 +97,12 @@ class ResultProc:
     def take_uuid(self):
         return UUID(self.take_bytes().decode('ascii'))
 
-    def take_dict(self, keys=None):
+    def take_dict(self, decode_bytes=True):
         x = self.take()
         assert isinstance(x, dict)
-        if keys is None:
-            return x
-        return TableProc(x, keys)
+        if decode_bytes:
+            return _decode_rec(self._enc, x)
+        return x
 
     def take_list(self, length: int = None):
         return lua_table_to_list(self.take_dict(), length)
@@ -140,8 +153,8 @@ class ResultProc:
 
     def take_list_of_strings(self, length: int = None):
         x = self.take_list(length)
-        assert all(map(lambda v: isinstance(v, bytes), x))
-        return [v.decode(self._enc) for v in x]
+        assert all(isinstance(v, str) for v in x)
+        return x
 
     def take_2d_int(self):
         x = self.take_list()
@@ -150,13 +163,3 @@ class ResultProc:
             for item in row:
                 assert isinstance(item, int)
         return x
-
-
-class TableProc(ResultProc):
-    def __init__(self, result, keys):
-        self._v = result
-        self._keys = keys
-        self._i = 0
-
-    def peek(self):
-        return self._v.get(self._keys[self._i])

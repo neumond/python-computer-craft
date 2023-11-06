@@ -1,0 +1,218 @@
+R1526:0[5]{:[1]<8>shell.py:[0]<2>py}<8>shell.py<1479>from cc import import_file, shell
+
+_lib = import_file('_lib.py', __file__)
+
+
+assert shell.complete('ls ro') == ['m/', 'm']
+assert shell.completeProgram('lu') == ['a']
+
+ps = shell.programs()
+assert 'shutdown' in ps
+
+als = shell.aliases()
+assert 'ls' in als
+assert als['ls'] == 'list'
+assert 'xls' not in als
+assert shell.setAlias('xls', 'list') is None
+als = shell.aliases()
+assert 'xls' in als
+assert als['xls'] == 'list'
+assert shell.clearAlias('xls') is None
+als = shell.aliases()
+assert 'xls' not in als
+
+assert shell.getRunningProgram() == 'py'
+
+assert shell.resolveProgram('doesnotexist') is None
+assert shell.resolveProgram('hello') == 'rom/programs/fun/hello.lua'
+
+assert shell.dir() == ''
+assert shell.resolve('doesnotexist') == 'doesnotexist'
+assert shell.resolve('startup.lua') == 'startup.lua'
+assert shell.setDir('rom') is None
+assert shell.dir() == 'rom'
+assert shell.resolve('startup.lua') == 'rom/startup.lua'
+assert shell.setDir('') is None
+
+assert isinstance(shell.path(), str)
+assert shell.setPath(shell.path()) is None
+
+assert shell.execute('hello') is True
+assert shell.run('hello') is True
+assert shell.execute('doesnotexist') is False
+assert shell.run('doesnotexist') is False
+
+tab = shell.openTab('hello')
+assert isinstance(tab, int)
+
+_lib.step(f'Program has been launched in tab {tab}')
+
+assert shell.switchTab(tab) is None
+
+_lib.step('Computer will shutdown after test due to shell.exit')
+
+assert shell.exit() is None
+
+print('Test finished successfully')
+S256:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<8>shell.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S41:T<1>1<18>G:shell:M:complete{:[1]<5>ls ro}
+R39:T<1>1<30>{:[1]T:[2]{:[1]<2>m/:[2]<1>m}}
+S45:T<1>1<25>G:shell:M:completeProgram{:[1]<2>lu}
+R30:T<1>1<21>{:[1]T:[2]{:[1]<1>a}}
+S34:T<1>1<18>G:shell:M:programs{:[1]N}
+R809:T<1>1<799>{:[1]T:[2]{:[1]<7>_lib.py:[2]<5>about:[3]<9>adventure:[4]<5>alias:[5]<4>apis:[6]<2>bg:[7]<2>cd:[8]<4>chat:[9]<5>clear:[10]<9>colors.py:[11]<4>copy:[12]<6>delete:[13]<7>disk.py:[14]<2>dj:[15]<5>drive:[16]<4>edit:[17]<5>eject:[18]<4>exit:[19]<2>fg:[20]<5>fs.py:[21]<3>gps:[22]<5>hello:[23]<13>helloworld.py:[24]<4>help:[25]<7>help.py:[26]<2>id:[27]<6>import:[28]<7>keys.py:[29]<5>label:[30]<4>list:[31]<3>lua:[32]<5>mkdir:[33]<7>monitor:[34]<4>motd:[35]<4>move:[36]<10>multishell:[37]<5>os.py:[38]<5>paint:[39]<8>pastebin:[40]<11>peripherals:[41]<8>programs:[42]<2>py:[43]<6>reboot:[44]<11>redirection:[45]<8>redstone:[46]<6>rename:[47]<6>repeat:[48]<3>set:[49]<11>settings.py:[50]<5>shell:[51]<8>shell.py:[52]<8>shutdown:[53]<7>speaker:[54]<7>term.py:[55]<4>time:[56]<4>type:[57]<4>wget:[58]<4>worm}}
+S28:T<1>1<17>G:shell:M:aliases{}
+R177:T<1>1<167>{:[1]T:[2]{:<2>rm<6>delete:<3>dir<4>list:<3>clr<5>clear:<2>sh<5>shell:<2>ls<4>list:<2>cp<4>copy:<10>foreground<2>fg:<10>background<2>bg:<2>mv<4>move:<2>rs<8>redstone}}
+S50:T<1>1<18>G:shell:M:setAlias{:[1]<3>xls:[2]<4>list}
+R15:T<1>1<7>{:[1]T}
+S28:T<1>1<17>G:shell:M:aliases{}
+R191:T<1>1<181>{:[1]T:[2]{:<2>rm<6>delete:<3>dir<4>list:<3>xls<4>list:<3>clr<5>clear:<2>sh<5>shell:<2>ls<4>list:<2>cp<4>copy:<10>foreground<2>fg:<10>background<2>bg:<2>mv<4>move:<2>rs<8>redstone}}
+S41:T<1>1<20>G:shell:M:clearAlias{:[1]<3>xls}
+R15:T<1>1<7>{:[1]T}
+S28:T<1>1<17>G:shell:M:aliases{}
+R177:T<1>1<167>{:[1]T:[2]{:<2>rm<6>delete:<3>dir<4>list:<3>clr<5>clear:<2>sh<5>shell:<2>ls<4>list:<2>cp<4>copy:<10>foreground<2>fg:<10>background<2>bg:<2>mv<4>move:<2>rs<8>redstone}}
+S38:T<1>1<27>G:shell:M:getRunningProgram{}
+R25:T<1>1<16>{:[1]T:[2]<2>py}
+S55:T<1>1<24>G:shell:M:resolveProgram{:[1]<12>doesnotexist}
+R15:T<1>1<7>{:[1]T}
+S47:T<1>1<24>G:shell:M:resolveProgram{:[1]<5>hello}
+R50:T<1>1<41>{:[1]T:[2]<26>rom/programs/fun/hello.lua}
+S24:T<1>1<13>G:shell:M:dir{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S48:T<1>1<17>G:shell:M:resolve{:[1]<12>doesnotexist}
+R36:T<1>1<27>{:[1]T:[2]<12>doesnotexist}
+S47:T<1>1<17>G:shell:M:resolve{:[1]<11>startup.lua}
+R35:T<1>1<26>{:[1]T:[2]<11>startup.lua}
+S37:T<1>1<16>G:shell:M:setDir{:[1]<3>rom}
+R15:T<1>1<7>{:[1]T}
+S24:T<1>1<13>G:shell:M:dir{}
+R26:T<1>1<17>{:[1]T:[2]<3>rom}
+S47:T<1>1<17>G:shell:M:resolve{:[1]<11>startup.lua}
+R39:T<1>1<30>{:[1]T:[2]<15>rom/startup.lua}
+S34:T<1>1<16>G:shell:M:setDir{:[1]<0>}
+R15:T<1>1<7>{:[1]T}
+S25:T<1>1<14>G:shell:M:path{}
+R149:T<1>1<139>{:[1]T:[2]<123>.:/rom/programs:/rom/programs/http:/rom/programs/advanced:/rom/programs/rednet:/rom/programs/fun:/rom/programs/fun/advanced}
+S25:T<1>1<14>G:shell:M:path{}
+R149:T<1>1<139>{:[1]T:[2]<123>.:/rom/programs:/rom/programs/http:/rom/programs/advanced:/rom/programs/rednet:/rom/programs/fun:/rom/programs/fun/advanced}
+S160:T<1>1<17>G:shell:M:setPath{:[1]<123>.:/rom/programs:/rom/programs/http:/rom/programs/advanced:/rom/programs/rednet:/rom/programs/fun:/rom/programs/fun/advanced}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:shell:M:execute{:[1]<5>hello}
+R21:T<1>1<12>{:[1]T:[2]T}
+S36:T<1>1<13>G:shell:M:run{:[1]<5>hello}
+R21:T<1>1<12>{:[1]T:[2]T}
+S48:T<1>1<17>G:shell:M:execute{:[1]<12>doesnotexist}
+R21:T<1>1<12>{:[1]T:[2]F}
+S44:T<1>1<13>G:shell:M:run{:[1]<12>doesnotexist}
+R21:T<1>1<12>{:[1]T:[2]F}
+S40:T<1>1<17>G:shell:M:openTab{:[1]<5>hello}
+R23:T<1>1<14>{:[1]T:[2][2]}
+S74:T<1>1<13>io.write(...){:[1]<42>Program has been launched in tab 2 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S37:T<1>1<19>G:shell:M:switchTab{:[1][2]}
+R15:T<1>1<7>{:[1]T}
+S91:T<1>1<13>io.write(...){:[1]<59>Computer will shutdown after test due to shell.exit [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R24:T<1>1<15>{:[1]T:[2]<1> }
+S25:T<1>1<14>G:shell:M:exit{}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

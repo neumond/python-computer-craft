@@ -6,7 +6,7 @@ assert textutils.slowWrite('write ', 5) is None
 assert textutils.slowPrint('print') is None
 assert textutils.slowPrint('print', 5) is None
 
-assert textutils.formatTime(0) == '0:00 AM'
+assert textutils.formatTime(0) == '12:00 AM'
 assert textutils.formatTime(0, True) == '0:00'
 
 table = [

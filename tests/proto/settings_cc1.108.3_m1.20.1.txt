@@ -1,0 +1,311 @@
+R2945:0[5]{:[1]<11>settings.py:[0]<2>py}<11>settings.py<2890>from cc import LuaException, import_file, fs, settings
+
+_lib = import_file('_lib.py', __file__)
+step, assert_raises = _lib.step, _lib.assert_raises
+
+step('Settings will be cleared')
+
+assert settings.undefine('test.a') is None
+assert settings.undefine('test.a') is None
+assert settings.undefine('test.a') is None
+assert settings.undefine('test.b') is None
+assert settings.undefine('test.c') is None
+assert settings.undefine('test.d') is None
+
+assert settings.clear() is None
+# names are not empty, there are system settings
+assert isinstance(settings.getNames(), list)
+
+assert settings.define('test.a') is None
+assert settings.define('test.b', description='b') is None
+assert settings.define('test.c', type='string', default='x') is None
+assert settings.define('test.d', default=42) is None
+
+assert settings.getDetails('test.a') == {
+    'changed': False,
+}
+assert settings.getDetails('test.b') == {
+    'changed': False,
+    'description': 'b',
+}
+assert settings.getDetails('test.c') == {
+    'changed': False,
+    'type': 'string',
+    'default': 'x',
+    'value': 'x',
+}
+assert settings.getDetails('test.d') == {
+    'changed': False,
+    'default': 42,
+    'value': 42,
+}
+
+# redefining
+assert settings.define('test.a', type='number', default=11) is None
+
+assert settings.getDetails('test.a') == {
+    'changed': False,
+    'type': 'number',
+    'default': 11,
+    'value': 11,
+}
+
+assert settings.get('test.a') == 11
+assert settings.set('test.a', 12) is None
+assert settings.get('test.a') == 12
+with assert_raises(LuaException):
+    settings.set('test.a', 'text')
+assert settings.get('test.a') == 12
+assert settings.unset('test.a') is None
+assert settings.get('test.a') == 11
+
+assert settings.set('test.c', 'hello') is None
+
+assert {'test.a', 'test.b', 'test.c', 'test.d'}.issubset(set(settings.getNames()))
+
+assert settings.undefine('test.a') is None
+assert settings.undefine('test.b') is None
+assert settings.undefine('test.c') is None
+assert settings.undefine('test.d') is None
+
+assert 'test.c' in settings.getNames()
+assert settings.get('test.c') == 'hello'
+assert settings.getDetails('test.c') == {
+    'changed': True,
+    'value': 'hello',
+}
+
+assert settings.unset('test.c') is None
+
+assert settings.get('test.c') is None
+assert settings.getDetails('test.c') == {
+    'changed': False,
+}
+
+assert {'test.a', 'test.b', 'test.c', 'test.d'} & set(settings.getNames()) == set()
+
+assert settings.set('test.e', [9, b'text', False]) is None
+assert settings.get('test.e') == {1: 9, 2: b'text', 3: False}
+assert settings.clear() is None
+assert settings.get('test.e') is None
+
+fs.delete('.settings')
+
+assert settings.load() is False
+assert settings.save() is True
+assert settings.load() is True
+
+fs.delete('.settings')
+
+assert settings.set('key', 84) is None
+
+assert settings.save('sfile') is True
+assert settings.load('sfile') is True
+
+fs.delete('sfile')
+
+print('Test finished successfully')
+S260:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<11>settings.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S64:T<1>1<13>io.write(...){:[1]<32>Settings will be cleared [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.a}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.a}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.a}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.b}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.c}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.d}
+R15:T<1>1<7>{:[1]T}
+S29:T<1>1<18>G:settings:M:clear{}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<21>G:settings:M:getNames{}
+R460:T<1>1<450>{:[1]T:[2]{:[1]<19>bios.strict_globals:[2]<19>bios.use_multishell:[3]<17>edit.autocomplete:[4]<22>edit.default_extension:[5]<16>list.show_hidden:[6]<16>lua.autocomplete:[7]<17>lua.function_args:[8]<19>lua.function_source:[9]<29>lua.warn_against_use_of_local:[10]<11>motd.enable:[11]<9>motd.path:[12]<23>paint.default_extension:[13]<24>shell.allow_disk_startup:[14]<19>shell.allow_startup:[15]<18>shell.autocomplete:[16]<25>shell.autocomplete_hidden}}
+S49:T<1>1<19>G:settings:M:define{:[1]<6>test.a:[2]{}}
+R15:T<1>1<7>{:[1]T}
+S69:T<1>1<19>G:settings:M:define{:[1]<6>test.b:[2]{:<11>description<1>b}}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:settings:M:define{:[1]<6>test.c:[2]{:<7>default<1>x:<4>type<6>string}}
+R15:T<1>1<7>{:[1]T}
+S64:T<1>1<19>G:settings:M:define{:[1]<6>test.d:[2]{:<7>default[42]}}
+R15:T<1>1<7>{:[1]T}
+S47:T<1>1<23>G:settings:M:getDetails{:[1]<6>test.a}
+R34:T<1>1<25>{:[1]T:[2]{:<7>changedF}}
+S47:T<1>1<23>G:settings:M:getDetails{:[1]<6>test.b}
+R54:T<1>1<45>{:[1]T:[2]{:<7>changedF:<11>description<1>b}}
+S47:T<1>1<23>G:settings:M:getDetails{:[1]<6>test.c}
+R79:T<1>1<70>{:[1]T:[2]{:<5>value<1>x:<4>type<6>string:<7>default<1>x:<7>changedF}}
+S47:T<1>1<23>G:settings:M:getDetails{:[1]<6>test.d}
+R62:T<1>1<53>{:[1]T:[2]{:<5>value[42]:<7>changedF:<7>default[42]}}
+S81:T<1>1<19>G:settings:M:define{:[1]<6>test.a:[2]{:<7>default[11]:<4>type<6>number}}
+R15:T<1>1<7>{:[1]T}
+S47:T<1>1<23>G:settings:M:getDetails{:[1]<6>test.a}
+R79:T<1>1<70>{:[1]T:[2]{:<5>value[11]:<4>type<6>number:<7>default[11]:<7>changedF}}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.a:[2]N}
+R24:T<1>1<15>{:[1]T:[2][11]}
+S48:T<1>1<16>G:settings:M:set{:[1]<6>test.a:[2][12]}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.a:[2]N}
+R24:T<1>1<15>{:[1]T:[2][12]}
+S51:T<1>1<16>G:settings:M:set{:[1]<6>test.a:[2]<4>text}
+R69:T<1>1<60>{:[1]F:[2]<45>bad argument #2 (number expected, got string)}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.a:[2]N}
+R24:T<1>1<15>{:[1]T:[2][12]}
+S42:T<1>1<18>G:settings:M:unset{:[1]<6>test.a}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.a:[2]N}
+R24:T<1>1<15>{:[1]T:[2][11]}
+S52:T<1>1<16>G:settings:M:set{:[1]<6>test.c:[2]<5>hello}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<21>G:settings:M:getNames{}
+R516:T<1>1<506>{:[1]T:[2]{:[1]<19>bios.strict_globals:[2]<19>bios.use_multishell:[3]<17>edit.autocomplete:[4]<22>edit.default_extension:[5]<16>list.show_hidden:[6]<16>lua.autocomplete:[7]<17>lua.function_args:[8]<19>lua.function_source:[9]<29>lua.warn_against_use_of_local:[10]<11>motd.enable:[11]<9>motd.path:[12]<23>paint.default_extension:[13]<24>shell.allow_disk_startup:[14]<19>shell.allow_startup:[15]<18>shell.autocomplete:[16]<25>shell.autocomplete_hidden:[17]<6>test.a:[18]<6>test.b:[19]<6>test.c:[20]<6>test.d}}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.a}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.b}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.c}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<21>G:settings:M:undefine{:[1]<6>test.d}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<21>G:settings:M:getNames{}
+R474:T<1>1<464>{:[1]T:[2]{:[1]<19>bios.strict_globals:[2]<19>bios.use_multishell:[3]<17>edit.autocomplete:[4]<22>edit.default_extension:[5]<16>list.show_hidden:[6]<16>lua.autocomplete:[7]<17>lua.function_args:[8]<19>lua.function_source:[9]<29>lua.warn_against_use_of_local:[10]<11>motd.enable:[11]<9>motd.path:[12]<23>paint.default_extension:[13]<24>shell.allow_disk_startup:[14]<19>shell.allow_startup:[15]<18>shell.autocomplete:[16]<25>shell.autocomplete_hidden:[17]<6>test.c}}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.c:[2]N}
+R28:T<1>1<19>{:[1]T:[2]<5>hello}
+S47:T<1>1<23>G:settings:M:getDetails{:[1]<6>test.c}
+R51:T<1>1<42>{:[1]T:[2]{:<5>value<5>hello:<7>changedT}}
+S42:T<1>1<18>G:settings:M:unset{:[1]<6>test.c}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.c:[2]N}
+R15:T<1>1<7>{:[1]T}
+S47:T<1>1<23>G:settings:M:getDetails{:[1]<6>test.c}
+R34:T<1>1<25>{:[1]T:[2]{:<7>changedF}}
+S32:T<1>1<21>G:settings:M:getNames{}
+R460:T<1>1<450>{:[1]T:[2]{:[1]<19>bios.strict_globals:[2]<19>bios.use_multishell:[3]<17>edit.autocomplete:[4]<22>edit.default_extension:[5]<16>list.show_hidden:[6]<16>lua.autocomplete:[7]<17>lua.function_args:[8]<19>lua.function_source:[9]<29>lua.warn_against_use_of_local:[10]<11>motd.enable:[11]<9>motd.path:[12]<23>paint.default_extension:[13]<24>shell.allow_disk_startup:[14]<19>shell.allow_startup:[15]<18>shell.autocomplete:[16]<25>shell.autocomplete_hidden}}
+S69:T<1>1<16>G:settings:M:set{:[1]<6>test.e:[2]{:[1][9]:[2]<4>text:[3]F}}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.e:[2]N}
+R45:T<1>1<36>{:[1]T:[2]{:[1][9]:[2]<4>text:[3]F}}
+S29:T<1>1<18>G:settings:M:clear{}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<16>G:settings:M:get{:[1]<6>test.e:[2]N}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<13>G:fs:M:delete{:[1]<9>.settings}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<17>G:settings:M:load{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]F}
+S33:T<1>1<17>G:settings:M:save{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S33:T<1>1<17>G:settings:M:load{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S40:T<1>1<13>G:fs:M:delete{:[1]<9>.settings}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<16>G:settings:M:set{:[1]<3>key:[2][84]}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<17>G:settings:M:save{:[1]<5>sfile}
+R21:T<1>1<12>{:[1]T:[2]T}
+S40:T<1>1<17>G:settings:M:load{:[1]<5>sfile}
+R21:T<1>1<12>{:[1]T:[2]T}
+S36:T<1>1<13>G:fs:M:delete{:[1]<5>sfile}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

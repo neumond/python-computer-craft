@@ -1,6 +1,5 @@
 from typing import List, Dict, Optional
 
-from .. import ser
 from ..sess import eval_lua
 
 
@@ -55,8 +54,7 @@ def resolveProgram(name: str) -> Optional[str]:
 
 
 def aliases() -> Dict[str, str]:
-    d = eval_lua(b'G:shell:M:aliases').take_dict()
-    return {k.decode(ser._CC_ENC): v.decode(ser._CC_ENC) for k, v in d.items()}
+    return eval_lua(b'G:shell:M:aliases').take_dict()
 
 
 def setAlias(alias: str, program: str) -> None:
