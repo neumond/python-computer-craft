@@ -1,0 +1,437 @@
+R3323:0[5]{:[1]<11>parallel.py:[0]<2>py}<11>parallel.py<3268>from cc import import_file, os, parallel
+
+_lib = import_file('_lib.py', __file__)
+assert_takes_time, assert_raises = _lib.assert_takes_time, _lib.assert_raises
+
+
+tags = set()
+
+
+def partial(tag, fn, *args):
+    def wrap():
+        tags.add(tag)
+        return fn(*args)
+    return wrap
+
+
+all_parallels = [
+    ('waitForAll', parallel.waitForAll),
+    ('waitForAny', parallel.waitForAny),
+]
+
+
+for name, fn in all_parallels:
+    tags.clear()
+    with assert_takes_time(1.5, 3):
+        # Since os.sleep is mostly waiting for events, it doesn't block execution of parallel threads
+        # and this snippet takes approximately 2 seconds to complete.
+        fn(
+            partial('a', os.sleep, 2),
+            partial('b', os.sleep, 2),
+            partial('c', os.sleep, 2),
+        )
+    assert tags == {'a', 'b', 'c'}
+    print(name, 'OK')
+
+
+for name, fn in all_parallels:
+    tags.clear()
+    tts = (0, 1) if name == 'waitForAny' else (1.5, 3)
+    with assert_takes_time(*tts):
+        fn(
+            partial('fast', os.version),
+            partial('s1', os.sleep, 2),
+            partial('s2', os.sleep, 2),
+        )
+    assert tags == {'fast', 's1', 's2'}
+    print(name, 'fast OK')
+
+
+def breaks_fast(etype):
+    os.sleep(0.5)
+    raise etype
+
+
+def breaks_slow(etype):
+    os.sleep(3)
+    raise etype
+
+
+tags.clear()
+with assert_takes_time(0, 1):
+    parallel.waitForAny(
+        partial('fast', os.version),
+        partial('bomb', breaks_slow, IndexError),
+    )
+assert tags == {'fast', 'bomb'}
+print('waitForAny fast success OK')
+
+
+tags.clear()
+with assert_takes_time(2.5, 3.8):
+    with assert_raises(IndexError):
+        parallel.waitForAll(
+            partial('fast', os.version),
+            partial('bomb', breaks_slow, IndexError),
+        )
+assert tags == {'fast', 'bomb'}
+print('waitForAll waits for bomb OK')
+
+
+for name, fn in all_parallels:
+    tags.clear()
+    with assert_takes_time(0.4, 1.2):
+        with assert_raises(ValueError):
+            fn(
+                partial('v', breaks_fast, ValueError),
+                partial('s', os.sleep, 2),
+                partial('i', breaks_slow, IndexError),
+            )
+    os.sleep(4)
+    assert tags == {'v', 's', 'i'}
+    print(name + ' handles error OK')
+
+
+for name, fn in all_parallels:
+    tags.clear()
+    with assert_takes_time(1.5, 3):
+        fn(
+            partial('1_s', os.sleep, 2),
+            partial(
+                '1_p',
+                fn,
+                partial('2_s', os.sleep, 2),
+                partial(
+                    '2_p',
+                    fn,
+                    partial('3_s', os.sleep, 2),
+                ),
+            ),
+        )
+    assert tags == {'1_s', '1_p', '2_s', '2_p', '3_s'}
+    print('Nested', name, 'OK')
+
+
+def nested_err():
+    parallel.waitForAll(
+        partial('n_v', breaks_fast, ValueError),
+        partial('n_s', os.sleep, 2),
+        partial('n_i', breaks_slow, IndexError),
+    )
+
+
+tags.clear()
+with assert_takes_time(0.4, 1.2):
+    with assert_raises(ValueError):
+        parallel.waitForAll(
+            nested_err,
+            partial('s', os.sleep, 2),
+            partial('i', breaks_slow, IndexError),
+        )
+assert tags == {'s', 'i', 'n_v', 'n_s', 'n_i'}
+print('Nested errors OK')
+
+
+print('Test finished successfully')
+S260:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<11>parallel.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276481478]}
+S30:T<1>2<12>G:os:M:sleep{:[1][2]}
+S30:T<1>3<12>G:os:M:sleep{:[1][2]}
+S30:T<1>4<12>G:os:M:sleep{:[1][2]}
+R15:T<1>2<7>{:[1]T}
+R15:T<1>4<7>{:[1]T}
+R15:T<1>3<7>{:[1]T}
+S5:D<1>3
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276483456]}
+S42:T<1>1<13>io.write(...){:[1]<10>waitForAll}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<13>io.write(...){:[1]<2>OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276483462]}
+S30:T<1>5<12>G:os:M:sleep{:[1][2]}
+S30:T<1>6<12>G:os:M:sleep{:[1][2]}
+S30:T<1>7<12>G:os:M:sleep{:[1][2]}
+R15:T<1>5<7>{:[1]T}
+S13:D<1>5<1>6<1>7
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R15:T<1>6<7>{:[1]T}
+R15:T<1>7<7>{:[1]T}
+R35:T<1>1<26>{:[1]T:[2][1699276485456]}
+S42:T<1>1<13>io.write(...){:[1]<10>waitForAny}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<13>io.write(...){:[1]<2>OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276485465]}
+S25:T<1>8<14>G:os:M:version{}
+S30:T<1>9<12>G:os:M:sleep{:[1][2]}
+S30:T<1>a<12>G:os:M:sleep{:[1][2]}
+R35:T<1>8<26>{:[1]T:[2]<11>CraftOS 1.8}
+R15:T<1>a<7>{:[1]T}
+R15:T<1>9<7>{:[1]T}
+S5:D<1>9
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276487456]}
+S42:T<1>1<13>io.write(...){:[1]<10>waitForAll}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S38:T<1>1<13>io.write(...){:[1]<7>fast OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276487464]}
+S25:T<1>b<14>G:os:M:version{}
+S30:T<1>c<12>G:os:M:sleep{:[1][2]}
+S30:T<1>d<12>G:os:M:sleep{:[1][2]}
+R35:T<1>b<26>{:[1]T:[2]<11>CraftOS 1.8}
+S13:D<1>b<1>c<1>d
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276487467]}
+S42:T<1>1<13>io.write(...){:[1]<10>waitForAny}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S38:T<1>1<13>io.write(...){:[1]<7>fast OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276487473]}
+S25:T<1>e<14>G:os:M:version{}
+S30:T<1>f<12>G:os:M:sleep{:[1][3]}
+R35:T<1>e<26>{:[1]T:[2]<11>CraftOS 1.8}
+S9:D<1>e<1>f
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276487476]}
+S58:T<1>1<13>io.write(...){:[1]<26>waitForAny fast success OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276487480]}
+S25:T<1>g<14>G:os:M:version{}
+S30:T<1>h<12>G:os:M:sleep{:[1][3]}
+R35:T<1>g<26>{:[1]T:[2]<11>CraftOS 1.8}
+R15:T<1>h<7>{:[1]T}
+S5:D<1>h
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276490457]}
+S60:T<1>1<13>io.write(...){:[1]<28>waitForAll waits for bomb OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276490460]}
+S32:T<1>i<12>G:os:M:sleep{:[1][0.5]}
+S30:T<1>j<12>G:os:M:sleep{:[1][2]}
+S30:T<1>k<12>G:os:M:sleep{:[1][3]}
+R15:T<1>i<7>{:[1]T}
+S13:D<1>i<1>j<1>k
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276490955]}
+S30:T<1>1<12>G:os:M:sleep{:[1][4]}
+R15:T<1>1<7>{:[1]T}
+S59:T<1>1<13>io.write(...){:[1]<27>waitForAll handles error OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276494958]}
+S32:T<1>l<12>G:os:M:sleep{:[1][0.5]}
+S30:T<1>m<12>G:os:M:sleep{:[1][2]}
+S30:T<1>n<12>G:os:M:sleep{:[1][3]}
+R15:T<1>l<7>{:[1]T}
+S13:D<1>l<1>m<1>n
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276495455]}
+S30:T<1>1<12>G:os:M:sleep{:[1][4]}
+R15:T<1>1<7>{:[1]T}
+S59:T<1>1<13>io.write(...){:[1]<27>waitForAny handles error OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276499459]}
+S30:T<1>o<12>G:os:M:sleep{:[1][2]}
+S30:T<1>q<12>G:os:M:sleep{:[1][2]}
+S30:T<1>s<12>G:os:M:sleep{:[1][2]}
+R15:T<1>q<7>{:[1]T}
+R15:T<1>o<7>{:[1]T}
+R15:T<1>s<7>{:[1]T}
+S5:D<1>s
+S5:D<1>r
+S5:D<1>p
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276501456]}
+S37:T<1>1<13>io.write(...){:[1]<6>Nested}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S42:T<1>1<13>io.write(...){:[1]<10>waitForAll}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<13>io.write(...){:[1]<2>OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276501465]}
+S30:T<1>t<12>G:os:M:sleep{:[1][2]}
+S30:T<1>v<12>G:os:M:sleep{:[1][2]}
+S30:T<1>x<12>G:os:M:sleep{:[1][2]}
+R15:T<1>t<7>{:[1]T}
+S21:D<1>t<1>u<1>v<1>w<1>x
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R15:T<1>x<7>{:[1]T}
+R15:T<1>v<7>{:[1]T}
+R35:T<1>1<26>{:[1]T:[2][1699276503456]}
+S37:T<1>1<13>io.write(...){:[1]<6>Nested}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S42:T<1>1<13>io.write(...){:[1]<10>waitForAny}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<13>io.write(...){:[1]<2>OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276503465]}
+S30:T<1>z<12>G:os:M:sleep{:[1][2]}
+S31:T<2>01<12>G:os:M:sleep{:[1][3]}
+S33:T<2>11<12>G:os:M:sleep{:[1][0.5]}
+S31:T<2>21<12>G:os:M:sleep{:[1][2]}
+S31:T<2>31<12>G:os:M:sleep{:[1][3]}
+R16:T<2>11<7>{:[1]T}
+S16:D<2>11<2>21<2>31
+S14:D<2>01<1>y<1>z
+S33:T<1>1<12>G:os:M:epoch{:[1]<3>utc}
+R35:T<1>1<26>{:[1]T:[2][1699276503955]}
+S48:T<1>1<13>io.write(...){:[1]<16>Nested errors OK}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

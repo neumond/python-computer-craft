@@ -11,9 +11,8 @@ def waitForAny(*task_fns):
     pgl = get_current_greenlet().cc_greenlet
     sess = pgl._sess
 
-    gs = [CCGreenlet(fn) for fn in task_fns]
-    for g in gs:
-        g.defer_switch()
+    for fn in task_fns:
+        CCGreenlet(fn)
 
     try:
         sess._server_greenlet.switch()
@@ -25,9 +24,8 @@ def waitForAll(*task_fns):
     pgl = get_current_greenlet().cc_greenlet
     sess = pgl._sess
 
-    gs = [CCGreenlet(fn) for fn in task_fns]
-    for g in gs:
-        g.defer_switch()
+    for fn in task_fns:
+        CCGreenlet(fn)
 
     try:
         for _ in range(len(task_fns)):

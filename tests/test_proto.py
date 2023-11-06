@@ -12,6 +12,9 @@ def _patch(monkeypatch):
     monkeypatch.setattr(
         computercraft.sess, 'python_version',
         lambda: '<VERSION>')
+    monkeypatch.setattr(
+        computercraft.sess.CCSession, '_drop_command',
+        computercraft.sess.CCSession._sorted_drop_command)
 
 
 _proto_folder = (Path(__file__).parent / 'proto')

@@ -255,6 +255,7 @@ class CCGreenlet:
         else:
             self._parent = parent_g.cc_greenlet
             self._parent._children.add(self._task_id)
+            self._sess._new_greenlets.append(self._task_id)
 
         self._children = set()
         self._g = greenlet(body_fn)
@@ -376,6 +377,7 @@ class CCSession:
             lambda event: self._sender(b'U' + ser.serialize(event, self._enc)),
             lambda task_id: self._greenlets[task_id].switch('event'),
         )
+        self._new_greenlets = []
 
     def on_task_result(self, task_id, result):
         assert get_current_greenlet() is self._server_greenlet
@@ -383,12 +385,24 @@ class CCSession:
             # ignore for dropped tasks
             return
         self._greenlets[task_id].switch(result)
+        self._run_new_greenlets()
 
     def on_event(self, event, params):
         self._evr.on_event(event.decode(self._enc), params)
+        self._run_new_greenlets()
 
     def create_task_id(self):
         return next(self._tid_allocator)
+
+    def _drop_command(self, all_tids):
+        return b'D' + b''.join(
+            ser.serialize(tid, self._enc) for tid in all_tids)
+
+    def _sorted_drop_command(self, all_tids):
+        # use instead _drop_command in tests
+        all_tids = sorted(set(all_tids))
+        return b'D' + b''.join(
+            ser.serialize(tid, self._enc) for tid in all_tids)
 
     def drop(self, task_ids):
         def collect(task_id):
@@ -401,8 +415,13 @@ class CCSession:
         for task_id in task_ids:
             all_tids.extend(collect(task_id))
 
-        self._sender(b'D' + b''.join(
-            ser.serialize(tid, self._enc) for tid in all_tids))
+        self._sender(self._drop_command(all_tids))
+
+    def _run_new_greenlets(self):
+        while self._new_greenlets:
+            ng, self._new_greenlets = self._new_greenlets, []
+            for tid in ng:
+                self._greenlets[tid].switch()
 
     def throw_keyboard_interrupt(self):
         self._program_greenlet.throw(EOFError())

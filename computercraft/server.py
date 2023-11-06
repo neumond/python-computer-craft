@@ -185,7 +185,10 @@ def main():
                     write_frame(b'S', m)
                     return send(m)
 
-                p = protocol(send_wrap, sess_cls=sess_cls, oc=oc)
+                class SessOverride(sess_cls):
+                    _drop_command = sess_cls._sorted_drop_command
+
+                p = protocol(send_wrap, sess_cls=SessOverride, oc=oc)
 
                 def pgen():
                     next(p)
