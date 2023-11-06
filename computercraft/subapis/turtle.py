@@ -11,8 +11,37 @@ def inspect_result(rp):
         if msg == 'No block to inspect':
             return None
         raise LuaException(msg)
-    else:
-        return rp.take_dict()
+    return rp.take_dict()
+
+
+def dig_result(rp):
+    success = rp.take_bool()
+    if not success:
+        msg = rp.take_string()
+        if msg == 'Nothing to dig here':
+            return False
+        raise LuaException(msg)
+    return True
+
+
+def suck_result(rp):
+    success = rp.take_bool()
+    if not success:
+        msg = rp.take_string()
+        if msg == 'No items to take':
+            return False
+        raise LuaException(msg)
+    return True
+
+
+def attack_result(rp):
+    success = rp.take_bool()
+    if not success:
+        msg = rp.take_string()
+        if msg == 'Nothing to attack here':
+            return False
+        raise LuaException(msg)
+    return True
 
 
 __all__ = (
@@ -62,35 +91,35 @@ __all__ = (
 )
 
 
-def craft(quantity: int = 64):
+def craft(quantity: int = 64) -> None:
     return eval_lua(b'G:turtle:M:craft', quantity).check_bool_error()
 
 
-def forward():
+def forward() -> None:
     return eval_lua(b'G:turtle:M:forward').check_bool_error()
 
 
-def back():
+def back() -> None:
     return eval_lua(b'G:turtle:M:back').check_bool_error()
 
 
-def up():
+def up() -> None:
     return eval_lua(b'G:turtle:M:up').check_bool_error()
 
 
-def down():
+def down() -> None:
     return eval_lua(b'G:turtle:M:down').check_bool_error()
 
 
-def turnLeft():
+def turnLeft() -> None:
     return eval_lua(b'G:turtle:M:turnLeft').check_bool_error()
 
 
-def turnRight():
+def turnRight() -> None:
     return eval_lua(b'G:turtle:M:turnRight').check_bool_error()
 
 
-def select(slotNum: int):
+def select(slotNum: int) -> None:
     return eval_lua(b'G:turtle:M:select', slotNum).check_bool_error()
 
 
@@ -113,47 +142,47 @@ def getItemDetail(slotNum: int = None) -> Optional[dict]:
     return rp.take_dict()
 
 
-def equipLeft():
+def equipLeft() -> None:
     return eval_lua(b'G:turtle:M:equipLeft').check_bool_error()
 
 
-def equipRight():
+def equipRight() -> None:
     return eval_lua(b'G:turtle:M:equipRight').check_bool_error()
 
 
-def attack():
-    return eval_lua(b'G:turtle:M:attack').check_bool_error()
+def attack() -> bool:
+    return attack_result(eval_lua(b'G:turtle:M:attack'))
 
 
-def attackUp():
-    return eval_lua(b'G:turtle:M:attackUp').check_bool_error()
+def attackUp() -> bool:
+    return attack_result(eval_lua(b'G:turtle:M:attackUp'))
 
 
-def attackDown():
-    return eval_lua(b'G:turtle:M:attackDown').check_bool_error()
+def attackDown() -> bool:
+    return attack_result(eval_lua(b'G:turtle:M:attackDown'))
 
 
-def dig():
-    return eval_lua(b'G:turtle:M:dig').check_bool_error()
+def dig() -> bool:
+    return dig_result(eval_lua(b'G:turtle:M:dig'))
 
 
-def digUp():
-    return eval_lua(b'G:turtle:M:digUp').check_bool_error()
+def digUp() -> bool:
+    return dig_result(eval_lua(b'G:turtle:M:digUp'))
 
 
-def digDown():
-    return eval_lua(b'G:turtle:M:digDown').check_bool_error()
+def digDown() -> bool:
+    return dig_result(eval_lua(b'G:turtle:M:digDown'))
 
 
-def place(signText: str = None):
+def place(signText: str = None) -> None:
     return eval_lua(b'G:turtle:M:place', signText).check_bool_error()
 
 
-def placeUp(signText: str = None):
+def placeUp(signText: str = None) -> None:
     return eval_lua(b'G:turtle:M:placeUp', signText).check_bool_error()
 
 
-def placeDown(signText: str = None):
+def placeDown(signText: str = None) -> None:
     return eval_lua(b'G:turtle:M:placeDown', signText).check_bool_error()
 
 
@@ -197,31 +226,31 @@ def compareTo(slot: int) -> bool:
     return eval_lua(b'G:turtle:M:compareTo', slot).take_bool()
 
 
-def drop(count: int = None):
+def drop(count: int = None) -> None:
     return eval_lua(b'G:turtle:M:drop', count).check_bool_error()
 
 
-def dropUp(count: int = None):
+def dropUp(count: int = None) -> None:
     return eval_lua(b'G:turtle:M:dropUp', count).check_bool_error()
 
 
-def dropDown(count: int = None):
+def dropDown(count: int = None) -> None:
     return eval_lua(b'G:turtle:M:dropDown', count).check_bool_error()
 
 
-def suck(amount: int = None):
-    return eval_lua(b'G:turtle:M:suck', amount).check_bool_error()
+def suck(amount: int = None) -> bool:
+    return suck_result(eval_lua(b'G:turtle:M:suck', amount))
 
 
-def suckUp(amount: int = None):
-    return eval_lua(b'G:turtle:M:suckUp', amount).check_bool_error()
+def suckUp(amount: int = None) -> bool:
+    return suck_result(eval_lua(b'G:turtle:M:suckUp', amount))
 
 
-def suckDown(amount: int = None):
-    return eval_lua(b'G:turtle:M:suckDown', amount).check_bool_error()
+def suckDown(amount: int = None) -> bool:
+    return suck_result(eval_lua(b'G:turtle:M:suckDown', amount))
 
 
-def refuel(quantity: int = None):
+def refuel(quantity: int = None) -> None:
     return eval_lua(b'G:turtle:M:refuel', quantity).check_bool_error()
 
 
@@ -233,5 +262,5 @@ def getFuelLimit() -> int:
     return eval_lua(b'G:turtle:M:getFuelLimit').take_int()
 
 
-def transferTo(slot: int, quantity: int = None):
+def transferTo(slot: int, quantity: int = None) -> None:
     return eval_lua(b'G:turtle:M:transferTo', slot, quantity).check_bool_error()

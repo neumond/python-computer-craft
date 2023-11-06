@@ -1,0 +1,690 @@
+R6264:0[5]{:[1]<9>turtle.py:[0]<2>py}<9>turtle.py<6215>from cc import LuaException, import_file, turtle, peripheral
+
+_lib = import_file('_lib.py', __file__)
+assert_raises, step = _lib.assert_raises, _lib.step
+
+flimit = turtle.getFuelLimit()
+assert isinstance(flimit, int)
+assert flimit > 0
+
+flevel = turtle.getFuelLevel()
+assert isinstance(flevel, int)
+assert 0 <= flevel <= flimit
+
+assert turtle.select(2) is None
+assert turtle.getSelectedSlot() == 2
+with assert_raises(LuaException):
+    turtle.select(0)
+assert turtle.select(1) is None
+assert turtle.getSelectedSlot() == 1
+
+step('Put 3 coals into slot 1')
+
+assert turtle.getItemCount() == 3
+assert turtle.getItemCount(1) == 3
+
+assert turtle.getItemDetail() == {
+    'count': 3,
+    'name': 'minecraft:coal',
+}
+assert turtle.getItemDetail(1) == {
+    'count': 3,
+    'name': 'minecraft:coal',
+}
+
+assert turtle.getItemSpace() == 61
+assert turtle.getItemSpace(1) == 61
+
+assert turtle.refuel(1) is None
+
+assert turtle.getFuelLevel() > flevel
+flevel = turtle.getFuelLevel()
+assert turtle.getItemCount() == 2
+
+assert turtle.refuel() is None
+
+assert turtle.getFuelLevel() > flevel
+assert turtle.getItemCount() == 0
+
+with assert_raises(LuaException):
+    turtle.refuel(1)
+with assert_raises(LuaException):
+    turtle.refuel()
+
+step('Remove blocks in front/below/above turtle')
+
+assert turtle.detect() is False
+assert turtle.detectUp() is False
+assert turtle.detectDown() is False
+
+assert turtle.inspect() is None
+assert turtle.inspectUp() is None
+assert turtle.inspectDown() is None
+
+step('Put cobblestone blocks in front/below/above turtle')
+
+assert turtle.detect() is True
+assert turtle.detectUp() is True
+assert turtle.detectDown() is True
+
+for c in [
+    turtle.inspect(),
+    turtle.inspectUp(),
+    turtle.inspectDown()
+]:
+    assert isinstance(c, dict)
+    assert c['name'] == 'minecraft:cobblestone'
+
+assert turtle.select(1) is None
+assert turtle.getItemCount() == 0
+assert turtle.equipLeft() is None
+
+assert turtle.select(2) is None
+assert turtle.getItemCount() == 0
+assert turtle.equipRight() is None
+
+if (
+    turtle.getItemCount(1) != 0
+    or turtle.getItemCount(2) != 0
+):
+    step('Remove all items from slots 1 and 2')
+
+assert turtle.select(1) is None
+if turtle.getItemDetail(1) != {
+    'count': 1,
+    'name': 'minecraft:diamond_pickaxe',
+}:
+    step('Put fresh diamond pickaxe at slot 1')
+
+assert turtle.equipLeft() is None
+
+assert turtle.dig() is True
+assert turtle.dig() is False
+assert turtle.digUp() is True
+assert turtle.digUp() is False
+assert turtle.digDown() is True
+assert turtle.digDown() is False
+
+assert turtle.getItemCount() == 3
+
+assert turtle.forward() is None
+assert turtle.back() is None
+assert turtle.up() is None
+assert turtle.down() is None
+assert turtle.turnLeft() is None
+assert turtle.turnRight() is None
+
+assert turtle.place() is None
+with assert_raises(LuaException, 'Cannot place block here'):
+    turtle.place()
+assert turtle.placeUp() is None
+with assert_raises(LuaException, 'Cannot place block here'):
+    turtle.placeUp()
+assert turtle.placeDown() is None
+with assert_raises(LuaException, 'No items to place'):
+    turtle.placeDown()
+
+step('Put 3 cobblestone blocks to slot 1')
+
+assert turtle.getItemCount(1) == 3
+assert turtle.getItemCount(2) == 0
+
+assert turtle.compare() is True
+assert turtle.compareUp() is True
+assert turtle.compareDown() is True
+
+assert turtle.select(2) is None
+
+assert turtle.compare() is False
+assert turtle.compareUp() is False
+assert turtle.compareDown() is False
+
+assert turtle.select(1) is None
+
+assert turtle.transferTo(2, 1) is None
+assert turtle.getItemCount(1) == 2
+assert turtle.getItemCount(2) == 1
+assert turtle.compareTo(2) is True
+
+assert turtle.transferTo(2) is None
+assert turtle.getItemCount(1) == 0
+assert turtle.getItemCount(2) == 3
+assert turtle.compareTo(2) is False
+
+assert turtle.select(2) is None
+assert turtle.transferTo(1) is None
+assert turtle.select(1) is None
+assert turtle.dig() is True
+assert turtle.digUp() is True
+assert turtle.digDown() is True
+assert turtle.getItemCount() == 6
+
+assert turtle.drop(1) is None
+assert turtle.dropUp(1) is None
+assert turtle.dropDown(1) is None
+assert turtle.getItemCount() == 3
+assert turtle.drop() is None
+assert turtle.getItemCount() == 0
+with assert_raises(LuaException, 'No items to drop'):
+    turtle.drop()
+
+step(
+    'Collect dropped cobblestone\n'
+    'Drop stack of sticks right in front of the turtle\n'
+    'Its better to build 1-block room then throw sticks there',
+)
+
+assert turtle.suck(1) is True
+assert turtle.getItemCount() == 1
+assert turtle.suck() is True
+assert turtle.getItemCount() == 64
+assert turtle.suck() is False
+assert turtle.drop() is None
+assert turtle.getItemCount() == 0
+
+step(
+    'Collect dropped sticks\n'
+    'Drop stack of sticks right below the turtle\n'
+    'Its better to build 1-block room then throw sticks there',
+)
+
+assert turtle.suckDown(1) is True
+assert turtle.getItemCount() == 1
+assert turtle.suckDown() is True
+assert turtle.getItemCount() == 64
+assert turtle.suckDown() is False
+assert turtle.dropDown() is None
+assert turtle.getItemCount() == 0
+
+step(
+    'Collect dropped sticks\n'
+    'Drop stack of sticks right above the turtle\n'
+    'Its better to build 1-block room then throw sticks there',
+)
+
+assert turtle.suckUp(1) is True
+assert turtle.getItemCount() == 1
+assert turtle.suckUp() is True
+assert turtle.getItemCount() == 64
+assert turtle.suckUp() is False
+assert turtle.dropUp() is None
+assert turtle.getItemCount() == 0
+
+
+def craft1():
+    return turtle.craft()
+
+
+def craft2():
+    c = peripheral.wrap('right')
+    return c.craft()
+
+
+step('Put crafting table into slot 1')
+assert turtle.select(1) is None
+assert turtle.equipRight() is None
+
+for craft_fn in craft1, craft2:
+    step(
+        'Clean inventory of turtle\n'
+        'Put 8 cobblestones into slot 1',
+    )
+
+    assert turtle.select(1) is None
+    with assert_raises(LuaException, 'No matching recipes'):
+        craft_fn()
+    for idx in [2, 3, 5, 7, 9, 10, 11]:
+        assert turtle.transferTo(idx, 1) is None
+    assert craft_fn() is None
+    with assert_raises(LuaException, 'No matching recipes'):
+        craft_fn()
+    assert turtle.getItemDetail() == {
+        'count': 1,
+        'name': 'minecraft:furnace',
+    }
+
+print('Test finished successfully')
+S257:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<9>turtle.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S34:T<1>1<23>G:turtle:M:getFuelLimit{}
+R28:T<1>1<19>{:[1]T:[2][100000]}
+S34:T<1>1<23>G:turtle:M:getFuelLevel{}
+R25:T<1>1<16>{:[1]T:[2][948]}
+S35:T<1>1<17>G:turtle:M:select{:[1][2]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S37:T<1>1<26>G:turtle:M:getSelectedSlot{}
+R23:T<1>1<14>{:[1]T:[2][2]}
+S35:T<1>1<17>G:turtle:M:select{:[1][0]}
+R70:T<1>1<61>{:[1]F:[2]<46>function: 20f31942: Slot number 0 out of range}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S37:T<1>1<26>G:turtle:M:getSelectedSlot{}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S63:T<1>1<13>io.write(...){:[1]<31>Put 3 coals into slot 1 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][3]}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][1]}
+R23:T<1>1<14>{:[1]T:[2][3]}
+S40:T<1>1<24>G:turtle:M:getItemDetail{:[1]N}
+R60:T<1>1<51>{:[1]T:[2]{:<4>name<14>minecraft:coal:<5>count[3]}}
+S42:T<1>1<24>G:turtle:M:getItemDetail{:[1][1]}
+R60:T<1>1<51>{:[1]T:[2]{:<4>name<14>minecraft:coal:<5>count[3]}}
+S39:T<1>1<23>G:turtle:M:getItemSpace{:[1]N}
+R24:T<1>1<15>{:[1]T:[2][61]}
+S41:T<1>1<23>G:turtle:M:getItemSpace{:[1][1]}
+R24:T<1>1<15>{:[1]T:[2][61]}
+S35:T<1>1<17>G:turtle:M:refuel{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S34:T<1>1<23>G:turtle:M:getFuelLevel{}
+R26:T<1>1<17>{:[1]T:[2][1028]}
+S34:T<1>1<23>G:turtle:M:getFuelLevel{}
+R26:T<1>1<17>{:[1]T:[2][1028]}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][2]}
+S33:T<1>1<17>G:turtle:M:refuel{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S34:T<1>1<23>G:turtle:M:getFuelLevel{}
+R26:T<1>1<17>{:[1]T:[2][1188]}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S35:T<1>1<17>G:turtle:M:refuel{:[1][1]}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No items to combust}
+S33:T<1>1<17>G:turtle:M:refuel{:[1]N}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No items to combust}
+S81:T<1>1<13>io.write(...){:[1]<49>Remove blocks in front/below/above turtle [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S28:T<1>1<17>G:turtle:M:detect{}
+R21:T<1>1<12>{:[1]T:[2]F}
+S30:T<1>1<19>G:turtle:M:detectUp{}
+R21:T<1>1<12>{:[1]T:[2]F}
+S32:T<1>1<21>G:turtle:M:detectDown{}
+R21:T<1>1<12>{:[1]T:[2]F}
+S29:T<1>1<18>G:turtle:M:inspect{}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No block to inspect}
+S31:T<1>1<20>G:turtle:M:inspectUp{}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No block to inspect}
+S33:T<1>1<22>G:turtle:M:inspectDown{}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No block to inspect}
+S90:T<1>1<13>io.write(...){:[1]<58>Put cobblestone blocks in front/below/above turtle [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S28:T<1>1<17>G:turtle:M:detect{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S30:T<1>1<19>G:turtle:M:detectUp{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<21>G:turtle:M:detectDown{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S29:T<1>1<18>G:turtle:M:inspect{}
+R167:T<1>1<157>{:[1]T:[2]T:[3]{:<5>state{}:<4>name<21>minecraft:cobblestone:<4>tags{:<26>minecraft:mineable/pickaxeT:<17>forge:cobblestoneT:<24>forge:cobblestone/normalT}}}
+S31:T<1>1<20>G:turtle:M:inspectUp{}
+R167:T<1>1<157>{:[1]T:[2]T:[3]{:<5>state{}:<4>name<21>minecraft:cobblestone:<4>tags{:<26>minecraft:mineable/pickaxeT:<17>forge:cobblestoneT:<24>forge:cobblestone/normalT}}}
+S33:T<1>1<22>G:turtle:M:inspectDown{}
+R167:T<1>1<157>{:[1]T:[2]T:[3]{:<5>state{}:<4>name<21>minecraft:cobblestone:<4>tags{:<26>minecraft:mineable/pickaxeT:<17>forge:cobblestoneT:<24>forge:cobblestone/normalT}}}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S31:T<1>1<20>G:turtle:M:equipLeft{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<17>G:turtle:M:select{:[1][2]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S32:T<1>1<21>G:turtle:M:equipRight{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][1]}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S75:T<1>1<13>io.write(...){:[1]<43>Remove all items from slots 1 and 2 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S42:T<1>1<24>G:turtle:M:getItemDetail{:[1][1]}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<13>io.write(...){:[1]<43>Put fresh diamond pickaxe at slot 1 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S31:T<1>1<20>G:turtle:M:equipLeft{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S25:T<1>1<14>G:turtle:M:dig{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S25:T<1>1<14>G:turtle:M:dig{}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>Nothing to dig here}
+S27:T<1>1<16>G:turtle:M:digUp{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S27:T<1>1<16>G:turtle:M:digUp{}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>Nothing to dig here}
+S29:T<1>1<18>G:turtle:M:digDown{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S29:T<1>1<18>G:turtle:M:digDown{}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>Nothing to dig here}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][3]}
+S29:T<1>1<18>G:turtle:M:forward{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S26:T<1>1<15>G:turtle:M:back{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S24:T<1>1<13>G:turtle:M:up{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S26:T<1>1<15>G:turtle:M:down{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S30:T<1>1<19>G:turtle:M:turnLeft{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S31:T<1>1<20>G:turtle:M:turnRight{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<16>G:turtle:M:place{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<16>G:turtle:M:place{:[1]N}
+R52:T<1>1<43>{:[1]T:[2]F:[3]<23>Cannot place block here}
+S34:T<1>1<18>G:turtle:M:placeUp{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S34:T<1>1<18>G:turtle:M:placeUp{:[1]N}
+R52:T<1>1<43>{:[1]T:[2]F:[3]<23>Cannot place block here}
+S36:T<1>1<20>G:turtle:M:placeDown{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S36:T<1>1<20>G:turtle:M:placeDown{:[1]N}
+R46:T<1>1<37>{:[1]T:[2]F:[3]<17>No items to place}
+S74:T<1>1<13>io.write(...){:[1]<42>Put 3 cobblestone blocks to slot 1 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][1]}
+R23:T<1>1<14>{:[1]T:[2][3]}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][2]}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S29:T<1>1<18>G:turtle:M:compare{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S31:T<1>1<20>G:turtle:M:compareUp{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S33:T<1>1<22>G:turtle:M:compareDown{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<17>G:turtle:M:select{:[1][2]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S29:T<1>1<18>G:turtle:M:compare{}
+R21:T<1>1<12>{:[1]T:[2]F}
+S31:T<1>1<20>G:turtle:M:compareUp{}
+R21:T<1>1<12>{:[1]T:[2]F}
+S33:T<1>1<22>G:turtle:M:compareDown{}
+R21:T<1>1<12>{:[1]T:[2]F}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][2]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][1]}
+R23:T<1>1<14>{:[1]T:[2][2]}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][2]}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S38:T<1>1<20>G:turtle:M:compareTo{:[1][2]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S44:T<1>1<21>G:turtle:M:transferTo{:[1][2]:[2]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][1]}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S41:T<1>1<23>G:turtle:M:getItemCount{:[1][2]}
+R23:T<1>1<14>{:[1]T:[2][3]}
+S38:T<1>1<20>G:turtle:M:compareTo{:[1][2]}
+R21:T<1>1<12>{:[1]T:[2]F}
+S35:T<1>1<17>G:turtle:M:select{:[1][2]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S44:T<1>1<21>G:turtle:M:transferTo{:[1][1]:[2]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S25:T<1>1<14>G:turtle:M:dig{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S27:T<1>1<16>G:turtle:M:digUp{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S29:T<1>1<18>G:turtle:M:digDown{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][6]}
+S33:T<1>1<15>G:turtle:M:drop{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<17>G:turtle:M:dropUp{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S37:T<1>1<19>G:turtle:M:dropDown{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][3]}
+S31:T<1>1<15>G:turtle:M:drop{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S31:T<1>1<15>G:turtle:M:drop{:[1]N}
+R45:T<1>1<36>{:[1]T:[2]F:[3]<16>No items to drop}
+S175:T<1>1<13>io.write(...){:[1]<142>Collect dropped cobblestone
+Drop stack of sticks right in front of the turtle
+Its better to build 1-block room then throw sticks there [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S33:T<1>1<15>G:turtle:M:suck{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S31:T<1>1<15>G:turtle:M:suck{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R24:T<1>1<15>{:[1]T:[2][64]}
+S31:T<1>1<15>G:turtle:M:suck{:[1]N}
+R45:T<1>1<36>{:[1]T:[2]F:[3]<16>No items to take}
+S31:T<1>1<15>G:turtle:M:drop{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S164:T<1>1<13>io.write(...){:[1]<131>Collect dropped sticks
+Drop stack of sticks right below the turtle
+Its better to build 1-block room then throw sticks there [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S37:T<1>1<19>G:turtle:M:suckDown{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S35:T<1>1<19>G:turtle:M:suckDown{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R24:T<1>1<15>{:[1]T:[2][64]}
+S35:T<1>1<19>G:turtle:M:suckDown{:[1]N}
+R45:T<1>1<36>{:[1]T:[2]F:[3]<16>No items to take}
+S35:T<1>1<19>G:turtle:M:dropDown{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S164:T<1>1<13>io.write(...){:[1]<131>Collect dropped sticks
+Drop stack of sticks right above the turtle
+Its better to build 1-block room then throw sticks there [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S35:T<1>1<17>G:turtle:M:suckUp{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S33:T<1>1<17>G:turtle:M:suckUp{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R24:T<1>1<15>{:[1]T:[2][64]}
+S33:T<1>1<17>G:turtle:M:suckUp{:[1]N}
+R45:T<1>1<36>{:[1]T:[2]F:[3]<16>No items to take}
+S33:T<1>1<17>G:turtle:M:dropUp{:[1]N}
+R21:T<1>1<12>{:[1]T:[2]T}
+S39:T<1>1<23>G:turtle:M:getItemCount{:[1]N}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S70:T<1>1<13>io.write(...){:[1]<38>Put crafting table into slot 1 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<21>G:turtle:M:equipRight{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S96:T<1>1<13>io.write(...){:[1]<64>Clean inventory of turtle
+Put 8 cobblestones into slot 1 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<16>G:turtle:M:craft{:[1][64]}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No matching recipes}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][2]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][3]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][5]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][7]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][9]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S47:T<1>1<21>G:turtle:M:transferTo{:[1][10]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S47:T<1>1<21>G:turtle:M:transferTo{:[1][11]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<16>G:turtle:M:craft{:[1][64]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S35:T<1>1<16>G:turtle:M:craft{:[1][64]}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No matching recipes}
+S40:T<1>1<24>G:turtle:M:getItemDetail{:[1]N}
+R63:T<1>1<54>{:[1]T:[2]{:<4>name<17>minecraft:furnace:<5>count[1]}}
+S96:T<1>1<13>io.write(...){:[1]<64>Clean inventory of turtle
+Put 8 cobblestones into slot 1 [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S35:T<1>1<17>G:turtle:M:select{:[1][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S45:T<1>1<22>G:peripheral:M:getType{:[1]<5>right}
+R32:T<1>1<23>{:[1]T:[2]<9>workbench}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<5>right:[2]<5>craft:[3][64]}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No matching recipes}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][2]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][3]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][5]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][7]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<21>G:turtle:M:transferTo{:[1][9]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S47:T<1>1<21>G:turtle:M:transferTo{:[1][10]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S47:T<1>1<21>G:turtle:M:transferTo{:[1][11]:[2][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S45:T<1>1<22>G:peripheral:M:getType{:[1]<5>right}
+R32:T<1>1<23>{:[1]T:[2]<9>workbench}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<5>right:[2]<5>craft:[3][64]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S45:T<1>1<22>G:peripheral:M:getType{:[1]<5>right}
+R32:T<1>1<23>{:[1]T:[2]<9>workbench}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<5>right:[2]<5>craft:[3][64]}
+R48:T<1>1<39>{:[1]T:[2]F:[3]<19>No matching recipes}
+S40:T<1>1<24>G:turtle:M:getItemDetail{:[1]N}
+R63:T<1>1<54>{:[1]T:[2]{:<4>name<17>minecraft:furnace:<5>count[1]}}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

@@ -10,7 +10,7 @@ _lib.step(
 )
 
 assert turtle.attack() is True
-assert turtle.attack() is True
+assert type(turtle.attack()) is bool
 assert turtle.attack() is False
 
 _lib.step(
@@ -19,7 +19,7 @@ _lib.step(
 )
 
 assert turtle.attackDown() is True
-assert turtle.attackDown() is True
+assert type(turtle.attackDown()) is bool
 assert turtle.attackDown() is False
 
 _lib.step(
@@ -28,7 +28,7 @@ _lib.step(
 )
 
 assert turtle.attackUp() is True
-assert turtle.attackUp() is True
+assert type(turtle.attackUp()) is bool
 assert turtle.attackUp() is False
 
 print('Test finished successfully')

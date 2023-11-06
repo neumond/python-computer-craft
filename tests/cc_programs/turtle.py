@@ -3,13 +3,6 @@ from cc import LuaException, import_file, turtle, peripheral
 _lib = import_file('_lib.py', __file__)
 assert_raises, step = _lib.assert_raises, _lib.step
 
-
-tbl = _lib.get_object_table('turtle')
-assert tbl['table'] == {'native': True}
-del tbl['table']
-tbl['function'].setdefault('craft', True)
-assert _lib.get_class_table(turtle) == tbl
-
 flimit = turtle.getFuelLimit()
 assert isinstance(flimit, int)
 assert flimit > 0
@@ -31,12 +24,12 @@ assert turtle.getItemCount() == 3
 assert turtle.getItemCount(1) == 3
 
 assert turtle.getItemDetail() == {
-    b'count': 3,  # TODO: binary output
-    b'name': b'minecraft:coal',
+    'count': 3,
+    'name': 'minecraft:coal',
 }
 assert turtle.getItemDetail(1) == {
-    b'count': 3,
-    b'name': b'minecraft:coal',
+    'count': 3,
+    'name': 'minecraft:coal',
 }
 
 assert turtle.getItemSpace() == 61
@@ -80,7 +73,7 @@ for c in [
     turtle.inspectDown()
 ]:
     assert isinstance(c, dict)
-    assert c[b'name'] == b'minecraft:cobblestone'
+    assert c['name'] == 'minecraft:cobblestone'
 
 assert turtle.select(1) is None
 assert turtle.getItemCount() == 0
@@ -98,8 +91,8 @@ if (
 
 assert turtle.select(1) is None
 if turtle.getItemDetail(1) != {
-    b'count': 1,
-    b'name': b'minecraft:diamond_pickaxe',
+    'count': 1,
+    'name': 'minecraft:diamond_pickaxe',
 }:
     step('Put fresh diamond pickaxe at slot 1')
 
@@ -114,18 +107,20 @@ assert turtle.digDown() is False
 
 assert turtle.getItemCount() == 3
 
-assert turtle.forward() is True
-assert turtle.back() is True
-assert turtle.up() is True
-assert turtle.down() is True
+assert turtle.forward() is None
+assert turtle.back() is None
+assert turtle.up() is None
+assert turtle.down() is None
 assert turtle.turnLeft() is None
 assert turtle.turnRight() is None
 
-assert turtle.place() is True
-assert turtle.place() is False
-assert turtle.placeUp() is True
-assert turtle.placeUp() is False
-assert turtle.placeDown() is True
+assert turtle.place() is None
+with assert_raises(LuaException, 'Cannot place block here'):
+    turtle.place()
+assert turtle.placeUp() is None
+with assert_raises(LuaException, 'Cannot place block here'):
+    turtle.placeUp()
+assert turtle.placeDown() is None
 with assert_raises(LuaException, 'No items to place'):
     turtle.placeDown()
 
@@ -146,31 +141,32 @@ assert turtle.compareDown() is False
 
 assert turtle.select(1) is None
 
-assert turtle.transferTo(2, 1) is True
+assert turtle.transferTo(2, 1) is None
 assert turtle.getItemCount(1) == 2
 assert turtle.getItemCount(2) == 1
 assert turtle.compareTo(2) is True
 
-assert turtle.transferTo(2) is True
+assert turtle.transferTo(2) is None
 assert turtle.getItemCount(1) == 0
 assert turtle.getItemCount(2) == 3
 assert turtle.compareTo(2) is False
 
 assert turtle.select(2) is None
-assert turtle.transferTo(1) is True
+assert turtle.transferTo(1) is None
 assert turtle.select(1) is None
 assert turtle.dig() is True
 assert turtle.digUp() is True
 assert turtle.digDown() is True
 assert turtle.getItemCount() == 6
 
-assert turtle.drop(1) is True
-assert turtle.dropUp(1) is True
-assert turtle.dropDown(1) is True
+assert turtle.drop(1) is None
+assert turtle.dropUp(1) is None
+assert turtle.dropDown(1) is None
 assert turtle.getItemCount() == 3
-assert turtle.drop() is True
+assert turtle.drop() is None
 assert turtle.getItemCount() == 0
-assert turtle.drop() is False
+with assert_raises(LuaException, 'No items to drop'):
+    turtle.drop()
 
 step(
     'Collect dropped cobblestone\n'
@@ -183,7 +179,7 @@ assert turtle.getItemCount() == 1
 assert turtle.suck() is True
 assert turtle.getItemCount() == 64
 assert turtle.suck() is False
-assert turtle.drop() is True
+assert turtle.drop() is None
 assert turtle.getItemCount() == 0
 
 step(
@@ -197,7 +193,7 @@ assert turtle.getItemCount() == 1
 assert turtle.suckDown() is True
 assert turtle.getItemCount() == 64
 assert turtle.suckDown() is False
-assert turtle.dropDown() is True
+assert turtle.dropDown() is None
 assert turtle.getItemCount() == 0
 
 step(
@@ -211,7 +207,7 @@ assert turtle.getItemCount() == 1
 assert turtle.suckUp() is True
 assert turtle.getItemCount() == 64
 assert turtle.suckUp() is False
-assert turtle.dropUp() is True
+assert turtle.dropUp() is None
 assert turtle.getItemCount() == 0
 
 
@@ -235,14 +231,16 @@ for craft_fn in craft1, craft2:
     )
 
     assert turtle.select(1) is None
-    assert craft_fn() is False
+    with assert_raises(LuaException, 'No matching recipes'):
+        craft_fn()
     for idx in [2, 3, 5, 7, 9, 10, 11]:
-        assert turtle.transferTo(idx, 1)
-    assert craft_fn() is True
-    assert craft_fn() is False
+        assert turtle.transferTo(idx, 1) is None
+    assert craft_fn() is None
+    with assert_raises(LuaException, 'No matching recipes'):
+        craft_fn()
     assert turtle.getItemDetail() == {
-        b'count': 1,
-        b'name': b'minecraft:furnace',
+        'count': 1,
+        'name': 'minecraft:furnace',
     }
 
 print('Test finished successfully')

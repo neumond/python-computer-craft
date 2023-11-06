@@ -1,0 +1,166 @@
+R800:0[5]{:[1]<16>turtle_attack.py:[0]<2>py}<16>turtle_attack.py<736>from cc import import_file, turtle
+
+_lib = import_file('_lib.py', __file__)
+
+
+_lib.step(
+    'NOTE: this test is unreliable\n'
+    'Build 1x1x1 stone cage in front of turtle\n'
+    'Spawn here a chicken',
+)
+
+assert turtle.attack() is True
+assert type(turtle.attack()) is bool
+assert turtle.attack() is False
+
+_lib.step(
+    'Build 1x1x1 stone cage below turtle\n'
+    'Spawn here a chicken',
+)
+
+assert turtle.attackDown() is True
+assert type(turtle.attackDown()) is bool
+assert turtle.attackDown() is False
+
+_lib.step(
+    'Build 1x1x1 stone cage above turtle\n'
+    'Spawn here a chicken',
+)
+
+assert turtle.attackUp() is True
+assert type(turtle.attackUp()) is bool
+assert turtle.attackUp() is False
+
+print('Test finished successfully')
+S265:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<16>turtle_attack.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S133:T<1>1<13>io.write(...){:[1]<100>NOTE: this test is unreliable
+Build 1x1x1 stone cage in front of turtle
+Spawn here a chicken [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S28:T<1>1<17>G:turtle:M:attack{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S28:T<1>1<17>G:turtle:M:attack{}
+R51:T<1>1<42>{:[1]T:[2]F:[3]<22>Nothing to attack here}
+S28:T<1>1<17>G:turtle:M:attack{}
+R51:T<1>1<42>{:[1]T:[2]F:[3]<22>Nothing to attack here}
+S96:T<1>1<13>io.write(...){:[1]<64>Build 1x1x1 stone cage below turtle
+Spawn here a chicken [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S32:T<1>1<21>G:turtle:M:attackDown{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<21>G:turtle:M:attackDown{}
+R51:T<1>1<42>{:[1]T:[2]F:[3]<22>Nothing to attack here}
+S32:T<1>1<21>G:turtle:M:attackDown{}
+R51:T<1>1<42>{:[1]T:[2]F:[3]<22>Nothing to attack here}
+S96:T<1>1<13>io.write(...){:[1]<64>Build 1x1x1 stone cage above turtle
+Spawn here a chicken [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S30:T<1>1<19>G:turtle:M:attackUp{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S30:T<1>1<19>G:turtle:M:attackUp{}
+R51:T<1>1<42>{:[1]T:[2]F:[3]<22>Nothing to attack here}
+S30:T<1>1<19>G:turtle:M:attackUp{}
+R51:T<1>1<42>{:[1]T:[2]F:[3]<22>Nothing to attack here}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN
