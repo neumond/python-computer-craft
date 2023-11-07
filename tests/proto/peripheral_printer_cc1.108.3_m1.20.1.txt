@@ -1,0 +1,369 @@
+R2597:0[5]{:[1]<21>peripheral_printer.py:[0]<2>py}<21>peripheral_printer.py<2522>from cc import LuaException, import_file, peripheral
+
+_lib = import_file('_lib.py', __file__)
+assert_raises = _lib.assert_raises
+
+side = 'left'
+
+_lib.step(f'Attach empty printer at {side} side of computer')
+
+m = peripheral.wrap(side)
+
+assert m.getPaperLevel() == 0
+assert m.getInkLevel() == 0
+
+# no paper
+assert m.newPage() is False
+# page not started
+with assert_raises(LuaException):
+    m.endPage()
+with assert_raises(LuaException):
+    m.write('test')
+with assert_raises(LuaException):
+    m.setCursorPos(2, 2)
+with assert_raises(LuaException):
+    m.getCursorPos()
+with assert_raises(LuaException):
+    m.getPageSize()
+with assert_raises(LuaException):
+    m.setPageTitle('title')
+
+_lib.step('Put paper into printer')
+paper_level = m.getPaperLevel()
+assert paper_level > 0
+# no ink
+assert m.newPage() is False
+
+_lib.step('Put ink into printer')
+ink_level = m.getInkLevel()
+assert ink_level > 0
+
+assert m.newPage() is True
+assert m.getPaperLevel() < paper_level
+assert m.getInkLevel() < ink_level
+
+assert m.setCursorPos(2, 2) is None
+assert m.getCursorPos() == (2, 2)
+assert m.setCursorPos(1, 1) is None
+assert m.getCursorPos() == (1, 1)
+assert m.setPageTitle('Green bottles') is None
+assert m.getPageSize() == (25, 21)
+
+
+def row(n=1):
+    _, r = m.getCursorPos()
+    m.setCursorPos(1, r + n)
+
+
+def split_text(text, max_width=25):
+    for i in range(0, len(text), max_width):
+        yield text[i:i + max_width]
+
+
+def split_by_words(text, max_width=25):
+    stack = []
+    stack_len = 0
+    for word in text.split(' '):
+        assert len(word) <= max_width
+        with_word = len(word) if stack_len == 0 else stack_len + 1 + len(word)
+        if with_word > max_width:
+            yield ' '.join(stack)
+            stack.clear()
+            stack_len = 0
+        else:
+            stack.append(word)
+            stack_len = with_word
+    if stack:
+        yield ' '.join(stack)
+
+
+def multiline_write(text):
+    _, r = m.getCursorPos()
+    for pt in split_by_words(text):
+        assert m.setCursorPos(1, r) is None
+        assert m.write(pt) is None
+        r += 1
+    assert m.setCursorPos(1, r) is None
+
+
+assert m.write('Green bottles'.center(25)) is None
+row(2)
+
+x = 2
+while x > 0:
+    multiline_write(f'{x} green bottles hanging on the wall')
+    multiline_write(f'{x} green bottles hanging on the wall')
+    multiline_write('if one green bottle accidently falls')
+    x -= 1
+    multiline_write(f'there will be {x} hanging on the wall')
+    row()
+
+assert m.endPage() is True
+
+print('Test finished successfully')
+S270:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<21>peripheral_printer.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S85:T<1>1<13>io.write(...){:[1]<53>Attach empty printer at left side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>left}
+R30:T<1>1<21>{:[1]T:[2]<7>printer}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>getPaperLevel}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S60:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<11>getInkLevel}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>newPage}
+R21:T<1>1<12>{:[1]T:[2]F}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>endPage}
+R40:T<1>1<31>{:[1]F:[2]<16>Page not started}
+S64:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<4>test}
+R40:T<1>1<31>{:[1]F:[2]<16>Page not started}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][2]:[4][2]}
+R40:T<1>1<31>{:[1]F:[2]<16>Page not started}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R40:T<1>1<31>{:[1]F:[2]<16>Page not started}
+S60:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<11>getPageSize}
+R40:T<1>1<31>{:[1]F:[2]<16>Page not started}
+S73:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setPageTitle:[3]<5>title}
+R40:T<1>1<31>{:[1]F:[2]<16>Page not started}
+S62:T<1>1<13>io.write(...){:[1]<30>Put paper into printer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>getPaperLevel}
+R24:T<1>1<15>{:[1]T:[2][64]}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>newPage}
+R21:T<1>1<12>{:[1]T:[2]F}
+S60:T<1>1<13>io.write(...){:[1]<28>Put ink into printer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S60:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<11>getInkLevel}
+R24:T<1>1<15>{:[1]T:[2][64]}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>newPage}
+R21:T<1>1<12>{:[1]T:[2]T}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>getPaperLevel}
+R24:T<1>1<15>{:[1]T:[2][63]}
+S60:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<11>getInkLevel}
+R24:T<1>1<15>{:[1]T:[2][63]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][2]:[4][2]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][2]:[3][2]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][1]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][1]}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setPageTitle:[3]<13>Green bottles}
+R15:T<1>1<7>{:[1]T}
+S60:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<11>getPageSize}
+R32:T<1>1<23>{:[1]T:[2][25]:[3][21]}
+S86:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<25>      Green bottles      }
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R31:T<1>1<22>{:[1]T:[2][26]:[3][1]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][3]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][3]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][3]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<23>2 green bottles hanging}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][4]}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<8>the wall}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][5]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][5]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][5]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<23>2 green bottles hanging}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][6]}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<8>the wall}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][7]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][7]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][7]}
+R15:T<1>1<7>{:[1]T}
+S80:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<19>if one green bottle}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][8]}
+R15:T<1>1<7>{:[1]T}
+S65:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<5>falls}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][9]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][9]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][9]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<23>there will be 1 hanging}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][10]}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<8>the wall}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][11]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R31:T<1>1<22>{:[1]T:[2][1]:[3][11]}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][12]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R31:T<1>1<22>{:[1]T:[2][1]:[3][12]}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][12]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<23>1 green bottles hanging}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][13]}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<8>the wall}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][14]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R31:T<1>1<22>{:[1]T:[2][1]:[3][14]}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][14]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<23>1 green bottles hanging}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][15]}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<8>the wall}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][16]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R31:T<1>1<22>{:[1]T:[2][1]:[3][16]}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][16]}
+R15:T<1>1<7>{:[1]T}
+S80:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<19>if one green bottle}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][17]}
+R15:T<1>1<7>{:[1]T}
+S65:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<5>falls}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][18]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R31:T<1>1<22>{:[1]T:[2][1]:[3][18]}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][18]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<23>there will be 0 hanging}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][19]}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<8>the wall}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][20]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R31:T<1>1<22>{:[1]T:[2][1]:[3][20]}
+S76:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][21]}
+R15:T<1>1<7>{:[1]T}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>endPage}
+R21:T<1>1<12>{:[1]T:[2]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

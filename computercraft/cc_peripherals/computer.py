@@ -3,32 +3,26 @@ from typing import Optional
 from ._base import BasePeripheral
 
 
-__all__ = ('ComputerPeripheral', 'TurtlePeripheral')
+__all__ = ('ComputerPeripheral', )
 
 
-class ComputerMixin:
-    def turnOn(self) -> None:
-        return self._method(b'turnOn').take_none()
-
-    def shutdown(self) -> None:
-        return self._method(b'shutdown').take_none()
-
-    def reboot(self) -> None:
-        return self._method(b'reboot').take_none()
-
-    def getID(self) -> int:
-        return self._method(b'getID').take_int()
-
-    def getLabel(self) -> Optional[str]:
-        return self._method(b'getLabel').take_option_string()
-
-    def isOn(self) -> bool:
-        return self._method(b'isOn').take_bool()
-
-
-class ComputerPeripheral(BasePeripheral, ComputerMixin):
+class ComputerPeripheral(BasePeripheral):
     TYPE = 'computer'
 
+    def turnOn(self) -> None:
+        return self._call(b'turnOn').take_none()
 
-class TurtlePeripheral(BasePeripheral, ComputerMixin):
-    TYPE = 'turtle'
+    def shutdown(self) -> None:
+        return self._call(b'shutdown').take_none()
+
+    def reboot(self) -> None:
+        return self._call(b'reboot').take_none()
+
+    def getID(self) -> int:
+        return self._call(b'getID').take_int()
+
+    def getLabel(self) -> Optional[str]:
+        return self._call(b'getLabel').take_option_string()
+
+    def isOn(self) -> bool:
+        return self._call(b'isOn').take_bool()

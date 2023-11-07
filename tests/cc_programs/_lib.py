@@ -47,36 +47,3 @@ def term_step(text):
     term.setCursorPos(1, 1)
     term.setCursorBlink(True)
     step(text)
-
-
-def _computer_peri(place_thing, thing):
-    from cc import peripheral
-
-    side = 'left'
-
-    step(
-        f'Place {place_thing} on {side} side of computer\n'
-        "Don't turn it on!",
-    )
-
-    c = peripheral.wrap(side)
-    assert c is not None
-
-    assert c.isOn() is False
-    assert isinstance(c.getID(), int)
-    assert c.getLabel() is None
-    assert c.turnOn() is None
-
-    step(f'{thing.capitalize()} must be turned on now')
-
-    assert c.shutdown() is None
-
-    step(f'{thing.capitalize()} must shutdown')
-
-    step(f'Now turn on {thing} manually and enter some commands')
-
-    assert c.reboot() is None
-
-    step(f'{thing.capitalize()} must reboot')
-
-    print('Test finished successfully')

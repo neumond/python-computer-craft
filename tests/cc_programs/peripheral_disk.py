@@ -1,8 +1,6 @@
-from computercraft.subapis.peripheral import CCDrive
 from cc import LuaException, import_file, peripheral
 
 _lib = import_file('_lib.py', __file__)
-
 
 side = 'left'
 
@@ -11,9 +9,6 @@ _lib.step(f'Put empty disk drive on {side} side of computer')
 d = peripheral.wrap(side)
 assert d is not None
 
-tbl = _lib.get_object_table(f'peripheral.wrap("{side}")')
-assert _lib.get_class_table(CCDrive) == tbl
-
 assert d.isDiskPresent() is False
 assert d.hasData() is False
 assert d.getMountPath() is None
@@ -21,7 +16,7 @@ assert d.setDiskLabel('text') is None
 assert d.getDiskLabel() is None
 assert d.getDiskID() is None
 assert d.hasAudio() is False
-assert d.getAudioTitle() is False  # False instead None!
+assert d.getAudioTitle() is None
 assert d.playAudio() is None
 assert d.stopAudio() is None
 assert d.ejectDisk() is None

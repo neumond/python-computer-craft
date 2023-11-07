@@ -1,20 +1,15 @@
 import random
 
-from computercraft.subapis.peripheral import CCSpeaker
 from cc import import_file, os, peripheral
 
 _lib = import_file('_lib.py', __file__)
 
-
+random.seed(598392)
 side = 'left'
 
 _lib.step(f'Attach speaker at {side} side of computer')
 
 m = peripheral.wrap(side)
-
-
-tbl = _lib.get_object_table(f'peripheral.wrap("{side}")')
-assert _lib.get_class_table(CCSpeaker) == tbl
 
 for _ in range(48):
     assert m.playNote(

@@ -2,7 +2,6 @@ from cc import import_file, peripheral
 
 _lib = import_file('_lib.py', __file__)
 
-
 side = 'back'
 
 _lib.step(f'Attach and disable (right-click) wired modem at {side} side')

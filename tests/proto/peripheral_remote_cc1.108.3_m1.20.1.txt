@@ -1,0 +1,150 @@
+R1152:0[5]{:[1]<20>peripheral_remote.py:[0]<2>py}<20>peripheral_remote.py<1079>from cc import import_file, peripheral
+
+_lib = import_file('_lib.py', __file__)
+
+side = 'back'
+
+_lib.step(f'Attach and disable (right-click) wired modem at {side} side')
+
+m = peripheral.wrap(side)
+assert m.isWireless() is False
+assert m.getNameLocal() is None
+
+_lib.step(f'Enable (right-click) wired modem at {side} side')
+
+assert isinstance(m.getNameLocal(), str)
+
+_lib.step('Connect networked speaker peripheral & enable its modem')
+
+names = m.getNamesRemote()
+assert isinstance(names, list)
+assert len(names) > 0
+speaker = []
+for n in names:
+    assert isinstance(n, str)
+    if n.startswith('speaker_'):
+        speaker.append(n)
+assert len(speaker) == 1
+speaker = speaker[0]
+
+assert m.isPresentRemote('doesnotexist') is False
+assert m.getTypeRemote('doesnotexist') is None
+
+assert m.isPresentRemote(speaker) is True
+assert m.getTypeRemote(speaker) == 'speaker'
+
+assert m.wrapRemote('doesnotexist') is None
+s = m.wrapRemote(speaker)
+
+assert s.playSound('minecraft:entity.player.levelup') is True
+
+print('You must have heard levelup sound')
+print('Test finished successfully')
+S269:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<20>peripheral_remote.py}
+R1162:T<1>1<1151>{:[1]T:[2]<1134>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)}
+S97:T<1>1<13>io.write(...){:[1]<65>Attach and disable (right-click) wired modem at back side [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>back}
+R50:T<1>1<41>{:[1]T:[2]<5>modem:[3]<14>peripheral_hub}
+S59:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<10>isWireless}
+R21:T<1>1<12>{:[1]T:[2]F}
+S59:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<10>isWireless}
+R21:T<1>1<12>{:[1]T:[2]F}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<12>getNameLocal}
+R15:T<1>1<7>{:[1]T}
+S85:T<1>1<13>io.write(...){:[1]<53>Enable (right-click) wired modem at back side [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<12>getNameLocal}
+R34:T<1>1<25>{:[1]T:[2]<10>computer_3}
+S95:T<1>1<13>io.write(...){:[1]<63>Connect networked speaker peripheral & enable its modem [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S63:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<14>getNamesRemote}
+R38:T<1>1<29>{:[1]T:[2]{:[1]<9>speaker_0}}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<15>isPresentRemote:[3]<12>doesnotexist}
+R21:T<1>1<12>{:[1]T:[2]F}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<13>getTypeRemote:[3]<12>doesnotexist}
+R15:T<1>1<7>{:[1]T}
+S80:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<15>isPresentRemote:[3]<9>speaker_0}
+R21:T<1>1<12>{:[1]T:[2]T}
+S78:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<13>getTypeRemote:[3]<9>speaker_0}
+R30:T<1>1<21>{:[1]T:[2]<7>speaker}
+S53:T<1>1<22>G:peripheral:M:getType{:[1]<12>doesnotexist}
+R15:T<1>1<7>{:[1]T}
+S49:T<1>1<22>G:peripheral:M:getType{:[1]<9>speaker_0}
+R30:T<1>1<21>{:[1]T:[2]<7>speaker}
+S115:T<1>1<19>G:peripheral:M:call{:[1]<9>speaker_0:[2]<9>playSound:[3]<31>minecraft:entity.player.levelup:[4][1]:[5][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S65:T<1>1<13>io.write(...){:[1]<33>You must have heard levelup sound}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

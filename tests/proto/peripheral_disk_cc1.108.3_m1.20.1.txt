@@ -1,0 +1,268 @@
+R1830:0[5]{:[1]<18>peripheral_disk.py:[0]<2>py}<18>peripheral_disk.py<1761>from cc import LuaException, import_file, peripheral
+
+_lib = import_file('_lib.py', __file__)
+
+side = 'left'
+
+_lib.step(f'Put empty disk drive on {side} side of computer')
+
+d = peripheral.wrap(side)
+assert d is not None
+
+assert d.isDiskPresent() is False
+assert d.hasData() is False
+assert d.getMountPath() is None
+assert d.setDiskLabel('text') is None
+assert d.getDiskLabel() is None
+assert d.getDiskID() is None
+assert d.hasAudio() is False
+assert d.getAudioTitle() is None
+assert d.playAudio() is None
+assert d.stopAudio() is None
+assert d.ejectDisk() is None
+
+_lib.step('Put new CC diskette into disk drive')
+
+assert d.isDiskPresent() is True
+assert d.hasData() is True
+assert isinstance(d.getMountPath(), str)
+assert isinstance(d.getDiskID(), int)
+
+assert d.getDiskLabel() is None
+assert d.setDiskLabel('label') is None
+assert d.getDiskLabel() == 'label'
+assert d.setDiskLabel(None) is None
+assert d.getDiskLabel() is None
+
+assert d.hasAudio() is False
+assert d.getAudioTitle() is None
+assert d.playAudio() is None
+assert d.stopAudio() is None
+
+assert d.ejectDisk() is None
+
+_lib.step('Put any audio disk into disk drive')
+
+assert d.isDiskPresent() is True
+assert d.hasData() is False
+assert d.getMountPath() is None
+assert d.getDiskID() is None
+assert d.hasAudio() is True
+
+label = d.getAudioTitle()
+assert isinstance(label, str)
+assert label != 'label'
+print(f'Label is {label}')
+assert d.getDiskLabel() == label
+with _lib.assert_raises(LuaException):
+    d.setDiskLabel('label')
+with _lib.assert_raises(LuaException):
+    d.setDiskLabel(None)
+# no effect
+assert d.getDiskLabel() == label
+
+assert d.playAudio() is None
+
+_lib.step('Audio must be playing now')
+
+assert d.stopAudio() is None
+assert d.ejectDisk() is None
+
+print('Test finished successfully')
+S267:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<18>peripheral_disk.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S85:T<1>1<13>io.write(...){:[1]<53>Put empty disk drive on left side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>left}
+R28:T<1>1<19>{:[1]T:[2]<5>drive}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>isDiskPresent}
+R21:T<1>1<12>{:[1]T:[2]F}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>hasData}
+R21:T<1>1<12>{:[1]T:[2]F}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getMountPath}
+R15:T<1>1<7>{:[1]T}
+S72:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setDiskLabel:[3]<4>text}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getDiskLabel}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>getDiskID}
+R15:T<1>1<7>{:[1]T}
+S56:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>hasAudio}
+R21:T<1>1<12>{:[1]T:[2]F}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>getAudioTitle}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>playAudio}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>stopAudio}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>ejectDisk}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<13>io.write(...){:[1]<43>Put new CC diskette into disk drive [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>isDiskPresent}
+R21:T<1>1<12>{:[1]T:[2]T}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>hasData}
+R21:T<1>1<12>{:[1]T:[2]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getMountPath}
+R27:T<1>1<18>{:[1]T:[2]<4>disk}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>getDiskID}
+R23:T<1>1<14>{:[1]T:[2][0]}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getDiskLabel}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setDiskLabel:[3]<5>label}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getDiskLabel}
+R28:T<1>1<19>{:[1]T:[2]<5>label}
+S66:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setDiskLabel:[3]N}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getDiskLabel}
+R15:T<1>1<7>{:[1]T}
+S56:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>hasAudio}
+R21:T<1>1<12>{:[1]T:[2]F}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>getAudioTitle}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>playAudio}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>stopAudio}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>ejectDisk}
+R15:T<1>1<7>{:[1]T}
+S74:T<1>1<13>io.write(...){:[1]<42>Put any audio disk into disk drive [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>isDiskPresent}
+R21:T<1>1<12>{:[1]T:[2]T}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>hasData}
+R21:T<1>1<12>{:[1]T:[2]F}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getMountPath}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>getDiskID}
+R15:T<1>1<7>{:[1]T}
+S56:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>hasAudio}
+R21:T<1>1<12>{:[1]T:[2]T}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<13>getAudioTitle}
+R32:T<1>1<23>{:[1]T:[2]<9>C418 - 13}
+S50:T<1>1<13>io.write(...){:[1]<18>Label is C418 - 13}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getDiskLabel}
+R32:T<1>1<23>{:[1]T:[2]<9>C418 - 13}
+S73:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setDiskLabel:[3]<5>label}
+R52:T<1>1<43>{:[1]F:[2]<28>Disk label cannot be changed}
+S66:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setDiskLabel:[3]N}
+R52:T<1>1<43>{:[1]F:[2]<28>Disk label cannot be changed}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getDiskLabel}
+R32:T<1>1<23>{:[1]T:[2]<9>C418 - 13}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>playAudio}
+R15:T<1>1<7>{:[1]T}
+S65:T<1>1<13>io.write(...){:[1]<33>Audio must be playing now [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>stopAudio}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>ejectDisk}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

@@ -1,0 +1,332 @@
+R780:0[5]{:[1]<21>peripheral_speaker.py:[0]<2>py}<21>peripheral_speaker.py<706>import random
+
+from cc import import_file, os, peripheral
+
+_lib = import_file('_lib.py', __file__)
+
+random.seed(598392)
+side = 'left'
+
+_lib.step(f'Attach speaker at {side} side of computer')
+
+m = peripheral.wrap(side)
+
+for _ in range(48):
+    assert m.playNote(
+        random.choice([
+            'bass', 'basedrum', 'bell', 'chime', 'flute', 'guitar', 'hat',
+            'snare', 'xylophone', 'iron_xylophone', 'pling', 'banjo',
+            'bit', 'didgeridoo', 'cow_bell',
+        ]),
+        3,
+        random.randint(0, 24)
+    ) is True
+    os.sleep(0.2)
+
+assert m.playSound('minecraft:entity.player.levelup') is True
+
+print('You must have heard notes and sounds')
+print('Test finished successfully')
+S270:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<21>peripheral_speaker.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S79:T<1>1<13>io.write(...){:[1]<47>Attach speaker at left side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>left}
+R30:T<1>1<21>{:[1]T:[2]<7>speaker}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<6>guitar:[4][3]:[5][2]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S88:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<10>didgeridoo:[4][3]:[5][0]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<8>basedrum:[4][3]:[5][18]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>banjo:[4][3]:[5][23]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S85:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<8>basedrum:[4][3]:[5][5]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>hat:[4][3]:[5][16]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<6>guitar:[4][3]:[5][17]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bell:[4][3]:[5][14]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bass:[4][3]:[5][8]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>banjo:[4][3]:[5][24]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>snare:[4][3]:[5][11]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S80:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>hat:[4][3]:[5][6]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<6>guitar:[4][3]:[5][6]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<8>basedrum:[4][3]:[5][23]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bass:[4][3]:[5][13]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>snare:[4][3]:[5][14]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>pling:[4][3]:[5][3]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>hat:[4][3]:[5][21]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bell:[4][3]:[5][17]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>bit:[4][3]:[5][10]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>hat:[4][3]:[5][16]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S80:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>bit:[4][3]:[5][4]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<6>guitar:[4][3]:[5][6]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>banjo:[4][3]:[5][12]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bell:[4][3]:[5][23]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>pling:[4][3]:[5][14]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bass:[4][3]:[5][17]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>hat:[4][3]:[5][22]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>flute:[4][3]:[5][16]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>chime:[4][3]:[5][4]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>banjo:[4][3]:[5][3]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<3>bit:[4][3]:[5][14]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S89:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<10>didgeridoo:[4][3]:[5][14]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>flute:[4][3]:[5][24]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S81:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bell:[4][3]:[5][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<6>guitar:[4][3]:[5][19]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S84:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<6>guitar:[4][3]:[5][11]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<4>bell:[4][3]:[5][24]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>snare:[4][3]:[5][14]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<8>basedrum:[4][3]:[5][13]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S93:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<14>iron_xylophone:[4][3]:[5][20]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<8>cow_bell:[4][3]:[5][20]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S85:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<8>basedrum:[4][3]:[5][5]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>flute:[4][3]:[5][5]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S88:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<10>didgeridoo:[4][3]:[5][5]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S93:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<14>iron_xylophone:[4][3]:[5][17]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<5>pling:[4][3]:[5][16]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S83:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<8>playNote:[3]<6>guitar:[4][3]:[5][0]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.2]}
+R15:T<1>1<7>{:[1]T}
+S110:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>playSound:[3]<31>minecraft:entity.player.levelup:[4][1]:[5][1]}
+R21:T<1>1<12>{:[1]T:[2]T}
+S68:T<1>1<13>io.write(...){:[1]<36>You must have heard notes and sounds}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

@@ -1,0 +1,230 @@
+R1483:0[5]{:[1]<19>peripheral_modem.py:[0]<2>py}<19>peripheral_modem.py<1412>from cc import import_file, parallel, os, peripheral
+
+_lib = import_file('_lib.py', __file__)
+side = 'back'
+
+
+def do_test():
+    m = peripheral.wrap(side)
+
+    remote_channel = 5
+    local_channel = 7
+    messages = []
+
+    def _send():
+        for msg in [
+            1,
+            b'hi',
+            {b'data': 5},
+            b'stop',
+        ]:
+            os.sleep(1)
+            m.transmit(remote_channel, local_channel, msg)
+
+    def _recv():
+        assert m.isOpen(local_channel) is False
+        for msg in m.receive(local_channel):
+            assert m.isOpen(local_channel) is True
+            assert msg.reply_channel == remote_channel
+            assert msg.distance > 0
+            messages.append(msg.content)
+            if len(messages) == 3:
+                break
+
+    assert m.closeAll() is None
+    parallel.waitForAll(_recv, _send)
+
+    assert messages == [1, b'hi', {b'data': 5}]
+    assert m.isOpen(local_channel) is False
+    assert m.closeAll() is None
+    assert isinstance(m.isWireless(), bool)
+
+
+_lib.step(
+    f'Attach wired modem to {side} side\n'
+    f'Place another computer with wired modem on {side} side\n'
+    'Connect modems\n'
+    'On another computer start py modem_server.py'
+)
+do_test()
+_lib.step(
+    'Disconnect and remove wired modems\n'
+    'Attach wireless modems\n'
+    'Restart modem_server.py on another computer'
+)
+do_test()
+print('Test finished successfully')
+S268:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<19>peripheral_modem.py}
+R1162:T<1>1<1151>{:[1]T:[2]<1134>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)}
+S185:T<1>1<13>io.write(...){:[1]<152>Attach wired modem to back side
+Place another computer with wired modem on back side
+Connect modems
+On another computer start py modem_server.py [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>back}
+R50:T<1>1<41>{:[1]T:[2]<5>modem:[3]<14>peripheral_hub}
+S59:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<10>isWireless}
+R21:T<1>1<12>{:[1]T:[2]F}
+S56:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<8>closeAll}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>2<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+S30:T<1>3<12>G:os:M:sleep{:[1][1]}
+R21:T<1>2<12>{:[1]T:[2]F}
+S61:T<1>2<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>2<12>{:[1]T:[2]F}
+S59:T<1>2<19>G:peripheral:M:call{:[1]<4>back:[2]<4>open:[3][7]}
+R15:T<1>2<7>{:[1]T}
+S18:S<13>modem_message
+R15:T<1>3<7>{:[1]T}
+S77:T<1>3<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5][1]}
+R15:T<1>3<7>{:[1]T}
+S30:T<1>3<12>G:os:M:sleep{:[1][1]}
+R59:E<13>modem_message{:[1]<4>back:[2][7]:[3][5]:[4][1]:[5][5]}
+S61:T<1>2<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>2<12>{:[1]T:[2]T}
+R15:T<1>3<7>{:[1]T}
+S79:T<1>3<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5]<2>hi}
+R15:T<1>3<7>{:[1]T}
+S30:T<1>3<12>G:os:M:sleep{:[1][1]}
+R61:E<13>modem_message{:[1]<4>back:[2][7]:[3][5]:[4]<2>hi:[5][5]}
+S61:T<1>2<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>2<12>{:[1]T:[2]T}
+R15:T<1>3<7>{:[1]T}
+S87:T<1>3<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5]{:<4>data[5]}}
+R15:T<1>3<7>{:[1]T}
+S30:T<1>3<12>G:os:M:sleep{:[1][1]}
+R69:E<13>modem_message{:[1]<4>back:[2][7]:[3][5]:[4]{:<4>data[5]}:[5][5]}
+S61:T<1>2<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>2<12>{:[1]T:[2]T}
+S18:U<13>modem_message
+S60:T<1>2<19>G:peripheral:M:call{:[1]<4>back:[2]<5>close:[3][7]}
+R15:T<1>2<7>{:[1]T}
+R15:T<1>3<7>{:[1]T}
+S81:T<1>3<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5]<4>stop}
+R15:T<1>3<7>{:[1]T}
+S5:D<1>3
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>1<12>{:[1]T:[2]F}
+S56:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<8>closeAll}
+R15:T<1>1<7>{:[1]T}
+S59:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<10>isWireless}
+R21:T<1>1<12>{:[1]T:[2]F}
+S142:T<1>1<13>io.write(...){:[1]<109>Disconnect and remove wired modems
+Attach wireless modems
+Restart modem_server.py on another computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>back}
+R28:T<1>1<19>{:[1]T:[2]<5>modem}
+S59:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<10>isWireless}
+R21:T<1>1<12>{:[1]T:[2]T}
+S56:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<8>closeAll}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>4<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+S30:T<1>5<12>G:os:M:sleep{:[1][1]}
+R21:T<1>4<12>{:[1]T:[2]F}
+S61:T<1>4<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>4<12>{:[1]T:[2]F}
+S59:T<1>4<19>G:peripheral:M:call{:[1]<4>back:[2]<4>open:[3][7]}
+R15:T<1>4<7>{:[1]T}
+S18:S<13>modem_message
+R15:T<1>5<7>{:[1]T}
+S77:T<1>5<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5][1]}
+R15:T<1>5<7>{:[1]T}
+S30:T<1>5<12>G:os:M:sleep{:[1][1]}
+R59:E<13>modem_message{:[1]<4>back:[2][7]:[3][5]:[4][1]:[5][3]}
+S61:T<1>4<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>4<12>{:[1]T:[2]T}
+R15:T<1>5<7>{:[1]T}
+S79:T<1>5<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5]<2>hi}
+R15:T<1>5<7>{:[1]T}
+S30:T<1>5<12>G:os:M:sleep{:[1][1]}
+R61:E<13>modem_message{:[1]<4>back:[2][7]:[3][5]:[4]<2>hi:[5][3]}
+S61:T<1>4<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>4<12>{:[1]T:[2]T}
+R15:T<1>5<7>{:[1]T}
+S87:T<1>5<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5]{:<4>data[5]}}
+R15:T<1>5<7>{:[1]T}
+S30:T<1>5<12>G:os:M:sleep{:[1][1]}
+R69:E<13>modem_message{:[1]<4>back:[2][7]:[3][5]:[4]{:<4>data[5]}:[5][3]}
+S61:T<1>4<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>4<12>{:[1]T:[2]T}
+S18:U<13>modem_message
+S60:T<1>4<19>G:peripheral:M:call{:[1]<4>back:[2]<5>close:[3][7]}
+R15:T<1>4<7>{:[1]T}
+R15:T<1>5<7>{:[1]T}
+S81:T<1>5<19>G:peripheral:M:call{:[1]<4>back:[2]<8>transmit:[3][5]:[4][7]:[5]<4>stop}
+R15:T<1>5<7>{:[1]T}
+S5:D<1>5
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<6>isOpen:[3][7]}
+R21:T<1>1<12>{:[1]T:[2]F}
+S56:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<8>closeAll}
+R15:T<1>1<7>{:[1]T}
+S59:T<1>1<19>G:peripheral:M:call{:[1]<4>back:[2]<10>isWireless}
+R21:T<1>1<12>{:[1]T:[2]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

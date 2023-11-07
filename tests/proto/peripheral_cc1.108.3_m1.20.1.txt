@@ -1,0 +1,154 @@
+R672:0[5]{:[1]<13>peripheral.py:[0]<2>py}<13>peripheral.py<614>from cc import import_file, peripheral
+
+_lib = import_file('_lib.py', __file__)
+
+_lib.step('Remove all peripherals')
+
+side = 'top'
+
+assert peripheral.getNames() == []
+assert peripheral.getType(side) is None
+assert peripheral.isPresent(side) is False
+assert peripheral.wrap(side) is None
+
+_lib.step(f'Put disk drive on {side} side of computer')
+
+assert peripheral.getNames() == [side]
+assert peripheral.getType(side) == 'drive'
+assert peripheral.isPresent(side) is True
+d = peripheral.wrap(side)
+assert d is not None
+assert d.isDiskPresent() is False
+
+print('Remove disk drive')
+
+print('Test finished successfully')
+S262:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<13>peripheral.py}
+R1870:T<1>1<1859>{:[1]T:[2]<1842>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)
+
+
+def _computer_peri(place_thing, thing):
+    from cc import peripheral
+
+    side = 'left'
+
+    step(
+        f'Place {place_thing} on {side} side of computer\n'
+        "Don't turn it on!",
+    )
+
+    c = peripheral.wrap(side)
+    assert c is not None
+
+    assert c.isOn() is False
+    assert isinstance(c.getID(), int)
+    assert c.getLabel() is None
+    assert c.turnOn() is None
+
+    step(f'{thing.capitalize()} must be turned on now')
+
+    assert c.shutdown() is None
+
+    step(f'{thing.capitalize()} must shutdown')
+
+    step(f'Now turn on {thing} manually and enter some commands')
+
+    assert c.reboot() is None
+
+    step(f'{thing.capitalize()} must reboot')
+
+    print('Test finished successfully')}
+S62:T<1>1<13>io.write(...){:[1]<30>Remove all peripherals [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S34:T<1>1<23>G:peripheral:M:getNames{}
+R22:T<1>1<13>{:[1]T:[2]{}}
+S43:T<1>1<22>G:peripheral:M:getType{:[1]<3>top}
+R15:T<1>1<7>{:[1]T}
+S45:T<1>1<24>G:peripheral:M:isPresent{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]F}
+S43:T<1>1<22>G:peripheral:M:getType{:[1]<3>top}
+R15:T<1>1<7>{:[1]T}
+S78:T<1>1<13>io.write(...){:[1]<46>Put disk drive on top side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S34:T<1>1<23>G:peripheral:M:getNames{}
+R32:T<1>1<23>{:[1]T:[2]{:[1]<3>top}}
+S43:T<1>1<22>G:peripheral:M:getType{:[1]<3>top}
+R28:T<1>1<19>{:[1]T:[2]<5>drive}
+S45:T<1>1<24>G:peripheral:M:isPresent{:[1]<3>top}
+R21:T<1>1<12>{:[1]T:[2]T}
+S43:T<1>1<22>G:peripheral:M:getType{:[1]<3>top}
+R28:T<1>1<19>{:[1]T:[2]<5>drive}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<3>top:[2]<13>isDiskPresent}
+R21:T<1>1<12>{:[1]T:[2]F}
+S49:T<1>1<13>io.write(...){:[1]<17>Remove disk drive}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

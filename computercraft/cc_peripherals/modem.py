@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, List, Optional
 
+from .. import ser
 from ..lua import LuaNum
 from ._base import BasePeripheral
 
@@ -35,15 +36,16 @@ class ModemMixin:
         return self._call(b'isWireless').take_bool()
 
     def receive(self, channel: int):
-        from .os import captureEvent
+        from ..subapis.os import captureEvent
 
         if self.isOpen(channel):
             raise Exception('Channel is busy')
 
+        side = self._side.encode(ser._CC_ENC)
         self.open(channel)
         try:
             for evt in captureEvent('modem_message'):
-                if evt[0] != self._side:
+                if evt[0] != side:
                     continue
                 if evt[1] != channel:
                     continue
@@ -73,16 +75,5 @@ class WiredModemPeripheral(BasePeripheral, ModemMixin):
 
     def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
         # use instead getMethodsRemote and callRemote
-        # NOTE: you can also use peripheral.wrap(peripheralName)
-        # TODO: this is probably wrong
         from ..subapis.peripheral import wrap
-
         return wrap(peripheralName)
-        # ptype = self.getTypeRemote(peripheralName)
-        # if ptype is None:
-        #     return None
-
-        # return TYPE_MAP[ptype](
-        #     self._lua_method_expr, *self._prepend_params,
-        #     b'callRemote', ser.encode(peripheralName),
-        # )

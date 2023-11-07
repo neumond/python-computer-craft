@@ -1,6 +1,6 @@
 def register_std_peripherals(register):
     from .command import CommandPeripheral
-    from .computer import ComputerPeripheral, TurtlePeripheral
+    from .computer import ComputerPeripheral
     from .drive import DrivePeripheral
     from .inventory import InventoryPeripheral
     from .modem import WirelessModemPeripheral, WiredModemPeripheral
@@ -10,9 +10,15 @@ def register_std_peripherals(register):
     from .workbench import WorkbenchPeripheral
 
     register('command', CommandPeripheral)
-    register('computer', ComputerPeripheral)
-    register('turtle', TurtlePeripheral)
     register('drive', DrivePeripheral)
+
+    def _cmp(side, ptype, call):
+        p = ComputerPeripheral(side)
+        p.TYPE = ptype
+        return p
+
+    for k in ['computer', 'turtle']:
+        register(k, _cmp)
 
     def _inv(side, ptype, call):
         p = InventoryPeripheral(side)

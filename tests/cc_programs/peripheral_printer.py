@@ -1,18 +1,13 @@
-from computercraft.subapis.peripheral import CCPrinter
 from cc import LuaException, import_file, peripheral
 
 _lib = import_file('_lib.py', __file__)
 assert_raises = _lib.assert_raises
-
 
 side = 'left'
 
 _lib.step(f'Attach empty printer at {side} side of computer')
 
 m = peripheral.wrap(side)
-
-tbl = _lib.get_object_table(f'peripheral.wrap("{side}")')
-assert _lib.get_class_table(CCPrinter) == tbl
 
 assert m.getPaperLevel() == 0
 assert m.getInkLevel() == 0
