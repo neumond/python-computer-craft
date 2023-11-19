@@ -9,6 +9,7 @@ local _py = {
     coparams = {},
     modules = {},
     mcache = {},
+    temp = {},
 }
 
 if type(getfenv) == 'function' then
@@ -20,8 +21,7 @@ elseif type(_G) == 'table' then
 else
     error('E001: Can\'t get environment')
 end
--- TODO: rename temp to _pytemp
-_py.genv.temp = {}
+_py.genv.temp = _py.temp
 _py.genv._m = _py.modules
 
 if type(loadstring) == 'function' then
@@ -183,6 +183,10 @@ function _py.deserialize(stream)
         local slen = tonumber(stream.tostop('>'))
         local fn = assert(_py.loadstring(stream.fixed(slen)))
         return fn()
+    elseif tok == 'X' then
+        local slen = tonumber(stream.tostop('>'))
+        local key = stream.fixed(slen)
+        return _py.temp[key]
     elseif tok == '{' then
         local r = {}
         while true do

@@ -31,7 +31,7 @@ __all__ = (
 class SeekMixin:
     def seek(self, whence: str = None, offset: int = None) -> int:
         # whence: set, cur, end
-        rp = self._call(b'.seek', whence, offset)
+        rp = self._call(b'seek', whence, offset)
         rp.check_nil_error()
         return rp.take_int()
 
@@ -41,13 +41,13 @@ class ReadMixin:
         raise NotImplementedError
 
     def read(self, count: int = 1) -> Optional[str]:
-        return self._take(self._call(b'.read', count))
+        return self._take(self._call(b'read', count))
 
     def readLine(self, withTrailing: bool = False) -> Optional[str]:
-        return self._take(self._call(b'.readLine', withTrailing))
+        return self._take(self._call(b'readLine', withTrailing))
 
     def readAll(self) -> Optional[str]:
-        return self._take(self._call(b'.readAll'))
+        return self._take(self._call(b'readAll'))
 
     def __iter__(self):
         return self
@@ -64,10 +64,10 @@ class WriteMixin:
         raise NotImplementedError
 
     def write(self, text: str) -> None:
-        return self._call(b'.write', self._put(text)).take_none()
+        return self._call(b'write', self._put(text)).take_none()
 
     def flush(self) -> None:
-        return self._call(b'.flush').take_none()
+        return self._call(b'flush').take_none()
 
 
 class ReadHandle(ReadMixin, ContextObject):

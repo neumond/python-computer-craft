@@ -1,0 +1,83 @@
+R627:0[5]{:[1]<9>window.py:[0]<2>py}<9>window.py<579>from cc import colors, term, os, window
+
+
+win = window.create(term.current(), 15, 5, 5, 5, False)
+assert win.getPosition() == (15, 5)
+assert win.getSize() == (5, 5)
+
+win.setBackgroundColor(colors.red)
+win.clear()
+win.setVisible(True)
+
+os.sleep(1)
+
+win.setVisible(False)
+win.setCursorPos(1, 1)
+win.setTextColor(colors.yellow)
+win.write('*********')
+win.setVisible(True)
+
+os.sleep(1)
+
+term.clear()
+
+os.sleep(1)
+
+win.redraw()
+assert win.getLine(1) == ('*****', b'44444', b'eeeee')
+
+# draws immediately
+win.reposition(21, 5)
+win.reposition(27, 5)
+
+print('Test finished successfully')
+S123:T<1>1<103>return(function(n,...)local o,e=term.current();if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>2}
+R21:T<1>1<12>{:[1]T:[2]T}
+S169:T<1>1<107>return(function(n,...)local o,e=window.create(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>3:[2]X1>2:[3][15]:[4][5]:[5][5]:[6][5]:[7]F}
+R21:T<1>1<12>{:[1]T:[2]T}
+S82:T<1>1<63>return(function(n,...)return temp[n].getPosition(...);end)(...){:[1]<1>3}
+R31:T<1>1<22>{:[1]T:[2][15]:[3][5]}
+S78:T<1>1<59>return(function(n,...)return temp[n].getSize(...);end)(...){:[1]<1>3}
+R30:T<1>1<21>{:[1]T:[2][5]:[3][5]}
+S100:T<1>1<70>return(function(n,...)return temp[n].setBackgroundColor(...);end)(...){:[1]<1>3:[2][16384]}
+R15:T<1>1<7>{:[1]T}
+S76:T<1>1<57>return(function(n,...)return temp[n].clear(...);end)(...){:[1]<1>3}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<62>return(function(n,...)return temp[n].setVisible(...);end)(...){:[1]<1>3:[2]T}
+R15:T<1>1<7>{:[1]T}
+S30:T<1>1<12>G:os:M:sleep{:[1][1]}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<62>return(function(n,...)return temp[n].setVisible(...);end)(...){:[1]<1>3:[2]F}
+R15:T<1>1<7>{:[1]T}
+S97:T<1>1<64>return(function(n,...)return temp[n].setCursorPos(...);end)(...){:[1]<1>3:[2][1]:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S91:T<1>1<64>return(function(n,...)return temp[n].setTextColor(...);end)(...){:[1]<1>3:[2][16]}
+R15:T<1>1<7>{:[1]T}
+S92:T<1>1<57>return(function(n,...)return temp[n].write(...);end)(...){:[1]<1>3:[2]<9>*********}
+R15:T<1>1<7>{:[1]T}
+S86:T<1>1<62>return(function(n,...)return temp[n].setVisible(...);end)(...){:[1]<1>3:[2]T}
+R15:T<1>1<7>{:[1]T}
+S30:T<1>1<12>G:os:M:sleep{:[1][1]}
+R15:T<1>1<7>{:[1]T}
+S25:T<1>1<14>G:term:M:clear{}
+R15:T<1>1<7>{:[1]T}
+S30:T<1>1<12>G:os:M:sleep{:[1][1]}
+R15:T<1>1<7>{:[1]T}
+S77:T<1>1<58>return(function(n,...)return temp[n].redraw(...);end)(...){:[1]<1>3}
+R15:T<1>1<7>{:[1]T}
+S85:T<1>1<59>return(function(n,...)return temp[n].getLine(...);end)(...){:[1]<1>3:[2][1]}
+R52:T<1>1<43>{:[1]T:[2]<5>*****:[3]<5>44444:[4]<5>eeeee}
+S111:T<1>1<62>return(function(n,...)return temp[n].reposition(...);end)(...){:[1]<1>3:[2][21]:[3][5]:[4]N:[5]N:[6]N}
+R15:T<1>1<7>{:[1]T}
+S111:T<1>1<62>return(function(n,...)return temp[n].reposition(...);end)(...){:[1]<1>3:[2][27]:[3][5]:[4]N:[5]N:[6]N}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S42:T<1>1<23>local n=...;temp[n]=nil{:[1]<1>3}
+R15:T<1>1<7>{:[1]T}
+S42:T<1>1<23>local n=...;temp[n]=nil{:[1]<1>2}
+R15:T<1>1<7>{:[1]T}
+S2:CN

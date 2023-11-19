@@ -164,18 +164,20 @@ def copy(fromPath: str, toPath: str) -> bool:
 
 
 class File(ContextObject):
+    CALL_OP = b':'
+
     def read(self, n: int) -> Optional[bytes]:
-        r = self._call(b':read', n)
+        r = self._call(b'read', n)
         r.check_nil_error(allow_nil_nil=True)
         return r.take_option_bytes()
 
     def seek(self, whence: str, offset: int = 0) -> int:
-        r = self._call(b':seek', whence, offset)
+        r = self._call(b'seek', whence, offset)
         r.check_nil_error()
         return r.take_int()
 
     def write(self, data: bytes) -> bool:
-        r = self._call(b':write', data)
+        r = self._call(b'write', data)
         r.check_nil_error()
         return r.take_bool()
 

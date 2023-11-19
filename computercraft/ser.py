@@ -52,6 +52,8 @@ def serialize(v: Any, encoding: str) -> bytes:
     elif isinstance(v, lua.LuaExpr):
         code = v.get_expr_code()
         return 'E{}>'.format(len(code)).encode('ascii') + code
+    elif isinstance(v, lua.TempObject):
+        return 'X{}>'.format(len(v._fid)).encode('ascii') + v._fid
     else:
         raise ValueError('Value can\'t be serialized: {}'.format(repr(v)))
 

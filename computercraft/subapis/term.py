@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from typing import Tuple
 
 from .. import ser
-from ..sess import eval_lua, lua_context_object, ContextObject
+from ..sess import eval_lua, lua_context_object, ReferenceObject
 
 
 __all__ = (
@@ -25,8 +25,10 @@ __all__ = (
     'setPaletteColor',
     'nativePaletteColor',
     'redirect',
-    # 'get_current_target',
-    # 'get_native_target',
+    'current',
+    'native',
+    'get_current_target',
+    'get_native_target',
 )
 
 
@@ -86,10 +88,6 @@ class TermMixin:
         return self._call(b'setPaletteColor', colorID, r, g, b).take_none()
 
 
-class TermTarget(ContextObject, TermMixin):
-    pass
-
-
 class _Proxy(TermMixin):
     def _call(self, method, *args):
         return eval_lua(b'G:term:M:' + method, *args)
@@ -122,6 +120,10 @@ def nativePaletteColor(colorID: int) -> Tuple[float, float, float]:
     return tuple(rp.take_number() for _ in range(3))
 
 
+class TermTarget(ReferenceObject, TermMixin):
+    pass
+
+
 @contextmanager
 def redirect(target: TermTarget):
     with lua_context_object(
@@ -132,11 +134,14 @@ def redirect(target: TermTarget):
         yield
 
 
-# TODO: implement
-
-# def get_current_target() -> TermTarget:
-#     return TermTarget('term.current()')
+def current() -> TermTarget:
+    return TermTarget(lua_context_object(b'term.current()', ()))
 
 
-# def get_native_target() -> TermTarget:
-#     return TermTarget('term.native()')
+def native() -> TermTarget:
+    return TermTarget(lua_context_object(b'term.native()', ()))
+
+
+# compat
+get_current_target = current
+get_native_target = native

@@ -47,7 +47,12 @@ def test_proto(logfile):
                 if t == b'':
                     break
                 elif t == b'R':
-                    pgen.send(read_frame())
+                    frame = read_frame()
+                    try:
+                        pgen.send(frame)
+                    except StopIteration:
+                        pytest.fail(
+                            'Protocol prematurely finished on frame ' + repr(frame))
                 elif t == b'S':
                     assert read_frame() == sbuf.popleft()
                 else:

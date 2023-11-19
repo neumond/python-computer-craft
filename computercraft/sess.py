@@ -15,7 +15,7 @@ from types import ModuleType
 
 from greenlet import greenlet, getcurrent as get_current_greenlet
 
-from . import rproc, ser
+from . import rproc, ser, lua
 
 
 __all__ = (
@@ -211,32 +211,32 @@ def lua_context_object(
     try:
         yield fid
     finally:
+        f = finalizer_template.replace(b'{e}', b'temp[n]')
+        if f:
+            f += b';'  # important to not have ;;
         eval_lua(
-            b'local n=...;'
-            + finalizer_template.replace(b'{e}', b'temp[n]')
-            + b';temp[n]=nil', fid)
+            b'local n=...;' + f + b'temp[n]=nil', fid)
 
 
-class ContextObject:
-    # TODO: support serializing this object
-
-    def __init__(self, fid):
-        self._fid = fid
+class _TempObjectExt:
+    CALL_OP = b'.'
 
     def _call(self, method: bytes, *args):
         return eval_lua(
             b'return(function(n,...)return temp[n]'
+            + self.CALL_OP
             + method
             + b'(...);end)(...)', self._fid, *args)
 
 
-def eval_lua_method_factory(obj):
-    # TODO: remove this
-    # eval strings must be cacheable
-    def method(name, *params):
-        code = 'return ' + obj + name + '(...)'
-        return eval_lua(code, *params)
-    return method
+class ContextObject(_TempObjectExt, lua.TempObject):
+    pass
+
+
+class ReferenceObject(_TempObjectExt, lua.TempObject):
+    def __init__(self, lua_context_gen):
+        self._g = lua_context_gen  # keep the reference
+        self._fid = self._g.__enter__()
 
 
 class CCGreenlet:
