@@ -1,0 +1,430 @@
+R3406:0[5]{:[1]<21>peripheral_monitor.py:[0]<2>py}<21>peripheral_monitor.py<3331>from cc import import_file, colors, os, peripheral
+
+_lib = import_file('_lib.py', __file__)
+
+
+side = 'left'
+
+_lib.step(
+    'Use advanced computer and monitor for colors\n'
+    f'Place single block monitor on {side} side of computer',
+)
+
+m = peripheral.wrap(side)
+assert m is not None
+assert m.getSize() == (7, 5)
+assert m.isColor() is True
+assert m.setTextColor(colors.white) is None
+assert m.setBackgroundColor(colors.black) is None
+assert m.clear() is None
+assert m.setCursorPos(1, 1) is None
+assert m.getCursorPos() == (1, 1)
+assert m.write('Alpha') is None
+assert m.getCursorPos() == (6, 1)
+assert m.setCursorBlink(False) is None
+assert m.getCursorBlink() is False
+assert m.setCursorBlink(True) is None
+assert m.getCursorBlink() is True
+
+_lib.step('You must have seen word Alpha with blinking cursor')
+
+assert m.clear() is None
+assert m.setCursorBlink(False) is None
+for offs, (tc, bc) in enumerate((
+    (colors.lime, colors.green),
+    (colors.yellow, colors.brown),
+    (colors.red, colors.orange),
+), start=1):
+    assert m.setTextColor(tc) is None
+    assert m.getTextColor() == tc
+    assert m.setBackgroundColor(bc) is None
+    assert m.getBackgroundColor() == bc
+    assert m.setCursorPos(offs, offs) is None
+    assert m.getCursorPos() == (offs, offs)
+    assert m.write('text') is None
+assert m.setBackgroundColor(colors.black) is None
+os.sleep(1)
+for i in range(2):
+    assert m.scroll(-1) is None
+    os.sleep(0.5)
+for i in range(2):
+    assert m.scroll(1) is None
+    os.sleep(0.5)
+
+_lib.step('You must have seen three texts with different colors scrolling')
+
+assert m.setTextColor(colors.white) is None
+assert m.setBackgroundColor(colors.black) is None
+assert m.clear() is None
+for i in range(1, 5):
+    assert m.setCursorPos(1, i) is None
+    assert m.write((str(i) + '  ') * 4) is None
+os.sleep(2)
+for i in range(2, 5, 2):
+    assert m.setCursorPos(1, i) is None
+    assert m.clearLine() is None
+
+_lib.step('You must have seen some lines disappearing')
+
+assert m.setBackgroundColor(colors.black) is None
+assert m.clear() is None
+assert m.setCursorPos(1, 1) is None
+assert m.blit(
+    'rainbow',
+    b'e14d3ba',
+    b'fffffff',
+) is None
+assert m.setCursorPos(1, 2) is None
+assert m.blit(
+    'rainbow',
+    b'0000000',
+    b'e14d3ba',
+) is None
+
+_lib.step('You must have seen per-letter colored text')
+
+assert m.setBackgroundColor(colors.black) is None
+assert m.setTextColor(colors.white) is None
+assert m.getTextScale() == 1
+assert m.setTextScale(5) is None
+assert m.getTextScale() == 5
+assert m.setCursorPos(1, 1) is None
+assert m.clear() is None
+assert m.getSize() == (1, 1)
+assert m.write('AAA') is None
+
+_lib.step('You must have seen single large letter A')
+
+assert m.setTextScale(1) is None
+assert m.setBackgroundColor(colors.white) is None
+assert m.clear() is None
+for i, color in enumerate(colors.iter_colors()):
+    m.setPaletteColor(color, i / 15, 0, 0)
+assert m.setCursorPos(1, 1) is None
+assert m.blit(
+    ' redtex',
+    b'0123456',
+    b'0000000',
+) is None
+assert m.setCursorPos(1, 2) is None
+assert m.blit(
+    'tappear',
+    b'789abcd',
+    b'0000000',
+) is None
+assert m.setCursorPos(1, 3) is None
+assert m.blit(
+    's!',
+    b'ef',
+    b'00',
+) is None
+
+_lib.step('You must have seen different shades of red made using palettes')
+
+print('Remove monitor')
+print('Test finished successfully')
+S270:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<21>peripheral_monitor.py}
+R1162:T<1>1<1151>{:[1]T:[2]<1134>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)}
+S137:T<1>1<13>io.write(...){:[1]<104>Use advanced computer and monitor for colors
+Place single block monitor on left side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>left}
+R30:T<1>1<21>{:[1]T:[2]<7>monitor}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>getSize}
+R30:T<1>1<21>{:[1]T:[2][7]:[3][5]}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>isColor}
+R21:T<1>1<12>{:[1]T:[2]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextColor:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S78:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][32768]}
+R15:T<1>1<7>{:[1]T}
+S53:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>clear}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][1]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][1]}
+S65:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<5>Alpha}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][6]:[3][1]}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<14>setCursorBlink:[3]F}
+R15:T<1>1<7>{:[1]T}
+S63:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<14>getCursorBlink}
+R21:T<1>1<12>{:[1]T:[2]F}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<14>setCursorBlink:[3]T}
+R15:T<1>1<7>{:[1]T}
+S63:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<14>getCursorBlink}
+R21:T<1>1<12>{:[1]T:[2]T}
+S90:T<1>1<13>io.write(...){:[1]<58>You must have seen word Alpha with blinking cursor [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S53:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>clear}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<14>setCursorBlink:[3]F}
+R15:T<1>1<7>{:[1]T}
+S69:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextColor:[3][32]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getTextColor}
+R24:T<1>1<15>{:[1]T:[2][32]}
+S77:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][8192]}
+R15:T<1>1<7>{:[1]T}
+S67:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>getBackgroundColor}
+R26:T<1>1<17>{:[1]T:[2][8192]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][1]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][1]}
+S64:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<4>text}
+R15:T<1>1<7>{:[1]T}
+S69:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextColor:[3][16]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getTextColor}
+R24:T<1>1<15>{:[1]T:[2][16]}
+S77:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][4096]}
+R15:T<1>1<7>{:[1]T}
+S67:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>getBackgroundColor}
+R26:T<1>1<17>{:[1]T:[2][4096]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][2]:[4][2]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][2]:[3][2]}
+S64:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<4>text}
+R15:T<1>1<7>{:[1]T}
+S72:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextColor:[3][16384]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getTextColor}
+R27:T<1>1<18>{:[1]T:[2][16384]}
+S74:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][2]}
+R15:T<1>1<7>{:[1]T}
+S67:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>getBackgroundColor}
+R23:T<1>1<14>{:[1]T:[2][2]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][3]:[4][3]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getCursorPos}
+R30:T<1>1<21>{:[1]T:[2][3]:[3][3]}
+S64:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<4>text}
+R15:T<1>1<7>{:[1]T}
+S78:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][32768]}
+R15:T<1>1<7>{:[1]T}
+S30:T<1>1<12>G:os:M:sleep{:[1][1]}
+R15:T<1>1<7>{:[1]T}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<6>scroll:[3][-1]}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.5]}
+R15:T<1>1<7>{:[1]T}
+S62:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<6>scroll:[3][-1]}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.5]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<6>scroll:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.5]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<6>scroll:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<12>G:os:M:sleep{:[1][0.5]}
+R15:T<1>1<7>{:[1]T}
+S102:T<1>1<13>io.write(...){:[1]<70>You must have seen three texts with different colors scrolling [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextColor:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S78:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][32768]}
+R15:T<1>1<7>{:[1]T}
+S53:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>clear}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][1]}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<12>1  1  1  1  }
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][2]}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<12>2  2  2  2  }
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][3]}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<12>3  3  3  3  }
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][4]}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<12>4  4  4  4  }
+R15:T<1>1<7>{:[1]T}
+S30:T<1>1<12>G:os:M:sleep{:[1][2]}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][2]}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>clearLine}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][4]}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<9>clearLine}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<13>io.write(...){:[1]<50>You must have seen some lines disappearing [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S78:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][32768]}
+R15:T<1>1<7>{:[1]T}
+S53:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>clear}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][1]}
+R15:T<1>1<7>{:[1]T}
+S94:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<4>blit:[3]<7>rainbow:[4]<7>e14d3ba:[5]<7>fffffff}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][2]}
+R15:T<1>1<7>{:[1]T}
+S94:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<4>blit:[3]<7>rainbow:[4]<7>0000000:[5]<7>e14d3ba}
+R15:T<1>1<7>{:[1]T}
+S82:T<1>1<13>io.write(...){:[1]<50>You must have seen per-letter colored text [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S78:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][32768]}
+R15:T<1>1<7>{:[1]T}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextColor:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getTextScale}
+R23:T<1>1<14>{:[1]T:[2][1]}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextScale:[3][5]}
+R15:T<1>1<7>{:[1]T}
+S61:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>getTextScale}
+R23:T<1>1<14>{:[1]T:[2][5]}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][1]}
+R15:T<1>1<7>{:[1]T}
+S53:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>clear}
+R15:T<1>1<7>{:[1]T}
+S55:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<7>getSize}
+R30:T<1>1<21>{:[1]T:[2][1]:[3][1]}
+S63:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>write:[3]<3>AAA}
+R15:T<1>1<7>{:[1]T}
+S80:T<1>1<13>io.write(...){:[1]<48>You must have seen single large letter A [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S68:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setTextScale:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S74:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<18>setBackgroundColor:[3][1]}
+R15:T<1>1<7>{:[1]T}
+S53:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<5>clear}
+R15:T<1>1<7>{:[1]T}
+S94:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][1]:[4][0.0]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S110:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][2]:[4][0.06666666666666667]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S110:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][4]:[4][0.13333333333333333]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S94:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][8]:[4][0.2]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S111:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][16]:[4][0.26666666666666666]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S110:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][32]:[4][0.3333333333333333]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S95:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][64]:[4][0.4]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S111:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][128]:[4][0.4666666666666667]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S111:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][256]:[4][0.5333333333333333]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S96:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][512]:[4][0.6]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S112:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][1024]:[4][0.6666666666666666]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S112:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][2048]:[4][0.7333333333333333]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S97:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][4096]:[4][0.8]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S112:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][8192]:[4][0.8666666666666667]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S113:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][16384]:[4][0.9333333333333333]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S98:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<15>setPaletteColor:[3][32768]:[4][1.0]:[5][0]:[6][0]}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][1]}
+R15:T<1>1<7>{:[1]T}
+S94:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<4>blit:[3]<7> redtex:[4]<7>0123456:[5]<7>0000000}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][2]}
+R15:T<1>1<7>{:[1]T}
+S94:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<4>blit:[3]<7>tappear:[4]<7>789abcd:[5]<7>0000000}
+R15:T<1>1<7>{:[1]T}
+S75:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<12>setCursorPos:[3][1]:[4][3]}
+R15:T<1>1<7>{:[1]T}
+S79:T<1>1<19>G:peripheral:M:call{:[1]<4>left:[2]<4>blit:[3]<2>s!:[4]<2>ef:[5]<2>00}
+R15:T<1>1<7>{:[1]T}
+S102:T<1>1<13>io.write(...){:[1]<70>You must have seen different shades of red made using palettes [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S46:T<1>1<13>io.write(...){:[1]<14>Remove monitor}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

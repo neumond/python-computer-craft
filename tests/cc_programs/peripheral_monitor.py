@@ -1,5 +1,3 @@
-from computercraft.cc.peripheral import CCMonitor
-from computercraft.cc.mixins import TermMixin
 from cc import import_file, colors, os, peripheral
 
 _lib = import_file('_lib.py', __file__)
@@ -14,23 +12,6 @@ _lib.step(
 
 m = peripheral.wrap(side)
 assert m is not None
-
-
-tbl = _lib.get_object_table(f'peripheral.wrap("{side}")')
-
-# remove British method names to make API lighter
-del tbl['function']['getBackgroundColour']
-del tbl['function']['getPaletteColour']
-del tbl['function']['getTextColour']
-del tbl['function']['isColour']
-del tbl['function']['setBackgroundColour']
-del tbl['function']['setPaletteColour']
-del tbl['function']['setTextColour']
-# NOTE: peripheral doesn't have nativePaletteColor method
-
-assert _lib.get_multiclass_table(TermMixin, CCMonitor) == tbl
-
-
 assert m.getSize() == (7, 5)
 assert m.isColor() is True
 assert m.setTextColor(colors.white) is None

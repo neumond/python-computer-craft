@@ -19,4 +19,4 @@ class BasePeripheral(LuaExpr):
         return eval_lua(b'G:peripheral:M:call', self._side, method, *args)
 
     def get_expr_code(self):
-        return b'peripheral.wrap("' + self._side.encode('ascii') + b'")'
+        return b'return peripheral.wrap("' + self._side.encode('ascii') + b'")'

@@ -1,0 +1,43 @@
+R452:0[5]{:[1]<28>redirect_to_local_monitor.py:[0]<2>py}<28>redirect_to_local_monitor.py<364>from cc import colors, term, peripheral
+
+
+side = 'left'
+input(f'Attach 3x3 color monitor to {side} side of computer [enter]')
+
+with term.redirect(peripheral.wrap(side)):
+    term.setBackgroundColor(colors.green)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    print('Redirected to monitor')
+
+print('Test finished successfully')
+S89:T<1>1<13>io.write(...){:[1]<57>Attach 3x3 color monitor to left side of computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S44:T<1>1<22>G:peripheral:M:getType{:[1]<4>left}
+R30:T<1>1<21>{:[1]T:[2]<7>monitor}
+S165:T<1>1<107>return(function(n,...)local o,e=term.redirect(...);if o then temp[n]=o;return true;end;return o,e;end)(...){:[1]<1>2:[2]E30>return peripheral.wrap("left")}
+R21:T<1>1<12>{:[1]T:[2]T}
+S48:T<1>1<27>G:term:M:setBackgroundColor{:[1][8192]}
+R15:T<1>1<7>{:[1]T}
+S39:T<1>1<21>G:term:M:setTextColor{:[1][1]}
+R15:T<1>1<7>{:[1]T}
+S25:T<1>1<14>G:term:M:clear{}
+R15:T<1>1<7>{:[1]T}
+S46:T<1>1<21>G:term:M:setCursorPos{:[1][1]:[2][1]}
+R15:T<1>1<7>{:[1]T}
+S53:T<1>1<13>io.write(...){:[1]<21>Redirected to monitor}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S65:T<1>1<46>local n=...;term.redirect(temp[n]);temp[n]=nil{:[1]<1>2}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN
