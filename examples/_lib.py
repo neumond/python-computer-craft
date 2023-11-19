@@ -115,7 +115,7 @@ def _computer_peri(place_thing, thing):
     c = peripheral.wrap(side)
     assert c is not None
 
-    from computercraft.subapis.peripheral import ComputerMixin
+    from computercraft.cc.peripheral import ComputerMixin
     tbl = get_object_table(f'peripheral.wrap("{side}")')
     assert get_class_table(ComputerMixin) == tbl
 

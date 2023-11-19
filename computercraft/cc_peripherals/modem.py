@@ -36,7 +36,7 @@ class ModemMixin:
         return self._call(b'isWireless').take_bool()
 
     def receive(self, channel: int):
-        from ..subapis.os import captureEvent
+        from ..cc.os import captureEvent
 
         if self.isOpen(channel):
             raise Exception('Channel is busy')
@@ -75,5 +75,5 @@ class WiredModemPeripheral(BasePeripheral, ModemMixin):
 
     def wrapRemote(self, peripheralName: str) -> Optional[BasePeripheral]:
         # use instead getMethodsRemote and callRemote
-        from ..subapis.peripheral import wrap
+        from ..cc.peripheral import wrap
         return wrap(peripheralName)

@@ -124,7 +124,7 @@ class ComputerCraftLoader(Loader):
         assert sn[0] == 'cc'
         if len(sn) == 1:
             sn.append('_pkg')
-        rawmod = import_module('.' + sn[1], 'computercraft.subapis')
+        rawmod = import_module('.' + sn[1], 'computercraft.cc')
         mod = ModuleType(spec.name)
         for k in rawmod.__all__:
             setattr(mod, k, getattr(rawmod, k))

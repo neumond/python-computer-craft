@@ -27,7 +27,9 @@ _proto_folder = (Path(__file__).parent / 'proto')
 def test_proto(logfile):
     sbuf = deque()
     with computercraft.sess.patch_std_files():
-        pgen = computercraft.server.protocol(sbuf.append, oc='_oc' in logfile.name)
+        pgen = computercraft.server.protocol(
+            sbuf.append,
+            oc='/oc_' in str(logfile.relative_to(_proto_folder)))
         pgen.send(None)
 
         with logfile.open('rb') as lf:

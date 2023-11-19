@@ -1,4 +1,4 @@
-from ..subapis.term import TermMixin
+from ..cc.term import TermMixin
 from ._base import BasePeripheral
 
 

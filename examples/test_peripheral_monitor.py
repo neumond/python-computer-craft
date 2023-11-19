@@ -1,5 +1,5 @@
-from computercraft.subapis.peripheral import CCMonitor
-from computercraft.subapis.mixins import TermMixin
+from computercraft.cc.peripheral import CCMonitor
+from computercraft.cc.mixins import TermMixin
 from cc import import_file, colors, os, peripheral
 
 _lib = import_file('_lib.py', __file__)
