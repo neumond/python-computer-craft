@@ -1,0 +1,32 @@
+R317:0[5]{:[1]<23>gps_command_computer.py:[0]<2>py}<23>gps_command_computer.py<239>from cc import gps
+
+
+print('Run this test on command computer')
+pos = gps.locate()
+assert isinstance(pos, tuple)
+assert len(pos) == 3
+assert all(isinstance(x, int) for x in pos)
+print('Position is', pos)
+print('Test finished successfully')
+S65:T<1>1<13>io.write(...){:[1]<33>Run this test on command computer}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S35:T<1>1<14>G:gps:M:locate{:[1]N:[2]N}
+R42:T<1>1<33>{:[1]T:[2][-12]:[3][70]:[4][-19]}
+S43:T<1>1<13>io.write(...){:[1]<11>Position is}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1> }
+R15:T<1>1<7>{:[1]T}
+S46:T<1>1<13>io.write(...){:[1]<14>(-12, 70, -19)}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

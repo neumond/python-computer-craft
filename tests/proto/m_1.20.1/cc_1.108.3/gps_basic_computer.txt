@@ -1,0 +1,43 @@
+R426:0[5]{:[1]<21>gps_basic_computer.py:[0]<2>py}<21>gps_basic_computer.py<352>from cc import gps
+
+
+print('It must be impossible to gps locate on basic computer')
+print('for this test to complete')
+
+assert gps.locate() is None
+
+input('Attach wireless modem to computer [enter]')
+
+assert gps.locate() is None
+assert gps.locate(debug=True) is None
+assert gps.locate(timeout=5, debug=True) is None
+
+print('Test finished successfully')
+S85:T<1>1<13>io.write(...){:[1]<53>It must be impossible to gps locate on basic computer}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S57:T<1>1<13>io.write(...){:[1]<25>for this test to complete}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S35:T<1>1<14>G:gps:M:locate{:[1]N:[2]N}
+R15:T<1>1<7>{:[1]T}
+S73:T<1>1<13>io.write(...){:[1]<41>Attach wireless modem to computer [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S35:T<1>1<14>G:gps:M:locate{:[1]N:[2]N}
+R15:T<1>1<7>{:[1]T}
+S35:T<1>1<14>G:gps:M:locate{:[1]N:[2]T}
+R15:T<1>1<7>{:[1]T}
+S37:T<1>1<14>G:gps:M:locate{:[1][5]:[2]T}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

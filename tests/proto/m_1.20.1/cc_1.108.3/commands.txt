@@ -1,0 +1,84 @@
+R1381:0[5]{:[1]<11>commands.py:[0]<2>py}<11>commands.py<1326>from cc import commands
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+print('Run this test on command computer')
+
+xyz = commands.getBlockPosition()
+assert xyz == (
+    AnyInstanceOf(int),
+    AnyInstanceOf(int),
+    AnyInstanceOf(int),
+)
+
+expected_binfo = {
+    'state': {
+        'state': AnyInstanceOf(str),
+        'facing': AnyInstanceOf(str),
+    },
+    'name': 'computercraft:computer_command',
+    'nbt': {
+        'x': xyz[0],
+        'y': xyz[1],
+        'z': xyz[2],
+        'ForgeCaps': {},
+        'ComputerId': AnyInstanceOf(int),
+        'id': 'computercraft:computer_command',
+        'On': 1,
+    },
+    'tags': {'computercraft:computer': True},
+}
+
+assert commands.getBlockInfo(*xyz) == expected_binfo
+assert commands.getBlockInfos(*xyz, *xyz) == [expected_binfo]
+
+cmdlist = commands.list()
+
+assert len(cmdlist) > 0
+for c in cmdlist:
+    assert isinstance(c, str)
+
+assert commands.exec('say Hello!') == (True, [], AnyInstanceOf(int))
+
+d = commands.exec('tp hajejndlasksdkelefsns fjeklaskslekffjslas')
+assert d[0] is False
+
+d = commands.exec('difficulty')
+assert d[0] is True
+assert len(d[1]) == 1
+assert d[1][0].startswith('The difficulty is ')
+assert isinstance(d[2], int)
+
+print('Test finished successfully')
+S65:T<1>1<13>io.write(...){:[1]<33>Run this test on command computer}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S40:T<1>1<29>G:commands:M:getBlockPosition{}
+R42:T<1>1<33>{:[1]T:[2][-12]:[3][70]:[4][-19]}
+S62:T<1>1<25>G:commands:M:getBlockInfo{:[1][-12]:[2][70]:[3][-19]}
+R272:T<1>1<262>{:[1]T:[2]{:<5>state{:<5>state<8>blinking:<6>facing<5>south}:<3>nbt{:<1>y[70]:<1>x[-12]:<10>ComputerId[5]:<9>ForgeCaps{}:<2>id<30>computercraft:computer_command:<2>On[1]:<1>z[-19]}:<4>name<30>computercraft:computer_command:<4>tags{:<22>computercraft:computerT}}}
+S89:T<1>1<26>G:commands:M:getBlockInfos{:[1][-12]:[2][70]:[3][-19]:[4][-12]:[5][70]:[6][-19]}
+R272:T<1>1<262>{:[1]T:[2]{:[1]{:<5>state{:<5>state<2>on:<6>facing<5>south}:<3>nbt{:<1>y[70]:<1>x[-12]:<10>ComputerId[5]:<9>ForgeCaps{}:<2>id<30>computercraft:computer_command:<2>On[1]:<1>z[-19]}:<4>name<30>computercraft:computer_command:<4>tags{:<22>computercraft:computerT}}}}
+S28:T<1>1<17>G:commands:M:list{}
+R1021:T<1>1<1010>{:[1]T:[2]{:[1]<11>advancement:[2]<9>attribute:[3]<7>execute:[4]<7>bossbar:[5]<5>clear:[6]<5>clone:[7]<6>damage:[8]<4>data:[9]<8>datapack:[10]<5>debug:[11]<15>defaultgamemode:[12]<10>difficulty:[13]<6>effect:[14]<2>me:[15]<7>enchant:[16]<10>experience:[17]<2>xp:[18]<4>fill:[19]<9>fillbiome:[20]<9>forceload:[21]<8>function:[22]<8>gamemode:[23]<8>gamerule:[24]<4>give:[25]<4>help:[26]<4>item:[27]<4>kick:[28]<4>kill:[29]<4>list:[30]<6>locate:[31]<4>loot:[32]<3>msg:[33]<4>tell:[34]<1>w:[35]<8>particle:[36]<5>place:[37]<9>playsound:[38]<6>reload:[39]<6>recipe:[40]<6>return:[41]<4>ride:[42]<3>say:[43]<8>schedule:[44]<10>scoreboard:[45]<4>seed:[46]<8>setblock:[47]<10>spawnpoint:[48]<13>setworldspawn:[49]<8>spectate:[50]<13>spreadplayers:[51]<9>stopsound:[52]<6>summon:[53]<3>tag:[54]<4>team:[55]<7>teammsg:[56]<2>tm:[57]<8>teleport:[58]<2>tp:[59]<7>tellraw:[60]<4>time:[61]<5>title:[62]<7>trigger:[63]<7>weather:[64]<11>worldborder:[65]<3>jfr:[66]<7>publish:[67]<13>computercraft:[68]<5>forge:[69]<6>config}}
+S46:T<1>1<17>G:commands:M:exec{:[1]<10>say Hello!}
+R34:T<1>1<25>{:[1]T:[2]T:[3]{}:[4][1]}
+S80:T<1>1<17>G:commands:M:exec{:[1]<44>tp hajejndlasksdkelefsns fjeklaskslekffjslas}
+R134:T<1>1<124>{:[1]T:[2]F:[3]{:[1]<30>Incorrect argument for command:[2]<53>tp hajejndlasksdkelefsns fjeklaskslekffjslas<--[HERE]}:[4][0]}
+S46:T<1>1<17>G:commands:M:exec{:[1]<10>difficulty}
+R66:T<1>1<57>{:[1]T:[2]T:[3]{:[1]<24>The difficulty is Normal}:[4][2]}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN
