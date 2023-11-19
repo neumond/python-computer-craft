@@ -1,0 +1,113 @@
+R671:0[5]{:[1]<9>pocket.py:[0]<2>py}<9>pocket.py<623>from cc import LuaException, import_file, pocket, peripheral
+
+_lib = import_file('_lib.py', __file__)
+
+
+assert peripheral.isPresent('back') is False
+
+_lib.step('Clean inventory from any pocket upgrades')
+
+with _lib.assert_raises(LuaException):
+    pocket.equipBack()
+with _lib.assert_raises(LuaException):
+    pocket.unequipBack()
+assert peripheral.isPresent('back') is False
+
+_lib.step('Put any pocket upgrade to inventory')
+
+assert pocket.equipBack() is None
+assert peripheral.isPresent('back') is True
+
+assert pocket.unequipBack() is None
+assert peripheral.isPresent('back') is False
+
+print('Test finished successfully')
+S257:T<1>1<215>local p, rel = ...
+if rel ~= nil then
+p = fs.combine(fs.getDir(rel), p)
+end
+if not fs.exists(p) then return nil end
+if fs.isDir(p) then return nil end
+f = fs.open(p, "r")
+local src = f.readAll()
+f.close()
+return src{:[1]<7>_lib.py:[2]<9>pocket.py}
+R1162:T<1>1<1151>{:[1]T:[2]<1134>from contextlib import contextmanager
+from cc import os
+
+
+@contextmanager
+def assert_raises(etype, message=None):
+    try:
+        yield
+    except Exception as e:
+        assert isinstance(e, etype), repr(e)
+        if message is not None:
+            assert e.args == (message, )
+    else:
+        raise AssertionError(f'Exception of type {etype} was not raised')
+
+
+@contextmanager
+def assert_takes_time(at_least, at_most):
+    t = os.epoch('utc') / 1000
+    yield
+    dt = os.epoch('utc') / 1000 - t
+    # print(at_least, '<=', dt, '<=', at_most)
+    assert at_least <= dt <= at_most
+
+
+class AnyInstanceOf:
+    def __init__(self, cls):
+        self.c = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self.c)
+
+
+def step(text):
+    input(f'{text} [enter]')
+
+
+def term_step(text):
+    from cc import colors, term
+
+    for color in colors.iter_colors():
+        r, g, b = term.nativePaletteColor(color)
+        term.setPaletteColor(color, r, g, b)
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1, 1)
+    term.setCursorBlink(True)
+    step(text)}
+S46:T<1>1<24>G:peripheral:M:isPresent{:[1]<4>back}
+R21:T<1>1<12>{:[1]T:[2]F}
+S80:T<1>1<13>io.write(...){:[1]<48>Clean inventory from any pocket upgrades [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S31:T<1>1<20>G:pocket:M:equipBack{}
+R56:T<1>1<47>{:[1]T:[2]F:[3]<27>Cannot find a valid upgrade}
+S33:T<1>1<22>G:pocket:M:unequipBack{}
+R47:T<1>1<38>{:[1]T:[2]F:[3]<18>Nothing to unequip}
+S46:T<1>1<24>G:peripheral:M:isPresent{:[1]<4>back}
+R21:T<1>1<12>{:[1]T:[2]F}
+S75:T<1>1<13>io.write(...){:[1]<43>Put any pocket upgrade to inventory [enter]}
+R15:T<1>1<7>{:[1]T}
+S22:T<1>1<11>G:io:M:read{}
+R23:T<1>1<14>{:[1]T:[2]<0>}
+S31:T<1>1<20>G:pocket:M:equipBack{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<24>G:peripheral:M:isPresent{:[1]<4>back}
+R21:T<1>1<12>{:[1]T:[2]T}
+S33:T<1>1<22>G:pocket:M:unequipBack{}
+R21:T<1>1<12>{:[1]T:[2]T}
+S46:T<1>1<24>G:peripheral:M:isPresent{:[1]<4>back}
+R21:T<1>1<12>{:[1]T:[2]F}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN

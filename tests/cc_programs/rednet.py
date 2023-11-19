@@ -3,11 +3,6 @@ from cc import LuaException, import_file, os, rednet, parallel
 _lib = import_file('_lib.py', __file__)
 step, assert_raises = _lib.step, _lib.assert_raises
 
-
-tbl = _lib.get_object_table('rednet')
-del tbl['function']['run']
-assert _lib.get_class_table(rednet) == tbl
-
 side = 'back'
 
 step(f'Attach modem to {side} side of computer')

@@ -1,0 +1,10 @@
+R208:0[5]{:[1]<11>shutdown.py:[0]<2>py}<11>shutdown.py<154>from cc import os
+
+
+if args[-1:] == [b'reboot']:
+    assert os.reboot() is None
+else:
+    assert os.shutdown() is None
+print('Test finished successfully')
+S26:T<1>1<15>G:os:M:shutdown{}
+R1:D

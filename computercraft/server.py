@@ -59,6 +59,8 @@ def protocol(send, sess_cls=sess.CCSession, oc=False):
             sess.on_task_result(next(msg), next(msg))
         elif action == b'C':
             sess.throw_keyboard_interrupt()
+        elif action == b'D':  # disconnection
+            return
         else:
             send(PROTO_ERROR)
             return
@@ -88,6 +90,13 @@ class CCApplication(web.Application):
 
             if mustquit:
                 break
+
+        if not mustquit:  # sudden disconnect
+            try:
+                pgen.send(b'D')
+            except StopIteration:
+                pass
+
         return ws
 
     async def tcp(self, reader, writer):
@@ -195,7 +204,10 @@ def main():
                     while True:
                         m = yield
                         write_frame(b'R', m)
-                        p.send(m)
+                        try:
+                            p.send(m)
+                        except StopIteration as e:
+                            return e.value
 
                 return pgen()
 

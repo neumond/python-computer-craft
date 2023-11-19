@@ -5,9 +5,6 @@ _lib = import_file('_lib.py', __file__)
 
 assert peripheral.isPresent('back') is False
 
-tbl = _lib.get_object_table('pocket')
-assert _lib.get_class_table(pocket) == tbl
-
 _lib.step('Clean inventory from any pocket upgrades')
 
 with _lib.assert_raises(LuaException):

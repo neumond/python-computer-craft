@@ -53,6 +53,8 @@ def test_proto(logfile):
                     try:
                         pgen.send(frame)
                     except StopIteration:
+                        if frame == b'D':
+                            break
                         pytest.fail(
                             'Protocol prematurely finished on frame ' + repr(frame))
                 elif t == b'S':
