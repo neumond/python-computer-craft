@@ -14,31 +14,21 @@ Never use code in this repo if you don't trust your players!
 
     ```toml
     [[http.rules]]
-		host = "127.0.0.0/8"
+		host = "$private"
 		action = "allow"  # change here deny to allow
     ```
 
 2. Install & start python language server
 
-    Choose one of the following:
-
-    Docker way:
-
     ```sh
-    docker run -it -p 8080:8080 neumond/python-computer-craft
-    ```
-
-    Install & run manually:
-
-    ```sh
-    pip install computercraft
+    python -m pip install computercraft
     python -m computercraft.server
     ```
 
 3. Start Minecraft, open up any computer and type:
 
     ```sh
-    wget http://127.0.0.1:8080/ py
+    wget http://127.0.0.1:8000 py
     py
     ```
 
@@ -121,4 +111,4 @@ p = import_file('/disk/program.py')  # absolute
 m = import_file('lib.py', __file__)  # relative to current file
 ```
 
-More examples can be found in this repository.
+More examples can be found in this repository: `examples/` and `tests/cc_programs/`

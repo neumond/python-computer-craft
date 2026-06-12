@@ -101,7 +101,7 @@ class StdFileProxy:
         else:
             # preventing use of gnu readline here
             # https://github.com/python/cpython/blob/master/Python/bltinmodule.c#L1970
-            raise AttributeError
+            return -1
 
     def __getattr__(self, name):
         return getattr(self._native, name)
