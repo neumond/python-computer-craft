@@ -13,7 +13,11 @@ local _py = {
 }
 
 if type(getfenv) == 'function' then
-    _py.genv = getfenv()
+    if type(os) == 'table' and os.version():find('^CraftOS') ~= nil then
+        _py.genv = getfenv(0)
+    else
+        _py.genv = getfenv()
+    end
 elseif type(_ENV) == 'table' then
     _py.genv = _ENV
 elseif type(_G) == 'table' then
