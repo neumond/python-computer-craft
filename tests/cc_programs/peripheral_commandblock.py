@@ -4,6 +4,8 @@ _lib = import_file('_lib.py', __file__)
 
 side = 'left'
 
+print('This test requires server config:')
+print('peripheral.command_block_enabled=true')
 _lib.step(f'Attach command block at {side} side of computer')
 
 m = peripheral.wrap(side)

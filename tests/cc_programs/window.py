@@ -30,4 +30,8 @@ assert win.getLine(1) == ('*****', b'44444', b'eeeee')
 win.reposition(21, 5)
 win.reposition(27, 5)
 
+os.sleep(1)
+
+term.clear()
+print()
 print('Test finished successfully')

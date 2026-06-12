@@ -1,0 +1,54 @@
+R575:0[5]{:[1]<7>help.py:[0]<2>py}<7>help.py<531>from cc import help
+
+
+help.setPath('/rom/help')
+
+assert help.path() == '/rom/help'
+
+assert help.lookup('disk') == 'rom/help/disk.txt'
+assert help.lookup('abracadabra') is None
+
+ts = help.topics()
+assert isinstance(ts, list)
+assert len(ts) > 2
+assert 'disk' in ts
+
+assert help.completeTopic('di') == ['sk']
+assert help.completeTopic('abracadabra') == []
+
+assert help.setPath('/kek') is None
+assert help.path() == '/kek'
+assert help.topics() == ['index']
+assert help.setPath('/rom/help') is None
+
+print('Test finished successfully')
+
+S43:T<1>1<16>G:help:M:setPath{:[1]<9>/rom/help}
+R15:T<1>1<7>{:[1]T}
+S24:T<1>1<13>G:help:M:path{}
+R32:T<1>1<23>{:[1]T:[2]<9>/rom/help}
+S37:T<1>1<15>G:help:M:lookup{:[1]<4>disk}
+R41:T<1>1<32>{:[1]T:[2]<17>rom/help/disk.txt}
+S45:T<1>1<15>G:help:M:lookup{:[1]<11>abracadabra}
+R15:T<1>1<7>{:[1]T}
+S26:T<1>1<15>G:help:M:topics{}
+R1404:T<1>1<1393>{:[1]T:[2]{:[1]<9>adventure:[2]<5>alias:[3]<4>apis:[4]<2>bg:[5]<3>bit:[6]<7>bundled:[7]<2>cd:[8]<9>changelog:[9]<4>chat:[10]<5>clear:[11]<6>colors:[12]<7>colours:[13]<8>commands:[14]<11>commandsapi:[15]<4>copy:[16]<9>coroutine:[17]<5>craft:[18]<7>credits:[19]<5>dance:[20]<6>delete:[21]<4>disk:[22]<2>dj:[23]<5>drive:[24]<6>drives:[25]<5>earth:[26]<4>edit:[27]<5>eject:[28]<5>equip:[29]<6>events:[30]<8>excavate:[31]<4>exec:[32]<4>exit:[33]<7>falling:[34]<2>fg:[35]<2>fs:[36]<2>go:[37]<3>gps:[38]<6>gpsapi:[39]<5>hello:[40]<4>help:[41]<7>helpapi:[42]<4>http:[43]<2>id:[44]<5>index:[45]<5>intro:[46]<2>io:[47]<4>keys:[48]<5>label:[49]<4>list:[50]<3>lua:[51]<4>math:[52]<5>mkdir:[53]<6>modems:[54]<7>monitor:[55]<8>monitors:[56]<4>move:[57]<10>multishell:[58]<2>os:[59]<5>paint:[60]<10>paintutils:[61]<8>parallel:[62]<8>pastebin:[63]<10>peripheral:[64]<11>peripherals:[65]<6>pocket:[66]<8>printers:[67]<11>programming:[68]<8>programs:[69]<6>reboot:[70]<11>redirection:[71]<6>rednet:[72]<8>redstone:[73]<11>redstoneapi:[74]<6>refuel:[75]<6>rename:[76]<6>repeat:[77]<2>rs:[78]<3>set:[79]<8>settings:[80]<5>shell:[81]<8>shellapi:[82]<8>shutdown:[83]<7>speaker:[84]<8>speakers:[85]<6>string:[86]<5>table:[87]<4>term:[88]<9>textutils:[89]<4>time:[90]<6>tunnel:[91]<4>turn:[92]<6>turtle:[93]<4>type:[94]<7>unequip:[95]<6>vector:[96]<4>wget:[97]<8>whatsnew:[98]<6>window:[99]<9>workbench:[100]<4>worm}}
+S42:T<1>1<22>G:help:M:completeTopic{:[1]<2>di}
+R31:T<1>1<22>{:[1]T:[2]{:[1]<2>sk}}
+S52:T<1>1<22>G:help:M:completeTopic{:[1]<11>abracadabra}
+R22:T<1>1<13>{:[1]T:[2]{}}
+S38:T<1>1<16>G:help:M:setPath{:[1]<4>/kek}
+R15:T<1>1<7>{:[1]T}
+S24:T<1>1<13>G:help:M:path{}
+R27:T<1>1<18>{:[1]T:[2]<4>/kek}
+S26:T<1>1<15>G:help:M:topics{}
+R34:T<1>1<25>{:[1]T:[2]{:[1]<5>index}}
+S43:T<1>1<16>G:help:M:setPath{:[1]<9>/rom/help}
+R15:T<1>1<7>{:[1]T}
+S58:T<1>1<13>io.write(...){:[1]<26>Test finished successfully}
+R15:T<1>1<7>{:[1]T}
+S32:T<1>1<13>io.write(...){:[1]<1>
+}
+R15:T<1>1<7>{:[1]T}
+S2:CN
+R1:D

@@ -16,7 +16,7 @@ assert d.setDiskLabel('text') is None
 assert d.getDiskLabel() is None
 assert d.getDiskID() is None
 assert d.hasAudio() is False
-assert d.getAudioTitle() is None
+assert d.getAudioTitle() is False
 assert d.playAudio() is None
 assert d.stopAudio() is None
 assert d.ejectDisk() is None

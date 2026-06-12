@@ -44,13 +44,13 @@ _lib.step(
     f'Attach wired modem to {side} side\n'
     f'Place another computer with wired modem on {side} side\n'
     'Connect modems\n'
-    'On another computer start py modem_server.py'
+    'On another computer start peripheral_modem_server.lua'
 )
 do_test()
 _lib.step(
     'Disconnect and remove wired modems\n'
     'Attach wireless modems\n'
-    'Restart modem_server.py on another computer'
+    'Restart peripheral_modem_server.lua on another computer'
 )
 do_test()
 print('Test finished successfully')

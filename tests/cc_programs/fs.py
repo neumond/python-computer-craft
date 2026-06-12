@@ -65,7 +65,7 @@ assert fs.isDriveRoot('/') is True
 assert fs.isDriveRoot('rom') is True
 assert fs.isDriveRoot('tdir') is False
 assert fs.isDriveRoot('tfile') is False
-assert fs.isDriveRoot('doesnotexist') is True  # wtf?
+assert fs.isDriveRoot('doesnotexist') is False
 
 assert fs.getName('a/b/c/d') == 'd'
 assert fs.getName('a/b/c/') == 'c'
@@ -86,8 +86,8 @@ assert fs.getDir('') == '..'
 assert fs.getDir('/') == '..'
 assert fs.getDir('///') == '..'
 assert fs.getDir('.') == '..'
-assert fs.getDir('..') == ''
-assert fs.getDir('../../..') == '../..'
+assert fs.getDir('..') == '../..'
+assert fs.getDir('../../..') == '../../../..'
 
 assert fs.combine('a', 'b') == 'a/b'
 assert fs.combine('a/', 'b') == 'a/b'
@@ -175,8 +175,8 @@ with fs.open('tdir/banana', 'r') as f:
     assert f.readLine() == 'line'
     assert f.read(1) is None
     assert f.readLine() is None
-    assert f.readAll() is None
-    assert f.readAll() is None
+    assert f.readAll() == ''
+    assert f.readAll() == ''
 assert fs.getSize('tdir/banana') == 9
 with fs.open('tdir/banana', 'a') as f:
     assert f.write('x') is None

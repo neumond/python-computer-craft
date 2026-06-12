@@ -28,12 +28,14 @@ expected_binfo = {
         'x': xyz[0],
         'y': xyz[1],
         'z': xyz[2],
-        'ForgeCaps': {},
         'ComputerId': AnyInstanceOf(int),
         'id': 'computercraft:computer_command',
         'On': 1,
     },
-    'tags': {'computercraft:computer': True},
+    'tags': {
+        'computercraft:computer': True,
+        'minecraft:wither_immune': True,
+    },
 }
 
 assert commands.getBlockInfo(*xyz) == expected_binfo

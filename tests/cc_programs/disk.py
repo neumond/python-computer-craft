@@ -43,7 +43,7 @@ assert disk.setLabel(s, 'text') is None
 assert disk.getLabel(s) is None
 assert disk.getID(s) is None
 assert disk.hasAudio(s) is False
-assert disk.getAudioTitle(s) is None
+assert disk.getAudioTitle(s) is False
 assert disk.playAudio(s) is None
 assert disk.stopAudio(s) is None
 assert disk.eject(s) is None
