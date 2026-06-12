@@ -17,7 +17,8 @@ _CC_ENC = 'latin1'
 _OC_ENC = 'utf-8'
 
 # encoding fast check
-assert [bytes([i]) for i in range(256)] == [chr(i).encode(_CC_ENC) for i in range(256)]
+assert [bytes([i]) for i in range(256)] == [
+    chr(i).encode(_CC_ENC) for i in range(256)]
 
 
 def cc_dirty_encode(s: str) -> bytes:
@@ -42,12 +43,14 @@ def serialize(v: Any, encoding: str) -> bytes:
     elif isinstance(v, (list, tuple)):
         items = []
         for k, x in enumerate(v, start=1):
-            items.append(b':' + serialize(k, encoding) + serialize(x, encoding))
+            items.append(
+                b':' + serialize(k, encoding) + serialize(x, encoding))
         return b'{' + b''.join(items) + b'}'
     elif isinstance(v, dict):
         items = []
         for k, x in v.items():
-            items.append(b':' + serialize(k, encoding) + serialize(x, encoding))
+            items.append(
+                b':' + serialize(k, encoding) + serialize(x, encoding))
         return b'{' + b''.join(items) + b'}'
     elif isinstance(v, lua.LuaExpr):
         code = v.get_expr_code()

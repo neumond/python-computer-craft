@@ -36,8 +36,13 @@ class TermMixin:
     def write(self, text: str) -> None:
         return self._call(b'write', ser.cc_dirty_encode(text)).take_none()
 
-    def blit(self, text: str, textColors: bytes, backgroundColors: bytes) -> None:
-        return self._call(b'blit', ser.cc_dirty_encode(text), textColors, backgroundColors).take_none()
+    def blit(
+        self, text: str, textColors: bytes, backgroundColors: bytes,
+    ) -> None:
+        return self._call(
+            b'blit', ser.cc_dirty_encode(text),
+            textColors, backgroundColors,
+        ).take_none()
 
     def clear(self) -> None:
         return self._call(b'clear').take_none()
@@ -84,7 +89,9 @@ class TermMixin:
         rp = self._call(b'getPaletteColor', colorID)
         return tuple(rp.take_number() for _ in range(3))
 
-    def setPaletteColor(self, colorID: int, r: float, g: float, b: float) -> None:
+    def setPaletteColor(
+        self, colorID: int, r: float, g: float, b: float,
+    ) -> None:
         return self._call(b'setPaletteColor', colorID, r, g, b).take_none()
 
 

@@ -39,7 +39,9 @@ def getAnalogInput(side: str) -> int:
 
 
 def setAnalogOutput(side: str, strength: int) -> None:
-    return eval_lua(b'G:redstone:M:setAnalogOutput', side, strength).take_none()
+    return eval_lua(
+        b'G:redstone:M:setAnalogOutput', side, strength,
+    ).take_none()
 
 
 def getAnalogOutput(side: str) -> int:
@@ -52,7 +54,7 @@ def getBundledInput(side: str) -> int:
     return eval_lua(b'G:redstone:M:getBundledInput', side).take_int()
 
 
-def setBundledOutput(side: str, colors: int):
+def setBundledOutput(side: str, colors: int) -> None:
     return eval_lua(b'G:redstone:M:setBundledOutput', side, colors).take_none()
 
 

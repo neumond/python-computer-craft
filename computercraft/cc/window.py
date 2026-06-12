@@ -21,8 +21,14 @@ class TermWindow(ReferenceObject, TermMixin):
         rp = self._call(b'getPosition')
         return tuple(rp.take_int() for _ in range(2))
 
-    def reposition(self, x: int, y: int, width: int = None, height: int = None, parent: TermTarget = None) -> None:
-        return self._call(b'reposition', x, y, width, height, parent).take_none()
+    def reposition(
+        self, x: int, y: int,
+        width: int = None, height: int = None,
+        parent: TermTarget = None,
+    ) -> None:
+        return self._call(
+            b'reposition', x, y, width, height, parent,
+        ).take_none()
 
     def getLine(self, y: int) -> Tuple[str, bytes, bytes]:
         rp = self._call(b'getLine', y)
@@ -30,7 +36,10 @@ class TermWindow(ReferenceObject, TermMixin):
 
 
 def create(
-    parentTerm: TermTarget, x: int, y: int, width: int, height: int, visible: bool = None,
+    parentTerm: TermTarget,
+    x: int, y: int,
+    width: int, height: int,
+    visible: bool = None,
 ) -> TermWindow:
     return TermWindow(lua_context_object(
         b'window.create(...)',

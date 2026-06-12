@@ -3,11 +3,14 @@ from typing import Union
 from ..sess import eval_lua
 
 
-# curl -s https://raw.githubusercontent.com/MightyPirates/OpenComputers/master-MC1.12/src/main/\
+# curl -s https://raw.githubusercontent.com/MightyPirates/\
+# OpenComputers/master-MC1.12/src/main/\
 # resources/assets/opencomputers/loot/openos/lib/core/full_keyboard.lua \
 # | grep -E '^keyboard\.keys' \
-# | sed -E 's/^keyboard\.keys\.(\S+)\s*\=\s*([0-9A-Fx]+).*$/\2: '\''\1'\'',/' \
-# | sed -E 's/^keyboard\.keys\["(\S+)"\]\s*\=\s*([0-9A-Fx]+).*$/\2: '\''\1'\'',/'
+# | sed -E \
+# 's/^keyboard\.keys\.(\S+)\s*\=\s*([0-9A-Fx]+).*$/\2: '\''\1'\'',/' \
+# | sed -E \
+# 's/^keyboard\.keys\["(\S+)"\]\s*\=\s*([0-9A-Fx]+).*$/\2: '\''\1'\'',/'
 
 _index = {
     0x02: '1',
@@ -162,7 +165,9 @@ def isControlDown() -> bool:
 
 
 def isKeyDown(charOrCode: Union[int, str]) -> bool:
-    return eval_lua(b'R:keyboard:M:isKeyDown', charOrCode).take_bool_coerce_nil()
+    return eval_lua(
+        b'R:keyboard:M:isKeyDown', charOrCode,
+    ).take_bool_coerce_nil()
 
 
 def isShiftDown() -> bool:

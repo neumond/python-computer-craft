@@ -54,7 +54,9 @@ def clearLine() -> None:
     return eval_lua(b'R:term:M:clearLine').take_none()
 
 
-def read(dobreak: bool = True, pwchar: Optional[str] = None) -> [str, None, False]:
+def read(
+    dobreak: bool = True, pwchar: Optional[str] = None,
+) -> [str, None, False]:
     r = eval_lua(
         b'R:term:M:read',
         None,  # TODO: history: table

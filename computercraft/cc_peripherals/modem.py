@@ -30,7 +30,9 @@ class ModemMixin:
         return self._call(b'closeAll').take_none()
 
     def transmit(self, channel: int, replyChannel: int, message: Any) -> None:
-        return self._call(b'transmit', channel, replyChannel, message).take_none()
+        return self._call(
+            b'transmit', channel, replyChannel, message,
+        ).take_none()
 
     def isWireless(self) -> bool:
         return self._call(b'isWireless').take_bool()
@@ -68,7 +70,9 @@ class WiredModemPeripheral(BasePeripheral, ModemMixin):
         return self._call(b'getNamesRemote').take_list_of_strings()
 
     def getTypeRemote(self, peripheralName: str) -> Optional[str]:
-        return self._call(b'getTypeRemote', peripheralName).take_option_string()
+        return self._call(
+            b'getTypeRemote', peripheralName,
+        ).take_option_string()
 
     def isPresentRemote(self, peripheralName: str) -> bool:
         return self._call(b'isPresentRemote', peripheralName).take_bool()

@@ -23,10 +23,12 @@ def getCount() -> int:
 
 
 def launch(environment: dict, programPath: str, *args: str) -> int:
-    return eval_lua(b'G:multishell:M:launch', environment, programPath, *args).take_int()
+    return eval_lua(
+        b'G:multishell:M:launch', environment, programPath, *args,
+    ).take_int()
 
 
-def setTitle(tabID: int, title: str):
+def setTitle(tabID: int, title: str) -> None:
     return eval_lua(b'G:multishell:M:setTitle', tabID, title).take_none()
 
 

@@ -26,10 +26,11 @@ def protocol(send, sess_cls=sess.CCSession, oc=False):
 
     version = next(msg)
     if version != PROTO_VERSION:
-        send(b'C' + ser.serialize(
-            'protocol version mismatch (expected {}, got {}), redownload py'.format(
-                PROTO_VERSION, version,
-            ), 'ascii'))
+        send(b'C' + ser.serialize((
+            'protocol version mismatch'
+            ' (expected {}, got {}),'
+            ' redownload py'
+        ).format(PROTO_VERSION, version), 'ascii'))
         return
 
     # CC:T starts its "args" with 0, includes program name

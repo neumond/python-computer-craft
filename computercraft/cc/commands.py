@@ -33,5 +33,9 @@ def getBlockInfo(x: int, y: int, z: int) -> dict:
     return eval_lua(b'G:commands:M:getBlockInfo', x, y, z).take_dict()
 
 
-def getBlockInfos(x1: int, y1: int, z1: int, x2: int, y2: int, z2: int) -> List[dict]:
-    return eval_lua(b'G:commands:M:getBlockInfos', x1, y1, z1, x2, y2, z2).take_list()
+def getBlockInfos(
+    x1: int, y1: int, z1: int, x2: int, y2: int, z2: int,
+) -> List[dict]:
+    return eval_lua(
+        b'G:commands:M:getBlockInfos', x1, y1, z1, x2, y2, z2,
+    ).take_list()

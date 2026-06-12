@@ -50,7 +50,9 @@ def segments(path: str) -> List[str]:
 
 
 def concat(pathA: str, pathB: str, *paths: str) -> str:
-    return eval_lua(b'R:filesystem:M:concat', pathA, pathB, *paths).take_string()
+    return eval_lua(
+        b'R:filesystem:M:concat', pathA, pathB, *paths,
+    ).take_string()
 
 
 def path(path: str) -> str:

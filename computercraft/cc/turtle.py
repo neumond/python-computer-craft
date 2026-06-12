@@ -263,4 +263,6 @@ def getFuelLimit() -> int:
 
 
 def transferTo(slot: int, quantity: int = None) -> None:
-    return eval_lua(b'G:turtle:M:transferTo', slot, quantity).check_bool_error()
+    return eval_lua(
+        b'G:turtle:M:transferTo', slot, quantity,
+    ).check_bool_error()

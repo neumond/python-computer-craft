@@ -186,7 +186,8 @@ def isDriveRoot(path: str) -> bool:
 
 
 def complete(
-    partialName: str, path: str, includeFiles: bool = None, includeDirs: bool = None,
+    partialName: str, path: str,
+    includeFiles: bool = None, includeDirs: bool = None,
 ) -> List[str]:
     return eval_lua(
         b'G:fs:M:complete', partialName, path, includeFiles, includeDirs,

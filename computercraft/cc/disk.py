@@ -30,7 +30,7 @@ def getMountPath(side: str) -> Optional[str]:
     return eval_lua(b'G:disk:M:getMountPath', side).take_option_string()
 
 
-def setLabel(side: str, label: Optional[str]):
+def setLabel(side: str, label: Optional[str]) -> None:
     return eval_lua(b'G:disk:M:setLabel', side, label).take_none()
 
 
@@ -50,13 +50,13 @@ def getAudioTitle(side: str) -> Optional[Union[bool, str]]:
     return eval_lua(b'G:disk:M:getAudioTitle', side).take_option_string_bool()
 
 
-def playAudio(side: str):
+def playAudio(side: str) -> None:
     return eval_lua(b'G:disk:M:playAudio', side).take_none()
 
 
-def stopAudio(side: str):
+def stopAudio(side: str) -> None:
     return eval_lua(b'G:disk:M:stopAudio', side).take_none()
 
 
-def eject(side: str):
+def eject(side: str) -> None:
     return eval_lua(b'G:disk:M:eject', side).take_none()

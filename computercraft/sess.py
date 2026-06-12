@@ -78,7 +78,10 @@ class StdFileProxy:
                 return ''  # press ctrl+D in OC
             if r.peek() is False:
                 r.take()   # press ctrl+C in OC
-                eval_lua(b'io.stderr:write(...)', r.take_bytes(), immediate=True)
+                eval_lua(
+                    b'io.stderr:write(...)',
+                    r.take_bytes(),
+                    immediate=True)
                 return ''
             return r.take_string() + '\n'
 

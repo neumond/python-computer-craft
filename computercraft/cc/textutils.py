@@ -16,16 +16,22 @@ __all__ = (
 )
 
 
-def slowWrite(text: str, rate: LuaNum = None):
-    return eval_lua(b'G:textutils:M:slowWrite', ser.cc_dirty_encode(text), rate).take_none()
+def slowWrite(text: str, rate: LuaNum = None) -> None:
+    return eval_lua(
+        b'G:textutils:M:slowWrite', ser.cc_dirty_encode(text), rate,
+    ).take_none()
 
 
-def slowPrint(text: str, rate: LuaNum = None):
-    return eval_lua(b'G:textutils:M:slowPrint', ser.cc_dirty_encode(text), rate).take_none()
+def slowPrint(text: str, rate: LuaNum = None) -> None:
+    return eval_lua(
+        b'G:textutils:M:slowPrint', ser.cc_dirty_encode(text), rate,
+    ).take_none()
 
 
 def formatTime(time: LuaNum, twentyFourHour: bool = None) -> str:
-    return eval_lua(b'G:textutils:M:formatTime', time, twentyFourHour).take_string()
+    return eval_lua(
+        b'G:textutils:M:formatTime', time, twentyFourHour,
+    ).take_string()
 
 
 def _prepareTab(rows_and_colors):
@@ -38,16 +44,22 @@ def _prepareTab(rows_and_colors):
     return r
 
 
-def tabulate(*rows_and_colors: Union[List[str], int]):
-    return eval_lua(b'G:textutils:M:tabulate', *_prepareTab(rows_and_colors)).take_none()
+def tabulate(*rows_and_colors: Union[List[str], int]) -> None:
+    return eval_lua(
+        b'G:textutils:M:tabulate', *_prepareTab(rows_and_colors),
+    ).take_none()
 
 
-def pagedTabulate(*rows_and_colors: Union[List[str], int]):
-    return eval_lua(b'G:textutils:M:pagedTabulate', *_prepareTab(rows_and_colors)).take_none()
+def pagedTabulate(*rows_and_colors: Union[List[str], int]) -> None:
+    return eval_lua(
+        b'G:textutils:M:pagedTabulate', *_prepareTab(rows_and_colors),
+    ).take_none()
 
 
 def pagedPrint(text: str, freeLines: int = None) -> int:
-    return eval_lua(b'G:textutils:M:pagedPrint', ser.cc_dirty_encode(text), freeLines).take_int()
+    return eval_lua(
+        b'G:textutils:M:pagedPrint', ser.cc_dirty_encode(text), freeLines,
+    ).take_int()
 
 
 def complete(partial: str, possible: List[str]) -> List[str]:

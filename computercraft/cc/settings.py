@@ -18,7 +18,10 @@ __all__ = (
 )
 
 
-def define(name: str, description: str = None, default: Any = None, type: str = None):
+def define(
+    name: str, description: str = None,
+    default: Any = None, type: str = None,
+) -> None:
     options = {}
     if description is not None:
         options[b'description'] = description

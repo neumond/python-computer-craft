@@ -94,7 +94,9 @@ def complete(prefix: str) -> List[str]:
 
 
 def completeProgram(prefix: str) -> List[str]:
-    return eval_lua(b'G:shell:M:completeProgram', prefix).take_list_of_strings()
+    return eval_lua(
+        b'G:shell:M:completeProgram', prefix,
+    ).take_list_of_strings()
 
 # TODO: ?
 # these functions won't be implemented

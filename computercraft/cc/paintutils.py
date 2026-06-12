@@ -22,21 +22,33 @@ def loadImage(path: str) -> List[List[int]]:
     return eval_lua(b'G:paintutils:M:loadImage', path).take_2d_int()
 
 
-def drawPixel(x: int, y: int, color: int = None):
+def drawPixel(x: int, y: int, color: int = None) -> None:
     return eval_lua(b'G:paintutils:M:drawPixel', x, y, color).take_none()
 
 
-def drawLine(startX: int, startY: int, endX: int, endY: int, color: int = None):
-    return eval_lua(b'G:paintutils:M:drawLine', startX, startY, endX, endY, color).take_none()
+def drawLine(
+    startX: int, startY: int, endX: int, endY: int, color: int = None,
+) -> None:
+    return eval_lua(
+        b'G:paintutils:M:drawLine', startX, startY, endX, endY, color,
+    ).take_none()
 
 
-def drawBox(startX: int, startY: int, endX: int, endY: int, color: int = None):
-    return eval_lua(b'G:paintutils:M:drawBox', startX, startY, endX, endY, color).take_none()
+def drawBox(
+    startX: int, startY: int, endX: int, endY: int, color: int = None,
+) -> None:
+    return eval_lua(
+        b'G:paintutils:M:drawBox', startX, startY, endX, endY, color,
+    ).take_none()
 
 
-def drawFilledBox(startX: int, startY: int, endX: int, endY: int, color: int = None):
-    return eval_lua(b'G:paintutils:M:drawFilledBox', startX, startY, endX, endY, color).take_none()
+def drawFilledBox(
+    startX: int, startY: int, endX: int, endY: int, color: int = None,
+) -> None:
+    return eval_lua(
+        b'G:paintutils:M:drawFilledBox', startX, startY, endX, endY, color,
+    ).take_none()
 
 
-def drawImage(image: List[List[int]], xPos: int, yPos: int):
+def drawImage(image: List[List[int]], xPos: int, yPos: int) -> None:
     return eval_lua(b'G:paintutils:M:drawImage', image, xPos, yPos).take_none()

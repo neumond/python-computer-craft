@@ -13,7 +13,9 @@ __all__ = (
 CHANNEL_GPS = 65534
 
 
-def locate(timeout: LuaNum = None, debug: bool = None) -> Optional[Tuple[LuaNum, LuaNum, LuaNum]]:
+def locate(
+    timeout: LuaNum = None, debug: bool = None,
+) -> Optional[Tuple[LuaNum, LuaNum, LuaNum]]:
     rp = eval_lua(b'G:gps:M:locate', timeout, debug)
     if rp.peek() is None:
         return None

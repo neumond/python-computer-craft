@@ -29,4 +29,6 @@ def topics() -> List[str]:
 
 
 def completeTopic(topicPrefix: str) -> List[str]:
-    return eval_lua(b'G:help:M:completeTopic', topicPrefix).take_list_of_strings()
+    return eval_lua(
+        b'G:help:M:completeTopic', topicPrefix,
+    ).take_list_of_strings()

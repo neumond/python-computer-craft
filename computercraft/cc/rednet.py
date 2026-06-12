@@ -32,7 +32,9 @@ def close(side: str = None) -> None:
 
 
 def send(receiverID: int, message: Any, protocol: str = None) -> bool:
-    return eval_lua(b'G:rednet:M:send', receiverID, message, protocol).take_bool()
+    return eval_lua(
+        b'G:rednet:M:send', receiverID, message, protocol,
+    ).take_bool()
 
 
 def broadcast(message: Any, protocol: str = None) -> None:
@@ -60,7 +62,9 @@ def unhost(protocol: str) -> None:
     return eval_lua(b'G:rednet:M:unhost', protocol).take_none()
 
 
-def lookup(protocol: str, hostname: str = None) -> Union[Optional[int], List[int]]:
+def lookup(
+    protocol: str, hostname: str = None,
+) -> Union[Optional[int], List[int]]:
     rp = eval_lua(b'G:rednet:M:lookup', protocol, hostname)
     if hostname is None:
         r = []

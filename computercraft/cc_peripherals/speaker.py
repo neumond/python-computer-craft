@@ -7,7 +7,9 @@ __all__ = ('SpeakerPeripheral', )
 class SpeakerPeripheral(BasePeripheral):
     TYPE = 'speaker'
 
-    def playNote(self, instrument: str, volume: int = 1, pitch: int = 1) -> bool:
+    def playNote(
+        self, instrument: str, volume: int = 1, pitch: int = 1,
+    ) -> bool:
         # instrument:
         # https://minecraft.gamepedia.com/Note_Block#Instruments
         # bass

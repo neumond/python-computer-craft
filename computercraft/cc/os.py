@@ -39,11 +39,11 @@ def getComputerLabel() -> Optional[str]:
     return eval_lua(b'G:os:M:getComputerLabel').take_option_string()
 
 
-def setComputerLabel(label: Optional[str]):
+def setComputerLabel(label: Optional[str]) -> None:
     return eval_lua(b'G:os:M:setComputerLabel', label).take_none()
 
 
-def run(environment: dict, programPath: str, *args: str):
+def run(environment: dict, programPath: str, *args: str) -> bool:
     return eval_lua(b'G:os:M:run', environment, programPath, *args).take_bool()
 
 
@@ -64,7 +64,7 @@ def captureEvent(event: str):
         evr.unsub(glet._task_id, event)
 
 
-def queueEvent(event: str, *params):
+def queueEvent(event: str, *params) -> None:
     return eval_lua(b'G:os:M:queueEvent', event, *params).take_none()
 
 
@@ -90,7 +90,7 @@ def epoch(locale=b'ingame') -> int:
     return eval_lua(b'G:os:M:epoch', locale).take_int()
 
 
-def sleep(seconds: LuaNum):
+def sleep(seconds: LuaNum) -> None:
     return eval_lua(b'G:os:M:sleep', seconds).take_none()
 
 
@@ -98,7 +98,7 @@ def startTimer(timeout: LuaNum) -> int:
     return eval_lua(b'G:os:M:startTimer', timeout).take_int()
 
 
-def cancelTimer(timerID: int):
+def cancelTimer(timerID: int) -> None:
     return eval_lua(b'G:os:M:cancelTimer', timerID).take_none()
 
 
