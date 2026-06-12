@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+requires-python = ">=3.8"
+name = "computercraft"
+version = "0.4.0"
+description = "Pythonization of ComputerCraft Minecraft mod. Write Python instead Lua!"
+readme = "README.md"
+authors = [{name = "Vitalik Verhovodov", email = "knifeslaughter@gmail.com"}]
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Games/Entertainment",
+]
+keywords = [
+    "computercraft",
+    "minecraft",
+    "cc:tweaked",
+]
+dependencies = [
+    "aiohttp",
+    "greenlet",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[project.urls]
+Repository = "https://github.com/neumond/python-computer-craft"
+
+[project.scripts]
+computercraft = "computercraft.server:main"
+
+[tool.setuptools]
+packages = [
+    "computercraft",
+    "computercraft.cc",
+    "computercraft.cc_peripherals",
+    "computercraft.oc",
+    "computercraft.oc_components",
+]
+
+[tool.setuptools.package-data]
+computercraft = ["back.lua"]
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
+testpaths = ["tests"]
+pythonpath = "."
+
+[tool.flake8]
+max-line-length = 120
+ignore = ["I", "C812", "N802", "N803", "N815", "N816", "W503"]
